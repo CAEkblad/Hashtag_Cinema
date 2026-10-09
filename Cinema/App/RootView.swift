@@ -162,6 +162,12 @@ struct RouteDestination: View {
             ReferralsView()
         case .scriptWriter:
             ScriptWriterView()
+        case .brandKit:
+            BrandKitView()
+        case .testimonials:
+            TestimonialsView()
+        case .marketUpdate:
+            MarketUpdateView()
         }
     }
 

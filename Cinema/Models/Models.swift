@@ -763,4 +763,7 @@ enum Route: Hashable {
     case activity
     case referrals
     case scriptWriter
+    case brandKit
+    case testimonials
+    case marketUpdate
 }

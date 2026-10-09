@@ -69,7 +69,7 @@ struct PosterMakerView: View {
         let previewWidth: CGFloat = size == .story ? 220 : 300
         return HStack {
             Spacer()
-            PosterCanvas(details: details, photos: photos, style: style, size: size)
+            PosterCanvas(details: details, photos: photos, style: style, size: size, accent: store.brandKit.accent, headshot: store.brandKit.headshotImage, logo: store.brandKit.logoImage)
                 .scaleEffect(previewWidth / PosterCanvas.baseWidth, anchor: .topLeading)
                 .frame(width: previewWidth, height: previewWidth * size.ratio, alignment: .topLeading)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -178,7 +178,14 @@ struct PosterMakerView: View {
 
     private var agentFields: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "You")
+            HStack {
+                SectionHeader(title: "You")
+                NavigationLink(value: Route.brandKit) {
+                    Label("Brand kit", systemImage: "paintpalette.fill")
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.red)
+                }
+            }
             TextField("Your name", text: $details.agentName)
                 .inputStyle()
             TextField("Phone (optional)", text: $details.agentPhone)
@@ -220,6 +227,7 @@ struct PosterMakerView: View {
         didPrefill = true
         details.agentName = store.profile.name
         details.brokerage = store.myMarketCenter?.name ?? store.profile.brokerage
+        details.agentPhone = store.brandKit.phone
         details.cityLine = store.homeCity.displayName
         if let listing {
             details.address = listing.address
@@ -263,7 +271,7 @@ struct PosterMakerView: View {
 
     @MainActor
     private func makeShare() {
-        let canvas = PosterCanvas(details: details, photos: photos, style: style, size: size)
+        let canvas = PosterCanvas(details: details, photos: photos, style: style, size: size, accent: store.brandKit.accent, headshot: store.brandKit.headshotImage, logo: store.brandKit.logoImage)
         let renderer = ImageRenderer(content: canvas)
         renderer.scale = 3
         guard let image = renderer.uiImage else {

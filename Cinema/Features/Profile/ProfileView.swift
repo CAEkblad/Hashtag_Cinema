@@ -86,6 +86,15 @@ struct ProfileView: View {
                 .listRowBackground(Theme.surface)
 
                 Section("Content") {
+                    NavigationLink(value: Route.brandKit) {
+                        IconRow(icon: "paintpalette.fill", title: "Brand kit", subtitle: store.brandKit.completion >= 3 ? "Headshot, logo and color on every poster" : "Add your headshot, logo and color")
+                    }
+                    NavigationLink(value: Route.testimonials) {
+                        IconRow(icon: "heart.text.square.fill", title: "Testimonials", subtitle: "\(store.testimonials.count) saved. Ask, share, make videos")
+                    }
+                    NavigationLink(value: Route.marketUpdate) {
+                        IconRow(icon: "chart.bar.xaxis", title: "Market update graphic", subtitle: "Your numbers, branded, with a script")
+                    }
                     NavigationLink(value: Route.listings) {
                         IconRow(icon: "house.and.flag.fill", title: "My listings", subtitle: "\(store.listings.filter { $0.status != .sold }.count) active · marketing plans and open houses")
                     }

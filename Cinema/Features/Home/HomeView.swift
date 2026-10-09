@@ -198,6 +198,14 @@ struct HomeView: View {
                 quickActionLabel("Script writer", icon: "text.quote")
             }
             .buttonStyle(.plain)
+            NavigationLink(value: Route.marketUpdate) {
+                quickActionLabel("Market update", icon: "chart.bar.xaxis")
+            }
+            .buttonStyle(.plain)
+            NavigationLink(value: Route.testimonials) {
+                quickActionLabel("Testimonials", icon: "heart.text.square.fill")
+            }
+            .buttonStyle(.plain)
             NavigationLink(value: Route.referrals) {
                 quickActionLabel("Invite agents", icon: "gift.fill")
             }

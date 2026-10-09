@@ -7,6 +7,10 @@ struct PosterCanvas: View {
     let photos: [UIImage]
     let style: PosterStyle
     let size: PosterSize
+    /// From the agent's brand kit.
+    var accent: Color = Theme.red
+    var headshot: UIImage? = nil
+    var logo: UIImage? = nil
 
     static let baseWidth: CGFloat = 360
 
@@ -66,7 +70,7 @@ struct PosterCanvas: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(Theme.red)
+                    .background(accent)
                     .padding(.top, 16)
             }
             if !extraPhotos.isEmpty {
@@ -96,7 +100,7 @@ struct PosterCanvas: View {
                 }
                 Text(details.specsLine)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.red)
+                    .foregroundStyle(accent)
                 if let openHouseLine {
                     Label(openHouseLine, systemImage: "calendar")
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -121,7 +125,7 @@ struct PosterCanvas: View {
             LinearGradient(colors: [.clear, .black.opacity(0.35), .black.opacity(0.85)], startPoint: .center, endPoint: .bottom)
             VStack(alignment: .leading, spacing: 8) {
                 Rectangle()
-                    .fill(Theme.red)
+                    .fill(accent)
                     .frame(width: 54, height: 6)
                 Text(details.kind.title)
                     .font(.system(size: size == .square ? 38 : 46, weight: .black, design: .rounded))
@@ -146,7 +150,7 @@ struct PosterCanvas: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(Theme.red, in: Capsule())
+                        .background(accent, in: Capsule())
                 }
                 agentStrip(dark: true)
                     .padding(.top, 6)
@@ -208,11 +212,20 @@ struct PosterCanvas: View {
 
     private func agentStrip(dark: Bool) -> some View {
         HStack(spacing: 10) {
-            Text(initials)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .frame(width: 34, height: 34)
-                .background(Theme.red, in: Circle())
+            if let headshot {
+                Image(uiImage: headshot)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 38, height: 38)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(accent, lineWidth: 2))
+            } else {
+                Text(initials)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .frame(width: 34, height: 34)
+                    .background(accent, in: Circle())
+            }
             VStack(alignment: .leading, spacing: 1) {
                 Text(agentText)
                     .font(.system(size: 13, weight: .bold, design: .rounded))
@@ -223,6 +236,12 @@ struct PosterCanvas: View {
             }
             .foregroundStyle(dark ? Color.white : Theme.ink)
             Spacer(minLength: 0)
+            if let logo {
+                Image(uiImage: logo)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 70, maxHeight: 30)
+            }
         }
     }
 

@@ -56,6 +56,13 @@ final class CinemaStore {
     ]
     var savedScripts: [Idea] = []
 
+    // Brand kit and social proof
+    var brandKit = BrandKit()
+    var testimonials: [Testimonial] = [
+        Testimonial(clientName: "Maria and Luis G.", quote: "Jordan made our first home feel easy. We beat five other offers and closed in 30 days.", stars: 5, side: .buyer, cityName: "Tampa", date: MockData.day(-12)),
+        Testimonial(clientName: "Dan R.", quote: "The video tour brought in buyers from out of state. Under contract in one weekend.", stars: 5, side: .seller, cityName: "St. Petersburg", date: MockData.day(-30))
+    ]
+
     // UI state
     var isRefreshingIdeas = false
     var toast: String?
@@ -87,6 +94,7 @@ final class CinemaStore {
         self.posting = posting
         self.coach = coach
         restore()
+        restoreBrandKit()
         ideas = localEngine.ideas(for: profile, count: 8, seed: Self.daySeed) + MockData.ideas
     }
 
@@ -929,6 +937,59 @@ final class CinemaStore {
     func saveScript(_ idea: Idea) {
         savedScripts.insert(idea, at: 0)
         addIdea(idea)
+    }
+
+    // MARK: Brand kit
+
+    private static let brandKey = "cinema.brand.v1"
+
+    func saveBrandKit(_ kit: BrandKit) {
+        brandKit = kit
+        if let data = try? JSONEncoder().encode(kit) {
+            UserDefaults.standard.set(data, forKey: Self.brandKey)
+        }
+    }
+
+    private func restoreBrandKit() {
+        guard let data = UserDefaults.standard.data(forKey: Self.brandKey),
+              let kit = try? JSONDecoder().decode(BrandKit.self, from: data) else { return }
+        brandKit = kit
+    }
+
+    // MARK: Testimonials
+
+    var reviewRequestMessage: String {
+        "Hi! It was a joy helping you with your home. Would you share a sentence or two about working with me? It helps other families find the right agent. Thank you! \(profile.firstName)"
+    }
+
+    func addTestimonial(_ testimonial: Testimonial) {
+        testimonials.insert(testimonial, at: 0)
+        notify(.system, "New testimonial", detail: "\(testimonial.clientName): \"\(testimonial.quote.prefix(60))\"", route: .testimonials)
+        showToast("Testimonial saved")
+    }
+
+    /// A client story video idea built from a real testimonial.
+    func testimonialIdea(_ testimonial: Testimonial) -> Idea {
+        let city = allMarkets.first { $0.name == testimonial.cityName } ?? homeCity
+        var idea = ScriptWriter.write(type: .clientStory, topic: testimonial.quote, seconds: 30, city: city, agentName: profile.name)
+        idea.title = "Client story: \(testimonial.clientName)"
+        idea.shots.insert("Show the quote on screen while you read it", at: 1)
+        return idea
+    }
+
+    // MARK: Market update
+
+    func marketScriptIdea(_ snapshot: MarketSnapshot) -> Idea {
+        Idea(
+            title: "\(snapshot.cityName) market: \(snapshot.periodLabel)",
+            hook: "Here's the \(snapshot.cityName) market for \(snapshot.periodLabel) in 30 seconds.",
+            category: .marketUpdate,
+            shots: ["Walk toward camera, tight framing", "Market graphic on screen, point at each number", "Close on you with the keyword"],
+            script: snapshot.script(agentFirstName: profile.firstName),
+            targetSeconds: 30,
+            whyItWorks: "Real local numbers make you the go to source. A monthly series builds a habit.",
+            cityName: snapshot.cityName
+        )
     }
 
     // MARK: Leaders: free promotion
