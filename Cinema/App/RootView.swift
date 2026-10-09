@@ -198,6 +198,10 @@ struct RouteDestination: View {
             PastClientsView()
         case .vendors:
             VendorsView()
+        case .sellerReport(let id):
+            SellerReportView(listingID: id)
+        case .netSheet:
+            NetSheetView()
         }
     }
 

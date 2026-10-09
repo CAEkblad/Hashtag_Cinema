@@ -864,6 +864,12 @@ final class CinemaStore {
     }
 
 
+    func addFeedback(_ feedback: ShowingFeedback, to listingID: UUID) {
+        guard let index = listings.firstIndex(where: { $0.id == listingID }) else { return }
+        listings[index].feedback.insert(feedback, at: 0)
+        showToast("Feedback saved")
+    }
+
     func toggleTask(_ task: MarketingTask, for listingID: UUID) {
         guard let index = listings.firstIndex(where: { $0.id == listingID }) else { return }
         if listings[index].done.contains(task) {

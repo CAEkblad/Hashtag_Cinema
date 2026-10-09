@@ -79,6 +79,38 @@ enum ListingCopywriter {
         return "Hi neighbor! I'm \(me), the agent for \(listing.address). You're invited to our open house, \(openHouse.label). Stop by early for a first look before the crowds. It's a \(rooms) home listed at \(listing.priceLabel). Know someone who'd love to live by you? Bring them along. And if you're curious what your own home is worth, I'm happy to put together a free value report."
     }
 
+    /// A quick text to the buyer's agent after a showing.
+    static func feedbackRequest(for listing: Listing, agentName: String) -> String {
+        let me = agentName.split(separator: " ").first.map { String($0) } ?? agentName
+        return "Hi! It's \(me), the listing agent for \(listing.address). Thanks for showing it. Could you share quick feedback for my sellers? 1) How interested are your buyers? 2) Thoughts on price? 3) Anything holding them back? Thank you!"
+    }
+
+    /// The weekly update sellers get, so they always know what's happening.
+    static func sellerReport(for listing: Listing, sellerName: String, agentName: String, videoViews: Int?) -> String {
+        let me = agentName.split(separator: " ").first.map { String($0) } ?? agentName
+        let greeting = sellerName.trimmingCharacters(in: .whitespaces).isEmpty ? "Hi!" : "Hi \(sellerName)!"
+        var lines = ["\(greeting) Here's your weekly update for \(listing.address).", ""]
+        lines.append("Days on market: \(listing.daysOnMarket)")
+        let visitors = listing.openHouses.reduce(0) { $0 + $1.visitors.count }
+        if !listing.openHouses.isEmpty { lines.append("Open house visitors: \(visitors)") }
+        if !listing.feedback.isEmpty { lines.append("Showings with feedback: \(listing.feedback.count)") }
+        if let videoViews, videoViews > 0 { lines.append("Video views: \(videoViews.formatted())") }
+        let done = listing.tasks.filter { listing.done.contains($0) }
+        if !done.isEmpty {
+            lines += ["", "Marketing done so far:"]
+            lines += done.map { "- \($0.title)" }
+        }
+        if !listing.feedback.isEmpty {
+            lines += ["", "What buyers are saying:"]
+            for item in listing.feedback.prefix(5) {
+                let price = item.priceOpinion.isEmpty ? "" : " Price: \(item.priceOpinion)."
+                lines.append("- \(item.interest.title).\(price) \(item.comment)".trimmingCharacters(in: .whitespaces))
+            }
+        }
+        lines += ["", "Questions or ideas? Call or text me anytime. \(me)"]
+        return lines.joined(separator: "\n")
+    }
+
     private static func areaLine(_ listing: Listing) -> String {
         guard let city = listing.city else { return "" }
         if let highlight = city.highlights.first(where: { !$0.lowercased().contains("spring training") }) {

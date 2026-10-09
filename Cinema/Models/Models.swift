@@ -784,4 +784,6 @@ enum Route: Hashable {
     case referralNetwork
     case pastClients
     case vendors
+    case sellerReport(UUID)
+    case netSheet
 }

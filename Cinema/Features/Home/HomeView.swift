@@ -243,6 +243,10 @@ struct HomeView: View {
                 quickActionLabel("Captions", icon: "text.bubble.fill")
             }
             .buttonStyle(.plain)
+            NavigationLink(value: Route.netSheet) {
+                quickActionLabel("Seller net sheet", icon: "dollarsign.circle.fill")
+            }
+            .buttonStyle(.plain)
             NavigationLink(value: Route.pastClients) {
                 quickActionLabel("Past clients", icon: "house.and.flag.fill")
             }

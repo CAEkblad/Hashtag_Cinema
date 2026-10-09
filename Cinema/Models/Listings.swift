@@ -115,6 +115,35 @@ struct OpenHouseVisitor: Identifiable, Hashable {
     var signedInAt: Date
 }
 
+/// What a buyer's agent said after a showing.
+struct ShowingFeedback: Identifiable, Hashable {
+    enum Interest: String, CaseIterable, Identifiable {
+        case hot, maybe, pass
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .hot: return "Very interested"
+            case .maybe: return "Maybe"
+            case .pass: return "Not for them"
+            }
+        }
+        var icon: String {
+            switch self {
+            case .hot: return "flame.fill"
+            case .maybe: return "hand.raised.fill"
+            case .pass: return "xmark.circle.fill"
+            }
+        }
+    }
+
+    var id = UUID()
+    var agentName: String
+    var date: Date
+    var interest: Interest
+    var priceOpinion: String
+    var comment: String
+}
+
 struct OpenHouse: Identifiable, Hashable {
     var id = UUID()
     var start: Date
@@ -194,6 +223,9 @@ struct Listing: Identifiable, Hashable {
     var done: Set<MarketingTask> = []
     var openHouses: [OpenHouse] = []
     var description: String = ""
+    var feedback: [ShowingFeedback] = []
+
+    var daysOnMarket: Int { max(0, Calendar.current.dateComponents([.day], from: listedAt, to: Date()).day ?? 0) }
 
     var city: FloridaCity? { FloridaMarkets.city(cityID) }
     var cityLine: String { city?.displayName ?? "" }

@@ -14,6 +14,7 @@ struct ListingDetailView: View {
     @State private var kiosk: OpenHouse?
     @State private var showCalculator = false
     @State private var showFlyer = false
+    @State private var showNetSheet = false
 
     var body: some View {
         if let listing = store.listing(listingID) {
@@ -32,6 +33,18 @@ struct ListingDetailView: View {
                 checklist(listing)
                 descriptionCard(listing)
                 openHouses(listing)
+                NavigationLink(value: Route.sellerReport(listing.id)) {
+                    IconRow(icon: "chart.bar.doc.horizontal.fill", title: "Seller report and feedback", subtitle: listing.feedback.isEmpty ? "Weekly update for your seller" : "\(listing.feedback.count) showing\(listing.feedback.count == 1 ? "" : "s") logged")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+                Button {
+                    showNetSheet = true
+                } label: {
+                    IconRow(icon: "dollarsign.circle.fill", title: "Seller net sheet", subtitle: "What your seller walks away with")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
                 Button {
                     showFlyer = true
                 } label: {
@@ -57,6 +70,9 @@ struct ListingDetailView: View {
         }
         .navigationDestination(isPresented: $showCalculator) {
             PaymentCalculatorView(startingPrice: Double(listing.price))
+        }
+        .navigationDestination(isPresented: $showNetSheet) {
+            NetSheetView(startingPrice: Double(listing.price), address: listing.address)
         }
         .sheet(isPresented: $showFlyer) {
             FlyerView(listing: listing)
