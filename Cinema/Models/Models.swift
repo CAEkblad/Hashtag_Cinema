@@ -760,4 +760,7 @@ enum Route: Hashable {
     case listings
     case listing(UUID)
     case paymentCalculator
+    case activity
+    case referrals
+    case scriptWriter
 }

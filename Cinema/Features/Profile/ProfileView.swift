@@ -61,6 +61,12 @@ struct ProfileView: View {
                 }
 
                 Section("Grow") {
+                    NavigationLink(value: Route.activity) {
+                        IconRow(icon: "bell.badge.fill", title: "Activity", subtitle: "Edits, leads, bookings and rewards", badge: store.unreadActivityCount > 0 ? "\(store.unreadActivityCount) new" : nil)
+                    }
+                    NavigationLink(value: Route.referrals) {
+                        IconRow(icon: "gift.fill", title: "Invite agents", subtitle: "Give 2 edits, get 2 edits", badge: store.creditsEarnedFromReferrals > 0 ? "+\(store.creditsEarnedFromReferrals)" : nil)
+                    }
                     NavigationLink(value: Route.market) {
                         IconRow(icon: "mappin.and.ellipse", title: "My market", subtitle: store.serviceAreas.isEmpty ? store.homeCity.displayName : "\(store.homeCity.name) plus \(store.serviceAreas.count) more")
                     }

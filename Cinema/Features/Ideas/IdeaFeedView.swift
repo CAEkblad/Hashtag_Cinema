@@ -21,6 +21,7 @@ struct IdeaFeedView: View {
                     TipView(NewIdeasTip())
                         .tint(Theme.red)
                     createRow
+                    scriptLink
                     posterLink
                     marketLink
                     categoryChips
@@ -81,6 +82,29 @@ struct IdeaFeedView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    private var scriptLink: some View {
+        NavigationLink(value: Route.scriptWriter) {
+            HStack(spacing: 10) {
+                Image(systemName: "text.quote")
+                    .foregroundStyle(Theme.red)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Write a script from any topic")
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Hook, script and shots in one tap")
+                        .font(.cinema(12))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .cardStyle(padding: 14)
+        }
+        .buttonStyle(.plain)
     }
 
     private var posterLink: some View {

@@ -48,6 +48,14 @@ final class CinemaStore {
     var crewApplication: CrewApplication?
     var crewJobOffers = MockData.crewJobOffers
 
+    // Inbox and referrals
+    var activity: [ActivityItem] = CinemaStore.sampleActivity()
+    var referrals: [Referral] = [
+        Referral(name: "Alex Morgan", date: MockData.day(-6), status: .rewarded),
+        Referral(name: "Priya Shah", date: MockData.day(-2), status: .invited)
+    ]
+    var savedScripts: [Idea] = []
+
     // UI state
     var isRefreshingIdeas = false
     var toast: String?
@@ -426,6 +434,7 @@ final class CinemaStore {
                 self.coachTips = tips + self.coachTips
             }
             self.showToast("\"\(request.title)\" is ready for review")
+            self.notify(.edit, "Your edit is ready", detail: "\"\(request.title)\" is ready for you to review and approve.", route: .clip(clipID))
         }
         return clip
     }
@@ -497,6 +506,7 @@ final class CinemaStore {
             booking.addOns = addOns.map(\.name)
             booking.estimatedTotal = total
             bookings.append(booking)
+            notify(.booking, "Shoot booked", detail: "\(package?.name ?? service.name) on \(date.shortDay) at \(date.timeOnly)\(shooter.map { " with \($0.name)" } ?? "").", route: .bookings)
             return booking
         } catch {
             showToast("Payment failed. Try again.")
@@ -531,6 +541,7 @@ final class CinemaStore {
         posts.append(post)
         if postNow { checkInToActiveChallenges() }
         showToast(postNow ? "Posted to \(platforms.count) platforms" : "Scheduled for \(date.shortDay)")
+        notify(.system, postNow ? "Posted" : "Post scheduled", detail: "\"\(clip.title)\" \(postNow ? "went out" : "goes out \(date.shortDay)") on \(platforms.map(\.name).joined(separator: ", ")).", route: .calendar)
     }
 
     // MARK: Leads
@@ -666,6 +677,7 @@ final class CinemaStore {
         joinRequests.removeAll { $0.id == request.id }
         brokerageMembers.append(BrokerageMember(name: request.agentName, postsThisMonth: 0, challengeDays: 0, creditsUsed: 0, leads: 0))
         showToast("\(request.agentName) is connected")
+        notify(.office, "Agent connected", detail: "\(request.agentName) joined your \(officeWord).", route: .marketCenter)
     }
 
     func decline(_ request: JoinRequest) {
@@ -786,6 +798,7 @@ final class CinemaStore {
             status: .new,
             openHouseAddress: listings[l].address
         ), at: 0)
+        notify(.lead, "Open house sign in", detail: "\(visitor.name) signed in at \(listings[l].address).", route: .leads)
     }
 
     // MARK: Find a photographer
@@ -834,6 +847,7 @@ final class CinemaStore {
             }
         }
         showToast(stars == 5 ? "Thanks! Five stars helps your shooter level up." : "Thanks for the feedback")
+        notify(.rating, "Thanks for rating your shoot", detail: "You gave \(stars) star\(stars == 1 ? "" : "s"). Ratings decide which shooters level up.", route: .bookings)
     }
 
     // MARK: #Cinema Crew
@@ -846,6 +860,75 @@ final class CinemaStore {
     func acceptJob(_ offer: CrewJobOffer) {
         crewJobOffers.removeAll { $0.id == offer.id }
         showToast("Job accepted. It's on your schedule.")
+    }
+
+    // MARK: Activity inbox
+
+    var unreadActivityCount: Int { activity.filter { !$0.isRead }.count }
+
+    func notify(_ kind: ActivityItem.Kind, _ title: String, detail: String, route: Route? = nil) {
+        activity.insert(ActivityItem(kind: kind, title: title, detail: detail, date: Date(), route: route), at: 0)
+    }
+
+    func markRead(_ item: ActivityItem) {
+        guard let index = activity.firstIndex(where: { $0.id == item.id }) else { return }
+        activity[index].isRead = true
+    }
+
+    func markAllRead() {
+        for index in activity.indices { activity[index].isRead = true }
+    }
+
+    nonisolated static func sampleActivity() -> [ActivityItem] {
+        [
+            ActivityItem(kind: .edit, title: "Your edit is ready", detail: "\"Bayshore listing tour\" is ready for you to review and approve.", date: MockData.day(0, hour: 8, minute: 12), route: .bookings),
+            ActivityItem(kind: .lead, title: "New lead from WATER", detail: "Someone commented WATER on your waterfront tour. We sent your DM.", date: MockData.day(0, hour: 7, minute: 40), route: .leads),
+            ActivityItem(kind: .coach, title: "Your weekly coach report", detail: "Your hooks are getting stronger. Try ending on a question this week.", date: MockData.day(-1, hour: 18), route: .coach),
+            ActivityItem(kind: .referral, title: "You earned 2 credits", detail: "Alex Morgan joined #Cinema with your invite.", date: MockData.day(-6, hour: 12), route: .referrals, isRead: true)
+        ]
+    }
+
+    // MARK: Referrals
+
+    /// Invite code agents share. Each friend who joins gives both of you 2 edit credits.
+    var referralCode: String {
+        let letters = profile.firstName.uppercased().filter { $0.isLetter }
+        let number = abs(profile.email.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) % 9000 }) + 1000
+        return "\(letters.prefix(6))\(number)"
+    }
+
+    var referralLink: String { "https://hashtagcinema.com/join?ref=\(referralCode)" }
+
+    var referralMessage: String {
+        "I make my real estate videos with #Cinema. Daily ideas for your city, they edit, and it posts everywhere. Use my code \(referralCode) and we both get 2 free edits: \(referralLink)"
+    }
+
+    var creditsEarnedFromReferrals: Int { referrals.filter { $0.status == .rewarded }.count * 2 }
+
+    func invite(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        let referral = Referral(name: trimmed, date: Date(), status: .invited)
+        referrals.insert(referral, at: 0)
+        showToast("Invite ready for \(trimmed)")
+        // Demo: the friend joins a few seconds later so the reward flow can be tested.
+        let id = referral.id
+        Task {
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            guard let index = self.referrals.firstIndex(where: { $0.id == id }) else { return }
+            self.referrals[index].status = .rewarded
+            self.profile.credits += 2
+            self.persist()
+            self.notify(.referral, "You earned 2 credits", detail: "\(trimmed) joined #Cinema with your invite.", route: .referrals)
+            self.showToast("\(trimmed) joined. You both got 2 credits.")
+        }
+    }
+
+    // MARK: Script writer
+
+    func saveScript(_ idea: Idea) {
+        savedScripts.insert(idea, at: 0)
+        addIdea(idea)
     }
 
     // MARK: Leaders: free promotion

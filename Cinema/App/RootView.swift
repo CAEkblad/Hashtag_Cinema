@@ -156,6 +156,12 @@ struct RouteDestination: View {
             ListingDetailView(listingID: id)
         case .paymentCalculator:
             PaymentCalculatorView()
+        case .activity:
+            ActivityInboxView()
+        case .referrals:
+            ReferralsView()
+        case .scriptWriter:
+            ScriptWriterView()
         }
     }
 

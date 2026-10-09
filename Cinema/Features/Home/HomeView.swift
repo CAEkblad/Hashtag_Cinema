@@ -100,10 +100,10 @@ struct HomeView: View {
                     .accessibilityLabel("How #Cinema works")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(value: Route.leads) {
+                    NavigationLink(value: Route.activity) {
                         Image(systemName: "bell.fill")
                             .overlay(alignment: .topTrailing) {
-                                if store.newLeadCount > 0 {
+                                if store.unreadActivityCount > 0 {
                                     Circle().fill(Theme.red).frame(width: 8, height: 8).offset(x: 3, y: -3)
                                 }
                             }
@@ -192,6 +192,14 @@ struct HomeView: View {
             quickAction("My library", icon: "film.stack") { selectedTab = .library }
             NavigationLink(value: Route.paymentCalculator) {
                 quickActionLabel("Payment calculator", icon: "function")
+            }
+            .buttonStyle(.plain)
+            NavigationLink(value: Route.scriptWriter) {
+                quickActionLabel("Script writer", icon: "text.quote")
+            }
+            .buttonStyle(.plain)
+            NavigationLink(value: Route.referrals) {
+                quickActionLabel("Invite agents", icon: "gift.fill")
             }
             .buttonStyle(.plain)
         }
