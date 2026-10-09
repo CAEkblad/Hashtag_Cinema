@@ -39,6 +39,12 @@ final class CinemaStore {
     var officeAssets = MockData.officeAssets
     var posters: [PosterItem] = []
 
+    // #Cinema Crew
+    var shooters = MockData.shooters
+    var favoriteShooterIDs: Set<UUID> = []
+    var crewApplication: CrewApplication?
+    var crewJobOffers = MockData.crewJobOffers
+
     // UI state
     var isRefreshingIdeas = false
     var toast: String?
@@ -467,11 +473,26 @@ final class CinemaStore {
 
     // MARK: Booking
 
-    func payDepositAndBook(service: ServiceType, date: Date, address: String, notes: String) async -> Booking? {
+    func payDepositAndBook(
+        service: ServiceType,
+        date: Date,
+        address: String,
+        notes: String,
+        shooter: Shooter? = nil,
+        package: ShootPackage? = nil,
+        addOns: [ShootAddOn] = [],
+        stagedPhotos: Int = 0
+    ) async -> Booking? {
+        let total = package.map { pkg in pkg.price + addOns.reduce(0) { $0 + $1.price * ($1.perPhoto ? max(stagedPhotos, 1) : 1) } }
+        let deposit = min(500, total ?? 500)
         do {
-            let result = try await payments.payDeposit(amount: 500, description: service.name)
+            let result = try await payments.payDeposit(amount: deposit, description: package?.name ?? service.name)
             guard result.succeeded else { return nil }
-            let booking = Booking(service: service, date: date, address: address, notes: notes, status: result.isPending ? .depositPending : .depositPaid)
+            var booking = Booking(service: service, date: date, address: address, notes: notes, status: result.isPending ? .depositPending : .depositPaid, depositAmount: deposit)
+            booking.shooterID = shooter?.id
+            booking.packageName = package?.name
+            booking.addOns = addOns.map(\.name)
+            booking.estimatedTotal = total
             bookings.append(booking)
             return booking
         } catch {
@@ -693,6 +714,66 @@ final class CinemaStore {
             paletteIndex: 0,
             imageData: poster.imageData
         ))
+    }
+
+    // MARK: Find a photographer
+
+    func shooter(_ id: UUID) -> Shooter? { shooters.first { $0.id == id } }
+
+    /// Shooters for a city: same city first, then nearby, best tier and rating first.
+    func shooters(near city: FloridaCity, skill: ShooterSkill? = nil, radiusMiles: Double = 60) -> [Shooter] {
+        shooters
+            .filter { skill == nil || $0.skills.contains(skill!) }
+            .filter { ($0.city?.distance(to: city) ?? 999) <= radiusMiles }
+            .sorted {
+                let d0 = $0.city?.distance(to: city) ?? 999
+                let d1 = $1.city?.distance(to: city) ?? 999
+                if $0.tier != $1.tier { return CrewTier.allCases.firstIndex(of: $0.tier)! > CrewTier.allCases.firstIndex(of: $1.tier)! }
+                if abs(d0 - d1) > 15 { return d0 < d1 }
+                return $0.rating > $1.rating
+            }
+    }
+
+    func toggleFavorite(shooter: Shooter) {
+        if favoriteShooterIDs.contains(shooter.id) {
+            favoriteShooterIDs.remove(shooter.id)
+        } else {
+            favoriteShooterIDs.insert(shooter.id)
+            showToast("\(shooter.name) saved to your favorites")
+        }
+    }
+
+    var bookingsToRate: [Booking] { bookings.filter { $0.status == .completed && $0.rating == nil } }
+
+    /// Five star ratings feed the shooter's tier on the backend.
+    func rate(_ bookingID: UUID, stars: Int, comment: String) {
+        guard let index = bookings.firstIndex(where: { $0.id == bookingID }) else { return }
+        bookings[index].rating = stars
+        if let shooterID = bookings[index].shooterID ?? shooters.first?.id,
+           let s = shooters.firstIndex(where: { $0.id == shooterID }) {
+            let count = Double(shooters[s].jobsCompleted)
+            shooters[s].rating = ((shooters[s].rating * count) + Double(stars)) / (count + 1)
+            shooters[s].jobsCompleted += 1
+            if stars == 5 { shooters[s].fiveStarCount += 1 }
+            if !comment.trimmingCharacters(in: .whitespaces).isEmpty {
+                let lastInitial = profile.name.split(separator: " ").dropFirst().last?.first.map { String($0) } ?? ""
+                let author = lastInitial.isEmpty ? profile.firstName : "\(profile.firstName) \(lastInitial)."
+                shooters[s].reviews.insert(ShootReview(author: author, rating: stars, text: comment, date: Date()), at: 0)
+            }
+        }
+        showToast(stars == 5 ? "Thanks! Five stars helps your shooter level up." : "Thanks for the feedback")
+    }
+
+    // MARK: #Cinema Crew
+
+    func submitCrewApplication(_ application: CrewApplication) {
+        crewApplication = application
+        showToast("Application sent. We review new shooters within 3 business days.")
+    }
+
+    func acceptJob(_ offer: CrewJobOffer) {
+        crewJobOffers.removeAll { $0.id == offer.id }
+        showToast("Job accepted. It's on your schedule.")
     }
 
     // MARK: Leaders: free promotion

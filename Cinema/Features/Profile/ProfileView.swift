@@ -86,6 +86,9 @@ struct ProfileView: View {
                     NavigationLink(value: Route.calendar) {
                         IconRow(icon: "calendar", title: "Content calendar", subtitle: "Scheduled and posted")
                     }
+                    NavigationLink(value: Route.findShooter) {
+                        IconRow(icon: "person.crop.rectangle.stack.fill", title: "Find a photographer", subtitle: "Vetted #Cinema Crew near \(store.homeCity.name)")
+                    }
                     NavigationLink(value: Route.bookings) {
                         IconRow(icon: "camera.fill", title: "Pro shoots", subtitle: "\(store.upcomingBookings.count) upcoming")
                     }
@@ -116,6 +119,15 @@ struct ProfileView: View {
                     Text("Connected accounts")
                 } footer: {
                     Text("Instagram needs a Business or Creator account. Facebook posts to a Page.")
+                }
+                .listRowBackground(Theme.surface)
+
+                Section {
+                    NavigationLink(value: store.crewApplication == nil ? Route.joinCrew : Route.crewDashboard) {
+                        IconRow(icon: "camera.badge.ellipsis", title: store.crewApplication == nil ? "Join #Cinema Crew" : "Crew dashboard", subtitle: store.crewApplication == nil ? "For photographers and videographers" : "Application under review")
+                    }
+                } header: {
+                    Text("#Cinema Crew")
                 }
                 .listRowBackground(Theme.surface)
 

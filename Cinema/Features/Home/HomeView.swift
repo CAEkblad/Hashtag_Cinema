@@ -177,8 +177,8 @@ struct HomeView: View {
     private var quickActions: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
             quickAction("Get ideas", icon: "lightbulb.fill") { selectedTab = .create }
-            NavigationLink(value: Route.bookings) {
-                quickActionLabel("Book a shoot", icon: "calendar.badge.plus")
+            NavigationLink(value: Route.findShooter) {
+                quickActionLabel("Find a photographer", icon: "person.crop.rectangle.stack.fill")
             }
             .buttonStyle(.plain)
             NavigationLink(value: Route.posterMaker) {

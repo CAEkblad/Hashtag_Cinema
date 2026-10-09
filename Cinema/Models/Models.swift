@@ -454,6 +454,13 @@ struct Booking: Identifiable, Hashable, Codable {
     var notes: String
     var status: BookingStatus
     var depositAmount: Int = 500
+    /// The shooter the agent asked for. #Cinema confirms who is assigned.
+    var shooterID: UUID? = nil
+    var packageName: String? = nil
+    var addOns: [String] = []
+    var estimatedTotal: Int? = nil
+    /// Star rating the agent gave after delivery.
+    var rating: Int? = nil
 }
 
 // MARK: - Posting and leads
@@ -744,4 +751,8 @@ enum Route: Hashable {
     case marketCenter
     case officeContent
     case posterMaker
+    case findShooter
+    case shooter(UUID)
+    case joinCrew
+    case crewDashboard
 }

@@ -142,6 +142,14 @@ struct RouteDestination: View {
             OfficeContentView()
         case .posterMaker:
             PosterMakerView()
+        case .findShooter:
+            FindPhotographerView()
+        case .shooter(let id):
+            ShooterProfileView(shooterID: id)
+        case .joinCrew:
+            JoinCrewView()
+        case .crewDashboard:
+            CrewDashboardView()
         }
     }
 

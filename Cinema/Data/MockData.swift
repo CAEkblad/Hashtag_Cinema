@@ -180,7 +180,8 @@ enum MockData {
     // MARK: Bookings
 
     static let bookings: [Booking] = [
-        Booking(service: .listing, date: day(3, hour: 9), address: "211 Davis Blvd, Tampa", notes: "Lockbox on side gate. Twilight shots if possible.", status: .confirmed)
+        Booking(service: .listing, date: day(3, hour: 9), address: "211 Davis Blvd, Tampa", notes: "Lockbox on side gate. Twilight shots if possible.", status: .confirmed, packageName: "Full package", addOns: ["Sunset or twilight photos"], estimatedTotal: 498),
+        Booking(service: .listing, date: day(-4, hour: 10), address: "4821 W Bayshore Blvd, Tampa", notes: "", status: .completed, packageName: "Video + Drone", estimatedTotal: 299)
     ]
 
     // MARK: Posts

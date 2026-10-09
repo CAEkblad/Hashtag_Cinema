@@ -3,6 +3,7 @@ import SwiftUI
 struct BookingView: View {
     @Environment(CinemaStore.self) private var store
     @State private var selectedService: ServiceType?
+    @State private var rating: Booking?
 
     var body: some View {
         ScrollView {
@@ -11,9 +12,57 @@ struct BookingView: View {
                     Text("Book a pro shoot")
                         .font(.cinema(26, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("Tampa Bay crew. $500 deposit holds your date, the balance is charged on delivery.")
+                    Text("#Cinema Crew near \(store.homeCity.name). Listing packages from $179. A $500 deposit holds bigger shoots, the balance is charged on delivery.")
                         .font(.cinema(14))
                         .foregroundStyle(Theme.textSecondary)
+                }
+
+                NavigationLink(value: Route.findShooter) {
+                    HStack(spacing: 14) {
+                        Image(systemName: "person.crop.rectangle.stack.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 46, height: 46)
+                            .background(Theme.red, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Find a photographer")
+                                .font(.cinema(16, weight: .semibold))
+                                .foregroundStyle(Theme.textPrimary)
+                            Text("\(store.shooters(near: store.homeCity).count) vetted shooters near you, with ratings and portfolios")
+                                .font(.cinema(13))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                    .cardStyle()
+                }
+                .buttonStyle(.plain)
+
+                ForEach(store.bookingsToRate) { booking in
+                    Button {
+                        rating = booking
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "star.bubble.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(Theme.warning)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Rate your shoot at \(booking.address.isEmpty ? "the studio" : booking.address)")
+                                    .font(.cinema(15, weight: .semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                    .multilineTextAlignment(.leading)
+                                Text("Ratings help great shooters level up")
+                                    .font(.cinema(12))
+                                    .foregroundStyle(Theme.textSecondary)
+                            }
+                            Spacer(minLength: 0)
+                            StarRow(rating: 0, size: 12)
+                        }
+                        .cardStyle()
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 ForEach(ServiceType.allCases) { service in
@@ -52,12 +101,20 @@ struct BookingView: View {
                     ForEach(store.bookings.sorted { $0.date < $1.date }) { booking in
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(booking.service.name)
+                                Text(booking.packageName ?? booking.service.name)
                                     .font(.cinema(15, weight: .semibold))
                                     .foregroundStyle(Theme.textPrimary)
                                 Text("\(booking.date.shortDay) at \(booking.date.timeOnly)")
                                     .font(.cinema(13))
                                     .foregroundStyle(Theme.textSecondary)
+                                if let shooter = booking.shooterID.flatMap({ store.shooter($0) }) {
+                                    Text("Requested \(shooter.name)")
+                                        .font(.cinema(12))
+                                        .foregroundStyle(Theme.textTertiary)
+                                }
+                                if let stars = booking.rating {
+                                    StarRow(rating: stars, size: 11)
+                                }
                             }
                             Spacer()
                             Pill(text: booking.status.title, icon: "checkmark.seal.fill")
@@ -74,11 +131,72 @@ struct BookingView: View {
         .sheet(item: $selectedService) { service in
             BookingFormView(service: service)
         }
+        .sheet(item: $rating) { booking in
+            RateShootView(booking: booking)
+                .presentationDetents([.medium, .large])
+        }
+    }
+}
+
+struct RateShootView: View {
+    @Environment(CinemaStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let booking: Booking
+    @State private var stars = 5
+    @State private var comment = ""
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("How was your shoot?")
+                    .font(.cinema(24, weight: .bold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(booking.packageName ?? booking.service.name)
+                    .font(.cinema(14))
+                    .foregroundStyle(Theme.textSecondary)
+                HStack(spacing: 12) {
+                    ForEach(1...5, id: \.self) { value in
+                        Button {
+                            stars = value
+                        } label: {
+                            Image(systemName: value <= stars ? "star.fill" : "star")
+                                .font(.system(size: 34))
+                                .foregroundStyle(value <= stars ? Theme.warning : Theme.textTertiary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(value) stars")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                TextField(stars >= 4 ? "What did they do great?" : "What should we fix?", text: $comment, axis: .vertical)
+                    .lineLimit(3...6)
+                    .inputStyle()
+                if stars <= 3 {
+                    Text("Sorry it wasn't perfect. #Cinema will reach out about a free reshoot or edit.")
+                        .font(.cinema(13))
+                        .foregroundStyle(Theme.red)
+                }
+                Spacer()
+                Button("Send rating") {
+                    store.rate(booking.id, stars: stars, comment: comment)
+                    dismiss()
+                }
+                .buttonStyle(PrimaryButtonStyle())
+            }
+            .padding(Theme.gutter)
+            .background(Theme.background.ignoresSafeArea())
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Later") { dismiss() }
+                }
+            }
+        }
     }
 }
 
 struct BookingFormView: View {
     let service: ServiceType
+    var preferredShooter: Shooter? = nil
 
     @Environment(CinemaStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -89,6 +207,20 @@ struct BookingFormView: View {
     @State private var notes = ""
     @State private var isPaying = false
     @State private var confirmed: Booking?
+    @State private var package: ShootPackage? = ShootPackage.listing.first { $0.id == "full" }
+    @State private var addOnIDs: Set<String> = []
+    @State private var stagedPhotos = 5
+    @State private var shooterID: UUID?
+    @State private var didSetShooter = false
+
+    private var usesPackages: Bool { service == .listing || service == .drone }
+    private var chosenAddOns: [ShootAddOn] { ShootAddOn.all.filter { addOnIDs.contains($0.id) } }
+    private var estimatedTotal: Int? {
+        guard usesPackages, let package else { return nil }
+        return package.price + chosenAddOns.reduce(0) { $0 + $1.price * ($1.perPhoto ? stagedPhotos : 1) }
+    }
+    private var dueToday: Int { min(500, estimatedTotal ?? 500) }
+    private var chosenShooter: Shooter? { shooterID.flatMap { store.shooter($0) } }
 
     private let slots = [8, 10, 13, 16]
 
@@ -122,6 +254,12 @@ struct BookingFormView: View {
                 }
             }
             .background(Theme.background.ignoresSafeArea())
+            .onAppear {
+                if !didSetShooter {
+                    shooterID = preferredShooter?.id
+                    didSetShooter = true
+                }
+            }
             .navigationTitle(service.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -135,6 +273,9 @@ struct BookingFormView: View {
     private var form: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                if usesPackages { packagePicker }
+                shooterPicker
+
                 Text("Pick a day")
                     .font(.cinema(17, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -198,10 +339,19 @@ struct BookingFormView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
+                    if let estimatedTotal {
+                        HStack {
+                            Text("Estimated total")
+                            Spacer()
+                            Text("$\(estimatedTotal.formatted())")
+                        }
+                        .font(.cinema(15))
+                        .foregroundStyle(Theme.textSecondary)
+                    }
                     HStack {
-                        Text("Deposit due today")
+                        Text(dueToday < 500 ? "Due today" : "Deposit due today")
                         Spacer()
-                        Text("$500").fontWeight(.bold)
+                        Text("$\(dueToday.formatted())").fontWeight(.bold)
                     }
                     .font(.cinema(16))
                     .foregroundStyle(Theme.textPrimary)
@@ -215,14 +365,20 @@ struct BookingFormView: View {
                     guard let date = chosenDate else { return }
                     isPaying = true
                     Task {
-                        confirmed = await store.payDepositAndBook(service: service, date: date, address: address, notes: notes)
+                        confirmed = await store.payDepositAndBook(
+                            service: service, date: date, address: address, notes: notes,
+                            shooter: chosenShooter,
+                            package: usesPackages ? package : nil,
+                            addOns: usesPackages ? chosenAddOns : [],
+                            stagedPhotos: stagedPhotos
+                        )
                         isPaying = false
                     }
                 } label: {
                     if isPaying {
                         ProgressView().tint(.white)
                     } else {
-                        Label("Pay $500 deposit", systemImage: "creditcard.fill")
+                        Label(dueToday < 500 ? "Pay $\(dueToday) and book" : "Pay $500 deposit", systemImage: "creditcard.fill")
                     }
                 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -231,6 +387,130 @@ struct BookingFormView: View {
             }
             .padding(Theme.gutter)
         }
+    }
+
+    private var packagePicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Pick a package")
+                .font(.cinema(17, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+            ForEach(ShootPackage.listing) { option in
+                Button {
+                    package = option
+                } label: {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: package == option ? "largecircle.fill.circle" : "circle")
+                            .foregroundStyle(package == option ? Theme.red : Theme.textTertiary)
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: 6) {
+                                Text(option.name)
+                                    .font(.cinema(15, weight: .semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                if option.isLuxury {
+                                    Pill(text: "Luxury", icon: "diamond.fill", color: Theme.ink, textColor: .white)
+                                }
+                            }
+                            Text(option.includes.joined(separator: " · "))
+                                .font(.cinema(12))
+                                .foregroundStyle(Theme.textSecondary)
+                                .multilineTextAlignment(.leading)
+                        }
+                        Spacer(minLength: 0)
+                        Text(option.priceLabel)
+                            .font(.cinema(15, weight: .bold))
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                    .cardStyle(padding: 12)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous).stroke(package == option ? Theme.red : .clear, lineWidth: 1.5))
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text("Add ons")
+                .font(.cinema(15, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+                .padding(.top, 4)
+            VStack(spacing: 0) {
+                ForEach(ShootAddOn.all) { addOn in
+                    Toggle(isOn: Binding(
+                        get: { addOnIDs.contains(addOn.id) },
+                        set: { on in if on { addOnIDs.insert(addOn.id) } else { addOnIDs.remove(addOn.id) } }
+                    )) {
+                        HStack {
+                            Text(addOn.name)
+                                .font(.cinema(14, weight: .medium))
+                                .foregroundStyle(Theme.textPrimary)
+                            Spacer()
+                            Text(addOn.priceLabel)
+                                .font(.cinema(13, weight: .semibold))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                    .tint(Theme.red)
+                    .padding(.vertical, 6)
+                    if addOn.perPhoto && addOnIDs.contains(addOn.id) {
+                        Stepper("\(stagedPhotos) photos to stage", value: $stagedPhotos, in: 1...40)
+                            .font(.cinema(13))
+                            .padding(.leading, 8)
+                    }
+                }
+            }
+            .cardStyle(padding: 12)
+        }
+    }
+
+    private var shooterPicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Shooter")
+                .font(.cinema(17, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    shooterChip(nil)
+                    ForEach(store.shooters(near: store.homeCity, skill: nil).prefix(8)) { shooter in
+                        shooterChip(shooter)
+                    }
+                }
+            }
+            Text(chosenShooter == nil ? "We'll match the best available Crew shooter for your date." : "We'll ask \(chosenShooter?.name ?? "") first. If they're booked we match a shooter at the same tier or higher.")
+                .font(.cinema(12))
+                .foregroundStyle(Theme.textTertiary)
+        }
+    }
+
+    private func shooterChip(_ shooter: Shooter?) -> some View {
+        let isOn = shooterID == shooter?.id
+        return Button {
+            shooterID = shooter?.id
+        } label: {
+            VStack(spacing: 6) {
+                if let shooter {
+                    Avatar(initials: shooter.initials, size: 44, paletteIndex: shooter.tier.paletteIndex)
+                    Text(shooter.name.split(separator: " ").first.map { String($0) } ?? shooter.name)
+                        .font(.cinema(12, weight: .semibold))
+                    Text("\(shooter.tier.title) · \(shooter.ratingLabel)")
+                        .font(.cinema(10))
+                        .foregroundStyle(Theme.textSecondary)
+                } else {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Theme.red)
+                        .frame(width: 44, height: 44)
+                        .background(Theme.redSoft, in: Circle())
+                    Text("Best match")
+                        .font(.cinema(12, weight: .semibold))
+                    Text("Any tier")
+                        .font(.cinema(10))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+            .foregroundStyle(Theme.textPrimary)
+            .frame(width: 92)
+            .padding(.vertical, 10)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(isOn ? Theme.red : Theme.stroke, lineWidth: isOn ? 1.5 : 1))
+        }
+        .buttonStyle(.plain)
     }
 
     private func confirmation(_ booking: Booking) -> some View {
