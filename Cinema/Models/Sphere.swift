@@ -28,7 +28,8 @@ struct PastClient: Identifiable, Hashable, Codable {
     }
 
     func yearsAtNextAnniversary(from now: Date = Date()) -> Int {
-        max(1, Calendar.current.dateComponents([.year], from: closeDate, to: nextAnniversary(from: now)).year ?? 1)
+        let calendar = Calendar.current
+        return max(1, calendar.component(.year, from: nextAnniversary(from: now)) - calendar.component(.year, from: closeDate))
     }
 
     var anniversaryLine: String {

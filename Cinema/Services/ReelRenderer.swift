@@ -50,8 +50,14 @@ enum ReelRenderer {
         var frame: Int64 = 0
 
         func append(_ draw: (CGContext) -> Void) async throws {
+            var waited = 0
             while !input.isReadyForMoreMediaData {
+                // A failed writer never becomes ready again, so stop instead of waiting forever.
+                if writer.status == .failed || writer.status == .cancelled || waited > 2_000 {
+                    throw writer.error ?? RenderError.writing
+                }
                 try await Task.sleep(nanoseconds: 5_000_000)
+                waited += 1
             }
             guard let pool = adaptor.pixelBufferPool else { throw RenderError.writing }
             var buffer: CVPixelBuffer?
@@ -79,6 +85,7 @@ enum ReelRenderer {
             if frame % 15 == 0 { progress(Double(frame) / Double(totalFrames)) }
         }
 
+        do {
         for (index, photo) in photos.enumerated() {
             guard let filled = aspectFill(photo) else { continue }
             let zoomIn = index % 2 == 0
@@ -97,6 +104,11 @@ enum ReelRenderer {
             try await append { context in
                 if let endCard { context.draw(endCard, in: CGRect(origin: .zero, size: size)) }
             }
+        }
+        } catch {
+            writer.cancelWriting()
+            try? FileManager.default.removeItem(at: url)
+            throw error
         }
 
         input.markAsFinished()

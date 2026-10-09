@@ -60,6 +60,8 @@ enum ReminderScheduler {
         content.body = "A quick note keeps you their agent for life. Your text is ready in #Cinema."
         content.sound = .default
         var parts = Calendar.current.dateComponents([.month, .day], from: client.closeDate)
+        // A Feb 29 closing would only fire in leap years. Use Feb 28 so it fires every year.
+        if parts.month == 2 && parts.day == 29 { parts.day = 28 }
         parts.hour = 9
         let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: true)
         try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "cinema.anniversary.\(client.id.uuidString)", content: content, trigger: trigger))
@@ -80,6 +82,11 @@ enum ReminderScheduler {
         content.sound = .default
         let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
         try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
+    /// Every scheduled #Cinema reminder, used when an account is deleted.
+    static func cancelAll() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
     static func cancel(ids: [String]) {

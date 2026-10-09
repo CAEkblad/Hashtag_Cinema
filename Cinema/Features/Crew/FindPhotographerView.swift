@@ -145,7 +145,7 @@ struct FindPhotographerView: View {
             .frame(height: 380)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-            if let pick = mapPick ?? results.first {
+            if let pick = results.first(where: { $0.id == mapPick?.id }) ?? results.first {
                 NavigationLink(value: Route.shooter(pick.id)) {
                     ShooterCard(shooter: pick, homeCity: city, isFavorite: store.favoriteShooterIDs.contains(pick.id))
                 }

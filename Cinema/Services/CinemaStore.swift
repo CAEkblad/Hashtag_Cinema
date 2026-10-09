@@ -1290,6 +1290,8 @@ final class CinemaStore {
     private static let keywordsKey = "cinema.keywords.v1"
 
     func saveKeywordRule(_ rule: KeywordRule) {
+        // One rule per keyword: saving a duplicate replaces the older one.
+        keywordRules.removeAll { $0.id != rule.id && $0.keyword.uppercased() == rule.keyword.uppercased() }
         if let index = keywordRules.firstIndex(where: { $0.id == rule.id }) {
             keywordRules[index] = rule
         } else {
@@ -1453,6 +1455,7 @@ final class CinemaStore {
         guard let d = deals.firstIndex(where: { $0.id == dealID }),
               let m = deals[d].milestones.firstIndex(where: { $0.id == milestoneID }) else { return }
         deals[d].milestones[m].isDone.toggle()
+        if deals[d].remindersOn { setDealReminders(dealID, on: true, quiet: true) }
     }
 
     func setMilestoneDate(_ date: Date, milestoneID: UUID, dealID: UUID) {
@@ -1460,10 +1463,10 @@ final class CinemaStore {
               let m = deals[d].milestones.firstIndex(where: { $0.id == milestoneID }) else { return }
         deals[d].milestones[m].dueDate = date
         deals[d].milestones.sort { $0.dueDate < $1.dueDate }
-        if deals[d].remindersOn { setDealReminders(dealID, on: true) }
+        if deals[d].remindersOn { setDealReminders(dealID, on: true, quiet: true) }
     }
 
-    func setDealReminders(_ dealID: UUID, on: Bool) {
+    func setDealReminders(_ dealID: UUID, on: Bool, quiet: Bool = false) {
         guard let d = deals.firstIndex(where: { $0.id == dealID }) else { return }
         deals[d].remindersOn = on
         let deal = deals[d]
@@ -1478,13 +1481,14 @@ final class CinemaStore {
             for milestone in deal.milestones where !milestone.isDone {
                 await ReminderScheduler.scheduleOnce(id: "cinema.deal.\(milestone.id.uuidString)", title: "Today: \(milestone.title)", body: deal.address, on: milestone.dueDate)
             }
-            self.showToast("Reminders set for every deadline")
+            if !quiet { self.showToast("Reminders set for every deadline") }
         }
     }
 
     func closeDeal(_ dealID: UUID) {
         guard let d = deals.firstIndex(where: { $0.id == dealID }) else { return }
         deals[d].isClosed = true
+        deals[d].closingDate = min(deals[d].closingDate, Date())
         for m in deals[d].milestones.indices { deals[d].milestones[m].isDone = true }
         let deal = deals[d]
         ReminderScheduler.cancel(ids: deal.milestones.map { "cinema.deal.\($0.id.uuidString)" })
@@ -1607,15 +1611,27 @@ final class CinemaStore {
             struct Empty: Codable {}
             _ = try? await client.invoke("delete-account", body: Empty(), as: Empty.self)
         }
-        for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey, Self.workKey, Self.planKey, Self.keywordsKey] {
-            UserDefaults.standard.removeObject(forKey: key)
-        }
-        ReminderScheduler.cancel()
+        ReminderScheduler.cancelAll()
         profile = MockData.profile
         brandKit = BrandKit()
         bioPage = BioPage()
         weekPlan = []
+        listings = []
+        deals = []
+        tours = []
+        leads = []
+        bookings = []
+        agentReferrals = []
+        shootMessages = []
+        buyers = []
+        pastClients = []
+        vendors = []
+        keywordRules = KeywordRule.defaults(city: homeCity.name)
         signOut()
+        // signOut saves the session, so clear storage after it.
+        for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey, Self.workKey, Self.planKey, Self.keywordsKey] {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
         showToast("Your account was deleted")
     }
 

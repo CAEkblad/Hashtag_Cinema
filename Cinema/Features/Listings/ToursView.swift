@@ -185,7 +185,7 @@ struct TourDetailView: View {
                     price = ""
                 }
                 .disabled(address.trimmingCharacters(in: .whitespaces).isEmpty)
-                let mine = store.listings.filter { listing in listing.status == .active && !tour.stops.contains { $0.address == listing.address } }
+                let mine = store.listings.filter { listing in listing.status == .active && !tour.stops.contains { $0.address.hasPrefix(listing.address) } }
                 ForEach(mine) { listing in
                     Button {
                         store.addStop(TourStop(address: "\(listing.address), \(listing.city?.name ?? "")", price: listing.priceLabel), to: tour.id)
