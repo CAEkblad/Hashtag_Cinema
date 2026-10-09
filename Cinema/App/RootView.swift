@@ -180,6 +180,12 @@ struct RouteDestination: View {
             GreetingsView()
         case .insights:
             InsightsView()
+        case .linkInBio:
+            LinkInBioView()
+        case .teleprompter:
+            TeleprompterScriptView()
+        case .captionWriter:
+            CaptionWriterView()
         }
     }
 

@@ -775,4 +775,7 @@ enum Route: Hashable {
     case hooks
     case greetings
     case insights
+    case linkInBio
+    case teleprompter
+    case captionWriter
 }

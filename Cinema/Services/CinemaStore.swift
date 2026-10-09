@@ -59,6 +59,9 @@ final class CinemaStore {
     // Weekly plan
     var weekPlan: [PlannedVideo] = []
 
+    // Link in bio
+    var bioPage = BioPage()
+
     // Brand kit and social proof
     var brandKit = BrandKit()
     var testimonials: [Testimonial] = [
@@ -98,6 +101,9 @@ final class CinemaStore {
         self.coach = coach
         restore()
         restoreBrandKit()
+        if let data = UserDefaults.standard.data(forKey: Self.bioKey), let page = try? JSONDecoder().decode(BioPage.self, from: data) {
+            bioPage = page
+        }
         ideas = localEngine.ideas(for: profile, count: 8, seed: Self.daySeed) + MockData.ideas
     }
 
@@ -1095,6 +1101,37 @@ final class CinemaStore {
         }
         rows.append(LeaderboardEntry(name: profile.name, market: homeCity.name, points: profile.points, isMe: true))
         return rows.sorted { $0.points > $1.points }
+    }
+
+    // MARK: Link in bio
+
+    private static let bioKey = "cinema.bio.v1"
+
+    func saveBioPage(_ page: BioPage) {
+        bioPage = page
+        if let data = try? JSONEncoder().encode(page) {
+            UserDefaults.standard.set(data, forKey: Self.bioKey)
+        }
+    }
+
+    // MARK: Account
+
+    /// Deletes the account. App Store rules require this to be in the app.
+    func deleteAccount() async {
+        if let client = SupabaseClient.shared {
+            struct Empty: Codable {}
+            _ = try? await client.invoke("delete-account", body: Empty(), as: Empty.self)
+        }
+        for key in [Self.sessionKey, Self.brandKey, Self.bioKey] {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        ReminderScheduler.cancel()
+        profile = MockData.profile
+        brandKit = BrandKit()
+        bioPage = BioPage()
+        weekPlan = []
+        signOut()
+        showToast("Your account was deleted")
     }
 
     // MARK: Brand kit

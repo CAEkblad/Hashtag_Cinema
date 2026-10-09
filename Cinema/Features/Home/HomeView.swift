@@ -218,6 +218,14 @@ struct HomeView: View {
                 quickActionLabel("Holiday posts", icon: "gift.fill")
             }
             .buttonStyle(.plain)
+            NavigationLink(value: Route.linkInBio) {
+                quickActionLabel("Link in bio", icon: "link.circle.fill")
+            }
+            .buttonStyle(.plain)
+            NavigationLink(value: Route.captionWriter) {
+                quickActionLabel("Captions", icon: "text.bubble.fill")
+            }
+            .buttonStyle(.plain)
             NavigationLink(value: Route.referrals) {
                 quickActionLabel("Invite agents", icon: "gift.fill")
             }

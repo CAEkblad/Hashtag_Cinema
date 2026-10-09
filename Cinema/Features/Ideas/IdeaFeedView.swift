@@ -23,6 +23,11 @@ struct IdeaFeedView: View {
                     createRow
                     scriptLink
                     hookLink
+                    NavigationLink(value: Route.teleprompter) {
+                        IconRow(icon: "text.viewfinder", title: "Teleprompter for your own script", subtitle: "Paste anything and film it")
+                            .cardStyle(padding: 14)
+                    }
+                    .buttonStyle(.plain)
                     posterLink
                     marketLink
                     categoryChips

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(CinemaStore.self) private var store
+    @State private var confirmDelete = false
 
     var body: some View {
         NavigationStack {
@@ -101,6 +102,15 @@ struct ProfileView: View {
                     NavigationLink(value: Route.testimonials) {
                         IconRow(icon: "heart.text.square.fill", title: "Testimonials", subtitle: "\(store.testimonials.count) saved. Ask, share, make videos")
                     }
+                    NavigationLink(value: Route.linkInBio) {
+                        IconRow(icon: "link.circle.fill", title: "Link in bio", subtitle: "One link for your Instagram and TikTok")
+                    }
+                    NavigationLink(value: Route.captionWriter) {
+                        IconRow(icon: "text.bubble.fill", title: "Caption writer", subtitle: "Captions and hashtags for \(store.homeCity.name)")
+                    }
+                    NavigationLink(value: Route.teleprompter) {
+                        IconRow(icon: "text.viewfinder", title: "Teleprompter", subtitle: "Film your own script")
+                    }
                     NavigationLink(value: Route.greetings) {
                         IconRow(icon: "gift.fill", title: "Holiday posts", subtitle: "Branded greetings, coming up first")
                     }
@@ -193,9 +203,32 @@ struct ProfileView: View {
                     }
                 }
                 .listRowBackground(Theme.surface)
+
+                Section {
+                    if let privacy = URL(string: "https://hashtagcinema.com/privacy") {
+                        Link("Privacy policy", destination: privacy)
+                    }
+                    if let terms = URL(string: "https://hashtagcinema.com/terms") {
+                        Link("Terms of use", destination: terms)
+                    }
+                    Button("Delete my account", role: .destructive) {
+                        confirmDelete = true
+                    }
+                } footer: {
+                    Text("Deleting removes your profile, ideas, clips, leads and settings. Stripe keeps its own payment receipts.")
+                }
+                .listRowBackground(Theme.surface)
             }
             .cinemaScreen()
             .navigationTitle("Me")
+            .confirmationDialog("Delete your #Cinema account?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("Delete account", role: .destructive) {
+                    Task { await store.deleteAccount() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This can't be undone.")
+            }
             .cinemaDestinations()
         }
     }
