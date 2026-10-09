@@ -14,6 +14,16 @@ struct LeadsView: View {
                 .listRowBackground(Color.clear)
             }
 
+            Section {
+                NavigationLink(value: Route.keywords) {
+                    IconRow(icon: "bubble.left.and.text.bubble.right.fill", title: "Auto DM keywords", subtitle: "\(store.keywordRules.filter(\.isOn).count) keywords turning comments into leads")
+                }
+                NavigationLink(value: Route.buyers) {
+                    IconRow(icon: "heart.text.square", title: "Buyer wishlists", subtitle: "Match buyers to your listings")
+                }
+            }
+            .listRowBackground(Theme.surface)
+
             if !store.leadsDueForFollowUp.isEmpty {
                 Section("Follow up today") {
                     ForEach(store.leadsDueForFollowUp) { lead in

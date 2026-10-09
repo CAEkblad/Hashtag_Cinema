@@ -222,6 +222,10 @@ struct RouteDestination: View {
             PhotoReelView()
         case .buyers:
             BuyersView()
+        case .businessPlan:
+            BusinessPlanView()
+        case .keywords:
+            KeywordsView()
         case .buyer(let id):
             BuyerDetailView(buyerID: id)
         case .deal(let id):

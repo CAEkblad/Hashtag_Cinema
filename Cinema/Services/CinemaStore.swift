@@ -73,6 +73,9 @@ final class CinemaStore {
     // Deals under contract
     var deals: [Deal] = CinemaStore.sampleDeals()
 
+    // Comment to DM keywords
+    var keywordRules: [KeywordRule] = []
+
     // Buyer wishlists
     var buyers: [BuyerWish] = [
         BuyerWish(name: "Dana and Chris Wolfe", cityNames: ["Tampa"], maxPrice: 1_400_000, minBeds: 3, mustHaves: [.pool], notes: "Moving from Chicago by spring. Want to be near South Tampa schools.")
@@ -125,6 +128,11 @@ final class CinemaStore {
         restoreBrandKit()
         restoreSphere()
         restoreWork()
+        if let data = UserDefaults.standard.data(forKey: Self.keywordsKey), let saved = try? JSONDecoder().decode([KeywordRule].self, from: data) {
+            keywordRules = saved
+        } else {
+            keywordRules = KeywordRule.defaults(city: homeCity.name)
+        }
         if shootMessages.isEmpty, let upcoming = bookings.first(where: { $0.date > Date() }) {
             shootMessages = [ShootMessage(bookingID: upcoming.id, fromAgent: false, text: "Hi! I'm confirmed for your shoot. Anything special about the home I should know?", date: Date().addingTimeInterval(-3_600), isRead: false)]
         }
@@ -1277,6 +1285,57 @@ final class CinemaStore {
         return tour.id
     }
 
+    // MARK: Comment to DM keywords
+
+    private static let keywordsKey = "cinema.keywords.v1"
+
+    func saveKeywordRule(_ rule: KeywordRule) {
+        if let index = keywordRules.firstIndex(where: { $0.id == rule.id }) {
+            keywordRules[index] = rule
+        } else {
+            keywordRules.append(rule)
+        }
+        saveKeywordRules()
+        showToast("\(rule.keyword) saved")
+    }
+
+    func deleteKeywordRule(_ id: UUID) {
+        keywordRules.removeAll { $0.id == id }
+        saveKeywordRules()
+    }
+
+    func setKeywordRule(_ id: UUID, on: Bool) {
+        guard let index = keywordRules.firstIndex(where: { $0.id == id }) else { return }
+        keywordRules[index].isOn = on
+        saveKeywordRules()
+    }
+
+    private func saveKeywordRules() {
+        if let data = try? JSONEncoder().encode(keywordRules) {
+            UserDefaults.standard.set(data, forKey: Self.keywordsKey)
+        }
+    }
+
+    // MARK: Business plan
+
+    private static let planKey = "cinema.plan.v1"
+
+    var businessPlan: BusinessPlan {
+        guard let data = UserDefaults.standard.data(forKey: Self.planKey),
+              let plan = try? JSONDecoder().decode(BusinessPlan.self, from: data) else {
+            var plan = BusinessPlan()
+            if let price = listings.first(where: { $0.status != .sold })?.price { plan.averagePrice = Double(min(price, 900_000)) }
+            return plan
+        }
+        return plan
+    }
+
+    func saveBusinessPlan(_ plan: BusinessPlan) {
+        if let data = try? JSONEncoder().encode(plan) {
+            UserDefaults.standard.set(data, forKey: Self.planKey)
+        }
+    }
+
     // MARK: Buyer wishlists
 
     func addBuyer(_ buyer: BuyerWish) {
@@ -1548,7 +1607,7 @@ final class CinemaStore {
             struct Empty: Codable {}
             _ = try? await client.invoke("delete-account", body: Empty(), as: Empty.self)
         }
-        for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey, Self.workKey] {
+        for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey, Self.workKey, Self.planKey, Self.keywordsKey] {
             UserDefaults.standard.removeObject(forKey: key)
         }
         ReminderScheduler.cancel()

@@ -61,6 +61,18 @@ struct ComposePostView: View {
                     Toggle("Turn comments into leads", isOn: $leadCapture)
                         .disabled(!leadCaptureAvailable)
                     if leadCapture {
+                        if !store.keywordRules.filter(\.isOn).isEmpty {
+                            Menu {
+                                ForEach(store.keywordRules.filter(\.isOn)) { rule in
+                                    Button(rule.keyword) {
+                                        keyword = rule.keyword
+                                        dmMessage = rule.fullMessage
+                                    }
+                                }
+                            } label: {
+                                Label("Use a saved keyword", systemImage: "text.badge.checkmark")
+                            }
+                        }
                         TextField("Keyword", text: $keyword)
                             .textInputAutocapitalization(.characters)
                         TextField("Auto DM message", text: $dmMessage, axis: .vertical)

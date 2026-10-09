@@ -62,6 +62,9 @@ struct ProfileView: View {
                 }
 
                 Section("Grow") {
+                    NavigationLink(value: Route.businessPlan) {
+                        IconRow(icon: "target", title: "Business plan", subtitle: "Your income goal, worked back to videos a week")
+                    }
                     NavigationLink(value: Route.insights) {
                         IconRow(icon: "chart.xyaxis.line", title: "Insights", subtitle: "Views, best days to post and top topics")
                     }
