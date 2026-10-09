@@ -80,6 +80,12 @@ struct ProfileView: View {
                 .listRowBackground(Theme.surface)
 
                 Section("Content") {
+                    NavigationLink(value: Route.listings) {
+                        IconRow(icon: "house.and.flag.fill", title: "My listings", subtitle: "\(store.listings.filter { $0.status != .sold }.count) active · marketing plans and open houses")
+                    }
+                    NavigationLink(value: Route.paymentCalculator) {
+                        IconRow(icon: "function", title: "Payment calculator", subtitle: "Shareable monthly payment graphic")
+                    }
                     NavigationLink(value: Route.posterMaker) {
                         IconRow(icon: "rectangle.portrait.on.rectangle.portrait.fill", title: "Poster maker", subtitle: "Just listed, just sold, open house and more")
                     }

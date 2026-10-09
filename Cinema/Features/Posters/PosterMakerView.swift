@@ -8,6 +8,7 @@ import UIKit
 struct PosterMakerView: View {
     @Environment(CinemaStore.self) private var store
     var prefill: OfficeAsset? = nil
+    var listing: Listing? = nil
 
     @State private var details = PosterDetails()
     @State private var style: PosterStyle = .classic
@@ -220,6 +221,19 @@ struct PosterMakerView: View {
         details.agentName = store.profile.name
         details.brokerage = store.myMarketCenter?.name ?? store.profile.brokerage
         details.cityLine = store.homeCity.displayName
+        if let listing {
+            details.address = listing.address
+            details.cityLine = listing.cityLine
+            details.price = String(listing.price)
+            details.beds = listing.beds
+            details.baths = listing.baths
+            details.squareFeet = listing.squareFeet.map { String($0) } ?? ""
+            details.kind = listing.status.posterKind
+            if let open = listing.nextOpenHouse, listing.status == .active {
+                details.kind = .openHouse
+                details.openHouseDate = open.start
+            }
+        }
         if let prefill {
             details.address = prefill.listingAddress ?? ""
             if let status = prefill.status?.lowercased(),
@@ -255,6 +269,10 @@ struct PosterMakerView: View {
         guard let image = renderer.uiImage else {
             store.showToast("Could not make the poster. Try again.")
             return
+        }
+        if let listing {
+            let task: MarketingTask = details.kind == .justSold ? .justSoldPoster : (details.kind == .comingSoon ? .comingSoonPoster : .justListedPoster)
+            store.markTask(task, for: listing.id)
         }
         store.savePoster(PosterItem(
             kind: details.kind,

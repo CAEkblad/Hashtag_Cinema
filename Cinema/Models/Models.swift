@@ -510,6 +510,8 @@ struct Lead: Identifiable, Hashable, Codable {
     var message: String
     var date: Date
     var status: LeadStatus
+    /// Set when the lead signed in at an open house instead of commenting.
+    var openHouseAddress: String? = nil
 }
 
 // MARK: - Challenges
@@ -755,4 +757,7 @@ enum Route: Hashable {
     case shooter(UUID)
     case joinCrew
     case crewDashboard
+    case listings
+    case listing(UUID)
+    case paymentCalculator
 }

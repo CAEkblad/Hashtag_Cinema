@@ -150,6 +150,12 @@ struct RouteDestination: View {
             JoinCrewView()
         case .crewDashboard:
             CrewDashboardView()
+        case .listings:
+            ListingsView()
+        case .listing(let id):
+            ListingDetailView(listingID: id)
+        case .paymentCalculator:
+            PaymentCalculatorView()
         }
     }
 

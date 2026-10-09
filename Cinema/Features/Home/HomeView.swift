@@ -185,7 +185,15 @@ struct HomeView: View {
                 quickActionLabel("Make a poster", icon: "rectangle.portrait.on.rectangle.portrait.fill")
             }
             .buttonStyle(.plain)
+            NavigationLink(value: Route.listings) {
+                quickActionLabel("My listings", icon: "house.and.flag.fill")
+            }
+            .buttonStyle(.plain)
             quickAction("My library", icon: "film.stack") { selectedTab = .library }
+            NavigationLink(value: Route.paymentCalculator) {
+                quickActionLabel("Payment calculator", icon: "function")
+            }
+            .buttonStyle(.plain)
         }
     }
 

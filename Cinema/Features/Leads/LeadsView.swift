@@ -7,7 +7,7 @@ struct LeadsView: View {
         List {
             Section {
                 HStack(spacing: 12) {
-                    StatTile(value: "\(store.leads.count)", label: "Leads from video", icon: "person.badge.plus")
+                    StatTile(value: "\(store.leads.count)", label: "Leads", icon: "person.badge.plus")
                     StatTile(value: "\(store.leads.filter { $0.status == .booked }.count)", label: "Showings booked", icon: "calendar.badge.checkmark")
                 }
                 .listRowInsets(EdgeInsets())
@@ -19,9 +19,9 @@ struct LeadsView: View {
                     LeadRow(lead: lead)
                 }
             } header: {
-                Text("Comment-to-DM leads")
+                Text("Comment-to-DM and open house leads")
             } footer: {
-                Text("When someone comments your keyword on Instagram or Facebook, they get an instant DM and land here. Turn it on when you post.")
+                Text("When someone comments your keyword on Instagram or Facebook, they get an instant DM and land here. Open house sign-ins land here too.")
             }
             .listRowBackground(Theme.surface)
         }
@@ -37,13 +37,13 @@ struct LeadRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: lead.platform.icon)
+                Image(systemName: lead.openHouseAddress == nil ? lead.platform.icon : "door.left.hand.open")
                     .foregroundStyle(Theme.red)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(lead.name)
                         .font(.cinema(15, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("\(lead.handle) · commented \(lead.keyword) · \(lead.date.relative)")
+                    Text(lead.openHouseAddress == nil ? "\(lead.handle) · commented \(lead.keyword) · \(lead.date.relative)" : "\(lead.handle) · signed in at open house · \(lead.date.relative)")
                         .font(.cinema(12))
                         .foregroundStyle(Theme.textTertiary)
                         .lineLimit(1)
@@ -60,7 +60,7 @@ struct LeadRow: View {
             Text("\u{201C}\(lead.message)\u{201D}")
                 .font(.cinema(14))
                 .foregroundStyle(Theme.textSecondary)
-            Text("From: \(lead.sourceClip)")
+            Text("From: \(lead.openHouseAddress ?? lead.sourceClip)")
                 .font(.cinema(12))
                 .foregroundStyle(Theme.textTertiary)
         }

@@ -1,0 +1,355 @@
+import SwiftUI
+import UIKit
+import CoreImage.CIFilterBuiltins
+
+struct ListingDetailView: View {
+    @Environment(CinemaStore.self) private var store
+    let listingID: UUID
+
+    @State private var tone: ListingCopywriter.Tone = .warm
+    @State private var poster: Listing?
+    @State private var showSchedule = false
+    @State private var openHouseDate = Calendar.current.date(bySettingHour: 13, minute: 0, second: 0, of: Date().addingTimeInterval(86_400 * 2)) ?? Date()
+    @State private var openHouseHours = 3
+    @State private var kiosk: OpenHouse?
+    @State private var showCalculator = false
+
+    var body: some View {
+        if let listing = store.listing(listingID) {
+            content(listing)
+        } else {
+            EmptyStateView(title: "Listing not found", message: "It may have been removed.", icon: "house")
+                .cinemaScreen()
+        }
+    }
+
+    private func content(_ listing: Listing) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                header(listing)
+                statusPicker(listing)
+                checklist(listing)
+                descriptionCard(listing)
+                openHouses(listing)
+                Button {
+                    showCalculator = true
+                } label: {
+                    IconRow(icon: "function", title: "Payment calculator", subtitle: "What \(listing.priceLabel) costs per month")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(Theme.gutter)
+        }
+        .cinemaScreen()
+        .navigationTitle(listing.address)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(item: $poster) { item in
+            PosterMakerView(listing: item)
+        }
+        .navigationDestination(isPresented: $showCalculator) {
+            PaymentCalculatorView(startingPrice: Double(listing.price))
+        }
+        .fullScreenCover(item: $kiosk) { openHouse in
+            OpenHouseKioskView(listing: listing, openHouse: openHouse)
+        }
+        .sheet(isPresented: $showSchedule) {
+            NavigationStack {
+                Form {
+                    DatePicker("Starts", selection: $openHouseDate, in: Date()...)
+                    Stepper("\(openHouseHours) hours", value: $openHouseHours, in: 1...6)
+                }
+                .navigationTitle("Schedule open house")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showSchedule = false } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Schedule") {
+                            store.scheduleOpenHouse(for: listing.id, start: openHouseDate, hours: openHouseHours)
+                            showSchedule = false
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
+    }
+
+    // MARK: Sections
+
+    private func header(_ listing: Listing) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ZStack(alignment: .bottomLeading) {
+                Theme.gradient(listing.paletteIndex)
+                Image(systemName: listing.symbol)
+                    .font(.system(size: 54, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Pill(text: listing.status.title, icon: listing.status.icon, color: .white, textColor: Theme.ink)
+                    .padding(12)
+            }
+            .frame(height: 180)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
+
+            Text(listing.priceLabel)
+                .font(.cinema(28, weight: .bold))
+                .foregroundStyle(Theme.textPrimary)
+            Text("\(listing.address), \(listing.cityLine)")
+                .font(.cinema(15, weight: .medium))
+                .foregroundStyle(Theme.textPrimary)
+            Text(listing.specsLine)
+                .font(.cinema(13))
+                .foregroundStyle(Theme.textSecondary)
+            if !listing.features.isEmpty {
+                FlowLayout(spacing: 6) {
+                    ForEach(listing.features) { feature in
+                        Pill(text: feature.title)
+                    }
+                }
+            }
+            HStack(spacing: 10) {
+                StatTile(value: "\(Int(listing.progress * 100))%", label: "Marketing done", icon: "checklist")
+                StatTile(value: "\(listing.visitorCount)", label: "Open house visitors", icon: "person.2.fill")
+                StatTile(value: "\(store.leads.filter { $0.openHouseAddress == listing.address || $0.sourceClip == listing.address }.count)", label: "Leads", icon: "person.badge.plus")
+            }
+        }
+    }
+
+    private func statusPicker(_ listing: Listing) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Picker("Status", selection: Binding(get: { listing.status }, set: { store.setStatus($0, for: listing.id) })) {
+                ForEach(ListingStatus.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            Button {
+                poster = listing
+            } label: {
+                Label("Make the \(listing.status.posterKind.shortTitle.lowercased()) poster", systemImage: "rectangle.portrait.on.rectangle.portrait.fill")
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+    }
+
+    private func checklist(_ listing: Listing) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Marketing plan")
+            VStack(spacing: 0) {
+                ForEach(listing.tasks) { task in
+                    let isDone = listing.done.contains(task)
+                    HStack(spacing: 12) {
+                        Button {
+                            store.toggleTask(task, for: listing.id)
+                        } label: {
+                            Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: 22))
+                                .foregroundStyle(isDone ? Theme.success : Theme.textTertiary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(isDone ? "Mark not done" : "Mark done")
+                        Label(task.title, systemImage: task.icon)
+                            .font(.cinema(15, weight: .medium))
+                            .foregroundStyle(isDone ? Theme.textSecondary : Theme.textPrimary)
+                            .labelStyle(TintedIconLabelStyle())
+                        Spacer()
+                        action(for: task, listing: listing)
+                    }
+                    .padding(.vertical, 9)
+                    Divider()
+                }
+            }
+            .cardStyle(padding: 12)
+        }
+    }
+
+    @ViewBuilder
+    private func action(for task: MarketingTask, listing: Listing) -> some View {
+        switch task {
+        case .bookShoot:
+            NavigationLink(value: Route.bookings) { actionLabel("Book") }
+        case .comingSoonPoster, .justListedPoster, .justSoldPoster:
+            Button { poster = listing } label: { actionLabel("Make") }
+        case .openHouse:
+            Button { showSchedule = true } label: { actionLabel("Plan") }
+        case .description:
+            Button {
+                UIPasteboard.general.string = listing.description.isEmpty ? ListingCopywriter.description(for: listing, tone: tone) : listing.description
+                store.markTask(.description, for: listing.id)
+                store.showToast("Description copied")
+            } label: { actionLabel("Copy") }
+        case .socialPost:
+            Button {
+                UIPasteboard.general.string = ListingCopywriter.socialCaption(for: listing)
+                store.showToast("Caption copied. Post it from your Library.")
+            } label: { actionLabel("Caption") }
+        case .listingVideo, .website:
+            EmptyView()
+        }
+    }
+
+    private func actionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.cinema(12, weight: .semibold))
+            .foregroundStyle(Theme.red)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Theme.redSoft, in: Capsule())
+    }
+
+    private func descriptionCard(_ listing: Listing) -> some View {
+        let text = ListingCopywriter.description(for: listing, tone: tone)
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Listing description")
+            Picker("Tone", selection: $tone) {
+                ForEach(ListingCopywriter.Tone.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            Text(text)
+                .font(.cinema(14))
+                .foregroundStyle(Theme.textPrimary)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+                .cardStyle()
+            HStack(spacing: 10) {
+                Button {
+                    var updated = listing
+                    updated.description = text
+                    updated.done.insert(.description)
+                    store.updateListing(updated)
+                    UIPasteboard.general.string = text
+                    store.showToast("Saved and copied")
+                } label: {
+                    Label("Use this", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                ShareLink(item: text) {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(SecondaryButtonStyle(fullWidth: false))
+            }
+            Text("Describes the home and area only, so it stays fair housing friendly. Check facts before posting to the MLS.")
+                .font(.cinema(11))
+                .foregroundStyle(Theme.textTertiary)
+        }
+    }
+
+    private func openHouses(_ listing: Listing) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Open houses", actionTitle: "Schedule") { showSchedule = true }
+            if listing.openHouses.isEmpty {
+                Text("Schedule one and you get a QR sign-in sheet. Every visitor lands in Leads with a follow up text ready to send.")
+                    .font(.cinema(14))
+                    .foregroundStyle(Theme.textSecondary)
+                    .cardStyle()
+            }
+            ForEach(listing.openHouses) { openHouse in
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(openHouse.label)
+                                .font(.cinema(15, weight: .semibold))
+                                .foregroundStyle(Theme.textPrimary)
+                            Text("\(openHouse.visitors.count) signed in")
+                                .font(.cinema(12))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        Spacer()
+                        QRCodeView(text: "https://hashtagcinema.com/oh/\(openHouse.id.uuidString.prefix(8).lowercased())")
+                            .frame(width: 72, height: 72)
+                    }
+                    Button {
+                        kiosk = openHouse
+                    } label: {
+                        Label("Start sign-in on this phone", systemImage: "ipad.and.iphone")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    Text("Or print the QR code so visitors sign in on their own phones (live once the backend is on).")
+                        .font(.cinema(11))
+                        .foregroundStyle(Theme.textTertiary)
+
+                    ForEach(openHouse.visitors) { visitor in
+                        VisitorRow(visitor: visitor, listing: listing, agentName: store.profile.name)
+                    }
+                }
+                .cardStyle()
+            }
+        }
+    }
+}
+
+struct VisitorRow: View {
+    let visitor: OpenHouseVisitor
+    let listing: Listing
+    let agentName: String
+
+    private var message: String { ListingCopywriter.followUp(for: visitor, listing: listing, agentName: agentName) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(visitor.name)
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text([visitor.phone, visitor.email].filter { !$0.isEmpty }.joined(separator: " · "))
+                        .font(.cinema(11))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Spacer()
+                if visitor.preapproved { Pill(text: "Pre-approved", color: Theme.success.opacity(0.15), textColor: Theme.success) }
+                if visitor.workingWithAgent { Pill(text: "Has agent") }
+            }
+            HStack(spacing: 8) {
+                if let url = smsURL {
+                    Link(destination: url) {
+                        Label("Text follow up", systemImage: "message.fill")
+                            .font(.cinema(12, weight: .semibold))
+                    }
+                    .foregroundStyle(Theme.red)
+                }
+                Button {
+                    UIPasteboard.general.string = message
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                        .font(.cinema(12, weight: .semibold))
+                }
+                .foregroundStyle(Theme.textSecondary)
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private var smsURL: URL? {
+        let digits = visitor.phone.filter { $0.isNumber || $0 == "+" }
+        guard !digits.isEmpty, let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return nil }
+        return URL(string: "sms:\(digits)&body=\(body)")
+    }
+}
+
+/// Simple QR code from text with Core Image.
+struct QRCodeView: View {
+    let text: String
+
+    var body: some View {
+        if let image = Self.make(text) {
+            Image(uiImage: image)
+                .interpolation(.none)
+                .resizable()
+                .scaledToFit()
+                .accessibilityLabel("Open house sign-in QR code")
+        } else {
+            Image(systemName: "qrcode")
+                .resizable()
+                .scaledToFit()
+        }
+    }
+
+    static func make(_ text: String) -> UIImage? {
+        let filter = CIFilter.qrCodeGenerator()
+        filter.message = Data(text.utf8)
+        filter.correctionLevel = "M"
+        guard let output = filter.outputImage?.transformed(by: CGAffineTransform(scaleX: 8, y: 8)) else { return nil }
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(output, from: output.extent) else { return nil }
+        return UIImage(cgImage: cgImage)
+    }
+}

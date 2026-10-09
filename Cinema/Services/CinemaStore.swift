@@ -39,6 +39,9 @@ final class CinemaStore {
     var officeAssets = MockData.officeAssets
     var posters: [PosterItem] = []
 
+    // Listings
+    var listings = MockData.listings
+
     // #Cinema Crew
     var shooters = MockData.shooters
     var favoriteShooterIDs: Set<UUID> = []
@@ -714,6 +717,75 @@ final class CinemaStore {
             paletteIndex: 0,
             imageData: poster.imageData
         ))
+    }
+
+    // MARK: Listings
+
+    func listing(_ id: UUID) -> Listing? { listings.first { $0.id == id } }
+
+    @discardableResult
+    func addListing(_ listing: Listing) -> Listing {
+        var new = listing
+        new.paletteIndex = listings.count % Theme.palettes.count
+        new.description = ListingCopywriter.description(for: new, tone: .warm)
+        listings.insert(new, at: 0)
+        showToast("Listing added with a marketing plan")
+        return new
+    }
+
+    func updateListing(_ listing: Listing) {
+        guard let index = listings.firstIndex(where: { $0.id == listing.id }) else { return }
+        listings[index] = listing
+    }
+
+    func setStatus(_ status: ListingStatus, for listingID: UUID) {
+        guard let index = listings.firstIndex(where: { $0.id == listingID }) else { return }
+        listings[index].status = status
+        showToast("\(status.title). Your \(status.posterKind.shortTitle.lowercased()) poster is ready to make.")
+    }
+
+    func toggleTask(_ task: MarketingTask, for listingID: UUID) {
+        guard let index = listings.firstIndex(where: { $0.id == listingID }) else { return }
+        if listings[index].done.contains(task) {
+            listings[index].done.remove(task)
+        } else {
+            listings[index].done.insert(task)
+            profile.points += 10
+        }
+    }
+
+    func markTask(_ task: MarketingTask, for listingID: UUID) {
+        guard let index = listings.firstIndex(where: { $0.id == listingID }) else { return }
+        listings[index].done.insert(task)
+    }
+
+    func scheduleOpenHouse(for listingID: UUID, start: Date, hours: Int) {
+        guard let index = listings.firstIndex(where: { $0.id == listingID }) else { return }
+        let end = Calendar.current.date(byAdding: .hour, value: hours, to: start) ?? start
+        listings[index].openHouses.append(OpenHouse(start: start, end: end))
+        listings[index].openHouses.sort { $0.start < $1.start }
+        listings[index].done.insert(.openHouse)
+        showToast("Open house scheduled. Make the poster next.")
+    }
+
+    /// Open house sign in. The visitor also becomes a lead.
+    func signIn(_ visitor: OpenHouseVisitor, openHouseID: UUID, listingID: UUID) {
+        guard let l = listings.firstIndex(where: { $0.id == listingID }),
+              let o = listings[l].openHouses.firstIndex(where: { $0.id == openHouseID }) else { return }
+        listings[l].openHouses[o].visitors.append(visitor)
+        let detail = [visitor.preapproved ? "Pre-approved" : nil, visitor.workingWithAgent ? "Has an agent" : nil, visitor.timeline.isEmpty ? nil : "Timeline: \(visitor.timeline)"]
+            .compactMap { $0 }.joined(separator: ". ")
+        leads.insert(Lead(
+            name: visitor.name,
+            handle: visitor.phone.isEmpty ? visitor.email : visitor.phone,
+            platform: .facebook,
+            keyword: "OPEN",
+            sourceClip: listings[l].address,
+            message: detail.isEmpty ? "Signed in at the open house" : detail,
+            date: Date(),
+            status: .new,
+            openHouseAddress: listings[l].address
+        ), at: 0)
     }
 
     // MARK: Find a photographer

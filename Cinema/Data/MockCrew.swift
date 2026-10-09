@@ -115,3 +115,28 @@ extension MockData {
         CrewJobOffer(title: "Agent brand video", address: "#Cinema studio", date: day(3, hour: 10), pay: 250, bonus: 10, skill: .brandVideo)
     ]
 }
+
+extension MockData {
+    static let listings: [Listing] = [
+        Listing(
+            address: "4821 W Bayshore Blvd", cityID: "tampa-hillsborough", price: 1_895_000, beds: 4, baths: 4.5, squareFeet: 4_120,
+            status: .active, features: [.waterfront, .pool, .renovatedKitchen, .impactWindows, .homeOffice, .garage],
+            listedAt: day(-6), symbol: "house.fill", paletteIndex: 2,
+            done: [.bookShoot, .listingVideo, .justListedPoster, .description],
+            openHouses: [OpenHouse(start: day(2, hour: 13), end: day(2, hour: 16))],
+            description: "Welcome home to 4821 W Bayshore Blvd. Water views from the moment you walk in, a sparkling pool, a renovated kitchen and impact windows."
+        ),
+        Listing(
+            address: "211 Davis Blvd", cityID: "tampa-hillsborough", price: 1_250_000, beds: 3, baths: 3, squareFeet: 2_680,
+            status: .comingSoon, features: [.pool, .lanai, .newRoof, .openFloorPlan],
+            listedAt: day(-1), symbol: "house.lodge.fill", paletteIndex: 4,
+            done: [.bookShoot]
+        ),
+        Listing(
+            address: "10230 Brentford Dr", cityID: "tampa-hillsborough", price: 615_000, beds: 4, baths: 2.5, squareFeet: 2_410,
+            status: .sold, features: [.pool, .gated, .garage],
+            listedAt: day(-40), symbol: "checkmark.seal.fill", paletteIndex: 0,
+            done: [.bookShoot, .justListedPoster, .socialPost, .description, .listingVideo]
+        )
+    ]
+}
