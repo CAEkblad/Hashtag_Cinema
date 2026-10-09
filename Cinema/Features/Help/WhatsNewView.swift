@@ -27,6 +27,7 @@ struct WhatsNewView: View {
         Item(icon: "arrow.triangle.branch", title: "Agent referrals", detail: "Send clients to trusted agents across Florida and track the fee.", route: .referralNetwork),
         Item(icon: "target", title: "Business plan", detail: "Your income goal, worked back to videos a week.", route: .businessPlan),
         Item(icon: "quote.bubble.fill", title: "What to say when", detail: "Honest answers to the 12 objections you hear most, each one a video in a tap.", route: .objections),
+        Item(icon: "map.fill", title: "My farm", detail: "Own a neighborhood: log monthly touches and get video ideas for it.", route: .farm),
         Item(icon: "waveform", title: "Siri and Shortcuts", detail: "Say \"Log mileage in #Cinema\", \"What's my video idea in #Cinema\" or \"Check my leads in #Cinema\".", route: .expenses),
         Item(icon: "square.grid.2x2.fill", title: "All tools", detail: "Everything in one place, grouped by what you're doing.", route: .tools)
     ]

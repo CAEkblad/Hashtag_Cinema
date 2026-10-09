@@ -808,6 +808,7 @@ enum Route: Hashable {
     case listingNetSheet(UUID)
     case listingCalculator(UUID)
     case objections
+    case farm
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

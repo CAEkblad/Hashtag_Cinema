@@ -60,6 +60,7 @@ enum ToolCatalog {
         Tool(title: "Brand kit", keywords: "logo headshot color", icon: "paintpalette.fill", route: .brandKit, group: .brand),
         Tool(title: "Link in bio", keywords: "bio page instagram", icon: "link.circle.fill", route: .linkInBio, group: .brand),
         Tool(title: "My market", keywords: "city neighborhoods local", icon: "mappin.and.ellipse", route: .market, group: .brand),
+        Tool(title: "My farm", keywords: "farming neighborhood geographic postcards door knock", icon: "map.fill", route: .farm, group: .brand),
         Tool(title: "Moving to Florida guide", keywords: "relocation out of state buyers homestead pdf", icon: "airplane.arrival", route: .relocationGuide, group: .brand),
         Tool(title: "Insights", keywords: "analytics views stats", icon: "chart.xyaxis.line", route: .insights, group: .brand),
         Tool(title: "Mileage and expenses", keywords: "tax deduction miles receipts accountant csv", icon: "car.fill", route: .expenses, group: .grow),

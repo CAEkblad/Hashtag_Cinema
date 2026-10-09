@@ -73,6 +73,9 @@ final class CinemaStore {
     // Deals under contract
     var deals: [Deal] = CinemaStore.sampleDeals()
 
+    // Farm area
+    var farm: FarmArea? = (try? JSONDecoder().decode(FarmArea.self, from: UserDefaults.standard.data(forKey: "cinema.farm.v1") ?? Data()))
+
     // Mileage and expenses
     var expenses: [BusinessExpense] = (try? JSONDecoder().decode([BusinessExpense].self, from: UserDefaults.standard.data(forKey: "cinema.expenses.v1") ?? Data())) ?? []
     var mileageRate: Double = UserDefaults.standard.object(forKey: "cinema.mileageRate") as? Double ?? 0.70
@@ -1295,6 +1298,33 @@ final class CinemaStore {
         return tour.id
     }
 
+    // MARK: Farm area
+
+    func setFarm(cityID: String, neighborhood: String, homes: Int, goal: Int) {
+        var updated = farm?.neighborhood == neighborhood ? (farm ?? FarmArea(cityID: cityID, neighborhood: neighborhood)) : FarmArea(cityID: cityID, neighborhood: neighborhood)
+        updated.cityID = cityID
+        updated.homes = homes
+        updated.monthlyGoal = goal
+        farm = updated
+        saveFarm()
+        showToast("\(neighborhood) is your farm")
+    }
+
+    func logFarmTouch(_ kind: FarmArea.TouchKind) {
+        guard var current = farm else { return }
+        current.touches.append(FarmArea.Touch(date: Date(), kind: kind))
+        farm = current
+        saveFarm()
+        let count = current.touches(inMonthOf: Date()).count
+        showToast(count == current.monthlyGoal ? "Monthly goal hit in \(current.neighborhood)!" : "\(kind.title) logged. \(count) this month")
+    }
+
+    private func saveFarm() {
+        if let farm, let data = try? JSONEncoder().encode(farm) {
+            UserDefaults.standard.set(data, forKey: "cinema.farm.v1")
+        }
+    }
+
     // MARK: Mileage and expenses
 
     /// The running store, so Siri shortcuts can reach it.
@@ -1718,7 +1748,8 @@ final class CinemaStore {
         savedScripts = []
         announcements = []
         connectedPlatforms = []
-        for key in ["cinema.expenses.v1", "cinema.mileageRate", "cinema.announcements.dismissed", "cinema.announcements.v1"] {
+        farm = nil
+        for key in ["cinema.expenses.v1", "cinema.mileageRate", "cinema.announcements.dismissed", "cinema.announcements.v1", "cinema.farm.v1"] {
             UserDefaults.standard.removeObject(forKey: key)
         }
         signOut()
