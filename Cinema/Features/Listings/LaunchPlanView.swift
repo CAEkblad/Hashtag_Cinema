@@ -5,6 +5,9 @@ struct LaunchPlanView: View {
     @Environment(CinemaStore.self) private var store
     let listingID: UUID
     @State private var remindersOn = false
+    @State private var didLoad = false
+
+    private var remindersKey: String { "cinema.launch.reminders.\(listingID.uuidString)" }
 
     enum Tool {
         case bookings, poster, shotList, reel, neighbors, openHouse, sellerReport, netSheet
@@ -64,13 +67,14 @@ struct LaunchPlanView: View {
                         var updated = listing
                         updated.listedAt = newDate
                         store.updateListing(updated)
-                        if remindersOn { scheduleReminders(updated) }
+                        if remindersOn { scheduleReminders(updated, announce: false) }
                     }), displayedComponents: .date)
                     .font(.cinema(15, weight: .semibold))
                     ProgressView(value: Double(doneCount), total: Double(max(trackable, 1)))
                         .tint(Theme.red)
                     Toggle("Remind me the morning of each step", isOn: Binding(get: { remindersOn }, set: { on in
                         remindersOn = on
+                        UserDefaults.standard.set(on, forKey: remindersKey)
                         if on { scheduleReminders(listing) } else { cancelReminders(listing) }
                     }))
                     .font(.cinema(14))
@@ -87,6 +91,11 @@ struct LaunchPlanView: View {
         .cinemaScreen()
         .navigationTitle("Launch plan")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            guard !didLoad else { return }
+            didLoad = true
+            remindersOn = UserDefaults.standard.bool(forKey: remindersKey)
+        }
     }
 
     private func stepRow(_ step: Step, _ listing: Listing) -> some View {
@@ -98,6 +107,7 @@ struct LaunchPlanView: View {
                 if let task = step.task {
                     Button {
                         store.toggleTask(task, for: listing.id)
+                        if remindersOn, let updated = store.listing(listing.id) { scheduleReminders(updated, announce: false) }
                     } label: {
                         Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
                             .font(.system(size: 24))
@@ -143,11 +153,11 @@ struct LaunchPlanView: View {
         case .bookings:
             NavigationLink(value: Route.bookings) { label }
         case .poster:
-            NavigationLink { PosterMakerView(listing: listing) } label: { label }
+            NavigationLink(value: Route.listingPoster(listing.id)) { label }
         case .shotList:
-            NavigationLink { ShotListView(listing: listing) } label: { label }
+            NavigationLink(value: Route.shotList(listing.id)) { label }
         case .reel:
-            NavigationLink { PhotoReelView(listing: listing) } label: { label }
+            NavigationLink(value: Route.listingReel(listing.id)) { label }
         case .neighbors:
             if let openHouse = listing.openHouses.first {
                 ShareLink(item: ListingCopywriter.neighborInvite(for: listing, openHouse: openHouse, agentName: store.profile.name)) { label }
@@ -161,7 +171,7 @@ struct LaunchPlanView: View {
         case .sellerReport:
             NavigationLink(value: Route.sellerReport(listing.id)) { label }
         case .netSheet:
-            NavigationLink { NetSheetView(startingPrice: Double(listing.price), address: listing.address) } label: { label }
+            NavigationLink(value: Route.listingNetSheet(listing.id)) { label }
         }
     }
 
@@ -179,10 +189,11 @@ struct LaunchPlanView: View {
     }
 
     private func reminderID(_ step: Step, _ listing: Listing) -> String {
-        "cinema.launch.\(listing.id.uuidString).\(step.offset).\(step.title.prefix(8))"
+        let index = Self.steps.firstIndex { $0.title == step.title } ?? 0
+        return "cinema.launch.\(listing.id.uuidString).\(index)"
     }
 
-    private func scheduleReminders(_ listing: Listing) {
+    private func scheduleReminders(_ listing: Listing, announce: Bool = true) {
         cancelReminders(listing)
         Task {
             guard await ReminderScheduler.requestPermission() else {
@@ -193,7 +204,7 @@ struct LaunchPlanView: View {
                 if let task = step.task, listing.done.contains(task) { continue }
                 await ReminderScheduler.scheduleOnce(id: reminderID(step, listing), title: "Today: \(step.title)", body: listing.address, on: date(step, listing))
             }
-            store.showToast("Reminders set for the launch")
+            if announce { store.showToast("Reminders set for the launch") }
         }
     }
 

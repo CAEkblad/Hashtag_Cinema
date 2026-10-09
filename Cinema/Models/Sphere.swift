@@ -19,7 +19,7 @@ struct PastClient: Identifiable, Hashable, Codable {
         let calendar = Calendar.current
         let parts = calendar.dateComponents([.month, .day], from: closeDate)
         let start = max(calendar.startOfDay(for: now).addingTimeInterval(-1), closeDate)
-        return calendar.nextDate(after: start, matching: parts, matchingPolicy: .nextTimePreservingSmallerComponents) ?? closeDate
+        return calendar.nextDate(after: start, matching: parts, matchingPolicy: .previousTimePreservingSmallerComponents) ?? closeDate
     }
 
     func daysUntilAnniversary(from now: Date = Date()) -> Int {

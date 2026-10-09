@@ -96,7 +96,7 @@ struct ComposeAnnouncementView: View {
                         store.postAnnouncement(title: title.trimmingCharacters(in: .whitespaces), body: message.trimmingCharacters(in: .whitespacesAndNewlines))
                         dismiss()
                     }
-                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty || message.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
         }

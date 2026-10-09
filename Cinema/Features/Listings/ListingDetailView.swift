@@ -7,16 +7,11 @@ struct ListingDetailView: View {
     let listingID: UUID
 
     @State private var tone: ListingCopywriter.Tone = .warm
-    @State private var poster: Listing?
     @State private var showSchedule = false
     @State private var openHouseDate = Calendar.current.date(bySettingHour: 13, minute: 0, second: 0, of: Date().addingTimeInterval(86_400 * 2)) ?? Date()
     @State private var openHouseHours = 3
     @State private var kiosk: OpenHouse?
-    @State private var showCalculator = false
     @State private var showFlyer = false
-    @State private var showNetSheet = false
-    @State private var showReel = false
-    @State private var showShots = false
 
     var body: some View {
         if let listing = store.listing(listingID) {
@@ -47,23 +42,17 @@ struct ListingDetailView: View {
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
-                Button {
-                    showNetSheet = true
-                } label: {
+                NavigationLink(value: Route.listingNetSheet(listing.id)) {
                     IconRow(icon: "dollarsign.circle.fill", title: "Seller net sheet", subtitle: "What your seller walks away with")
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
-                Button {
-                    showShots = true
-                } label: {
+                NavigationLink(value: Route.shotList(listing.id)) {
                     IconRow(icon: "video.badge.checkmark", title: "Shot list to film it yourself", subtitle: "Built from this home's features, with a voiceover")
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
-                Button {
-                    showReel = true
-                } label: {
+                NavigationLink(value: Route.listingReel(listing.id)) {
                     IconRow(icon: "film.stack.fill", title: "Make a photo reel", subtitle: "Turn listing photos into a vertical video")
                         .cardStyle()
                 }
@@ -75,9 +64,7 @@ struct ListingDetailView: View {
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
-                Button {
-                    showCalculator = true
-                } label: {
+                NavigationLink(value: Route.listingCalculator(listing.id)) {
                     IconRow(icon: "function", title: "Payment calculator", subtitle: "What \(listing.priceLabel) costs per month")
                         .cardStyle()
                 }
@@ -88,21 +75,6 @@ struct ListingDetailView: View {
         .cinemaScreen()
         .navigationTitle(listing.address)
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(item: $poster) { item in
-            PosterMakerView(listing: item)
-        }
-        .navigationDestination(isPresented: $showCalculator) {
-            PaymentCalculatorView(startingPrice: Double(listing.price))
-        }
-        .navigationDestination(isPresented: $showShots) {
-            ShotListView(listing: listing)
-        }
-        .navigationDestination(isPresented: $showReel) {
-            PhotoReelView(listing: listing)
-        }
-        .navigationDestination(isPresented: $showNetSheet) {
-            NetSheetView(startingPrice: Double(listing.price), address: listing.address)
-        }
         .sheet(isPresented: $showFlyer) {
             FlyerView(listing: listing)
         }
@@ -177,9 +149,7 @@ struct ListingDetailView: View {
                 ForEach(ListingStatus.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
-            Button {
-                poster = listing
-            } label: {
+            NavigationLink(value: Route.listingPoster(listing.id)) {
                 Label("Make the \(listing.status.posterKind.shortTitle.lowercased()) poster", systemImage: "rectangle.portrait.on.rectangle.portrait.fill")
             }
             .buttonStyle(PrimaryButtonStyle())
@@ -223,7 +193,7 @@ struct ListingDetailView: View {
         case .bookShoot:
             NavigationLink(value: Route.bookings) { actionLabel("Book") }
         case .comingSoonPoster, .justListedPoster, .justSoldPoster:
-            Button { poster = listing } label: { actionLabel("Make") }
+            NavigationLink(value: Route.listingPoster(listing.id)) { actionLabel("Make") }
         case .openHouse:
             Button { showSchedule = true } label: { actionLabel("Plan") }
         case .description:

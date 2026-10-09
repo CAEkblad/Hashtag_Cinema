@@ -802,6 +802,11 @@ enum Route: Hashable {
     case whatsNew
     case launchPlan(UUID)
     case expenses
+    case listingPoster(UUID)
+    case shotList(UUID)
+    case listingReel(UUID)
+    case listingNetSheet(UUID)
+    case listingCalculator(UUID)
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

@@ -65,15 +65,22 @@ struct BrokerageDashboardView: View {
                             Text("\(member.challengeDays)").frame(width: 50)
                             Text("\(member.leads)").frame(width: 50)
                         }
-                        .contextMenu {
-                            ShareLink(item: "Hey \(member.name.split(separator: " ").first.map(String.init) ?? member.name)! Haven't seen a video from you this month. Open #Cinema, today's idea takes 60 seconds to film. I'll share it with the office!") {
-                                Label("Nudge \(member.name)", systemImage: "hand.wave.fill")
-                            }
-                        }
                         .font(.cinema(14))
                         .foregroundStyle(Theme.textPrimary)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                        .contextMenu {
+                            if member.postsThisMonth == 0 {
+                                ShareLink(item: "Hey \(member.name.split(separator: " ").first.map(String.init) ?? member.name)! Haven't seen a video from you this month. Open #Cinema, today's idea takes 60 seconds to film. I'll share it with the office!") {
+                                    Label("Nudge \(member.name)", systemImage: "hand.wave.fill")
+                                }
+                            } else {
+                                ShareLink(item: "Great work on your videos this month, \(member.name.split(separator: " ").first.map(String.init) ?? member.name)! Keep it going.") {
+                                    Label("Cheer on \(member.name)", systemImage: "hands.clap.fill")
+                                }
+                            }
+                        }
                     }
                 }
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))

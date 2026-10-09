@@ -78,8 +78,8 @@ final class CinemaStore {
     var mileageRate: Double = UserDefaults.standard.object(forKey: "cinema.mileageRate") as? Double ?? 0.70
 
     // Office announcements
-    var announcements: [OfficeAnnouncement] = [
-        OfficeAnnouncement(title: "Listing video challenge starts Monday", body: "Post 3 listing or neighborhood videos this week. Top 3 agents get a free pro shoot from #Cinema.", author: "Your team leader", office: "Your office", date: MockData.day(0, hour: 8))
+    var announcements: [OfficeAnnouncement] = (try? JSONDecoder().decode([OfficeAnnouncement].self, from: UserDefaults.standard.data(forKey: "cinema.announcements.v1") ?? Data())) ?? [
+        OfficeAnnouncement(id: UUID(uuidString: "0C1E2A3B-4C5D-4E6F-8A9B-0C1D2E3F4A5B") ?? UUID(), title: "Listing video challenge starts Monday", body: "Post 3 listing or neighborhood videos this week. Top 3 agents get a free pro shoot from #Cinema.", author: "Your team leader", office: "Your office", date: MockData.day(0, hour: 8))
     ]
     var dismissedAnnouncementIDs: Set<UUID> = Set((UserDefaults.standard.stringArray(forKey: "cinema.announcements.dismissed") ?? []).compactMap(UUID.init(uuidString:)))
 
@@ -1312,7 +1312,7 @@ final class CinemaStore {
 
     /// Manual entries plus every #Cinema shoot, which counts as marketing.
     var allExpenses: [BusinessExpense] {
-        let shoots = bookings.filter { $0.status != .depositPending }.map { booking in
+        let shoots = bookings.filter { $0.status != .depositPending && $0.date <= Date() }.map { booking in
             BusinessExpense(id: booking.id, date: booking.date, category: .marketing, amount: Double(booking.estimatedTotal ?? booking.depositAmount), note: "#Cinema: \(booking.packageName ?? booking.service.name)")
         }
         return expenses + shoots
@@ -1349,6 +1349,9 @@ final class CinemaStore {
     func postAnnouncement(title: String, body: String) {
         let office = myMarketCenter?.name ?? profile.brokerage
         announcements.append(OfficeAnnouncement(title: title, body: body, author: profile.name, office: office.isEmpty ? "Your office" : office, date: Date()))
+        if let data = try? JSONEncoder().encode(announcements) {
+            UserDefaults.standard.set(data, forKey: "cinema.announcements.v1")
+        }
         notify(.office, "Announcement posted", detail: "\(title) is on your agents' Home screens.", route: .brokerage)
         showToast("Posted to your agents")
     }
@@ -1548,7 +1551,8 @@ final class CinemaStore {
         guard on else { return }
         Task {
             guard await ReminderScheduler.requestPermission() else {
-                self.showToast("Turn on notifications in Settings to get reminders")
+                if let index = self.deals.firstIndex(where: { $0.id == dealID }) { self.deals[index].remindersOn = false }
+                if !quiet { self.showToast("Turn on notifications in Settings to get reminders") }
                 return
             }
             for milestone in deal.milestones where !milestone.isDone {
@@ -1682,7 +1686,12 @@ final class CinemaStore {
     func deleteAccount() async {
         if let client = SupabaseClient.shared {
             struct Empty: Codable {}
-            _ = try? await client.invoke("delete-account", body: Empty(), as: Empty.self)
+            do {
+                _ = try await client.invoke("delete-account", body: Empty(), as: Empty.self)
+            } catch {
+                showToast("Couldn't delete your account. Check your connection and try again.")
+                return
+            }
         }
         ReminderScheduler.cancelAll()
         profile = MockData.profile
@@ -1701,7 +1710,17 @@ final class CinemaStore {
         vendors = []
         keywordRules = KeywordRule.defaults(city: homeCity.name)
         expenses = []
-        UserDefaults.standard.removeObject(forKey: "cinema.expenses.v1")
+        reminderEnabled = false
+        clips = []
+        posts = []
+        testimonials = []
+        activity = []
+        savedScripts = []
+        announcements = []
+        connectedPlatforms = []
+        for key in ["cinema.expenses.v1", "cinema.mileageRate", "cinema.announcements.dismissed", "cinema.announcements.v1"] {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
         signOut()
         // signOut saves the session, so clear storage after it.
         for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey, Self.workKey, Self.planKey, Self.keywordsKey] {

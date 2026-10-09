@@ -234,6 +234,16 @@ struct RouteDestination: View {
             LaunchPlanView(listingID: id)
         case .expenses:
             ExpensesView()
+        case .listingPoster(let id):
+            if let listing = store.listing(id) { PosterMakerView(listing: listing) }
+        case .shotList(let id):
+            if let listing = store.listing(id) { ShotListView(listing: listing) }
+        case .listingReel(let id):
+            if let listing = store.listing(id) { PhotoReelView(listing: listing) }
+        case .listingNetSheet(let id):
+            if let listing = store.listing(id) { NetSheetView(startingPrice: Double(listing.price), address: listing.address) }
+        case .listingCalculator(let id):
+            if let listing = store.listing(id) { PaymentCalculatorView(startingPrice: Double(listing.price)) }
         case .buyer(let id):
             BuyerDetailView(buyerID: id)
         case .deal(let id):

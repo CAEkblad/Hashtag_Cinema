@@ -59,7 +59,7 @@ struct ExpensesView: View {
                     Text("Mileage and expenses")
                         .font(.cinema(26, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("Log trips and business costs as you go. #Cinema shoots are added for you. Export a spreadsheet for your accountant.")
+                    Text("Log trips and business costs as you go. Finished #Cinema shoots are added for you. Export a spreadsheet for your accountant.")
                         .font(.cinema(14))
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -161,7 +161,7 @@ struct ExpensesView: View {
             let isMiles = item.category == .mileage
             let estimate = isMiles ? item.amount * store.mileageRate : item.amount
             let note = item.note.replacingOccurrences(of: "\"", with: "'")
-            rows.append("\(item.date.formatted(.iso8601.year().month().day())),\(item.category.title),\(String(format: "%.2f", item.amount)),\(isMiles ? "miles" : "USD"),\(String(format: "%.2f", estimate)),\"\(note)\"")
+            rows.append("\(item.date.formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day())),\(item.category.title),\(String(format: "%.2f", item.amount)),\(isMiles ? "miles" : "USD"),\(String(format: "%.2f", estimate)),\"\(note)\"")
         }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Cinema-Expenses-\(String(year)).csv")
         try? rows.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
