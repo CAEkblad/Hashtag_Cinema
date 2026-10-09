@@ -64,6 +64,9 @@ final class CinemaStore {
     var pastClients: [PastClient] = CinemaStore.samplePastClients()
     var vendors: [Vendor] = CinemaStore.sampleVendors()
 
+    // Showing tours
+    var tours: [ShowingTour] = CinemaStore.sampleTours()
+
     // Weekly plan
     var weekPlan: [PlannedVideo] = []
 
@@ -1205,6 +1208,52 @@ final class CinemaStore {
             Vendor(name: "Mike Dawson", company: "Gulf Coast Inspections", category: .inspector, phone: "(813) 555-0187", note: "Includes wind mitigation and 4 point"),
             Vendor(name: "Sunshine Title", company: "Sunshine Title and Escrow", category: .title, phone: "(813) 555-0110"),
             Vendor(name: "Carlos Ramos", company: "Crystal Clear Pools", category: .pool, phone: "(813) 555-0163", note: "Can get a green pool blue before photos")
+        ]
+    }
+
+    // MARK: Showing tours
+
+    func tour(_ id: UUID) -> ShowingTour? { tours.first { $0.id == id } }
+
+    func createTour(buyerName: String, start: Date, minutesPerStop: Int) {
+        let tour = ShowingTour(buyerName: buyerName, start: start, minutesPerStop: minutesPerStop)
+        tours.append(tour)
+        showToast("Tour for \(buyerName) created. Add the homes next.")
+    }
+
+    func addStop(_ stop: TourStop, to tourID: UUID) {
+        guard let index = tours.firstIndex(where: { $0.id == tourID }), !stop.address.isEmpty else { return }
+        tours[index].stops.append(stop)
+    }
+
+    func moveStops(in tourID: UUID, from offsets: IndexSet, to destination: Int) {
+        guard let index = tours.firstIndex(where: { $0.id == tourID }) else { return }
+        tours[index].stops.move(fromOffsets: offsets, toOffset: destination)
+    }
+
+    func deleteStops(in tourID: UUID, at offsets: IndexSet) {
+        guard let index = tours.firstIndex(where: { $0.id == tourID }) else { return }
+        tours[index].stops.remove(atOffsets: offsets)
+    }
+
+    func setReaction(_ reaction: TourStop.Reaction, stopID: UUID, tourID: UUID) {
+        guard let t = tours.firstIndex(where: { $0.id == tourID }),
+              let s = tours[t].stops.firstIndex(where: { $0.id == stopID }) else { return }
+        tours[t].stops[s].reaction = reaction
+    }
+
+    func deleteTour(_ id: UUID) {
+        tours.removeAll { $0.id == id }
+    }
+
+    nonisolated static func sampleTours() -> [ShowingTour] {
+        let start = MockData.day(1, hour: 10)
+        return [
+            ShowingTour(buyerName: "Marcus Reed", start: start, minutesPerStop: 30, stops: [
+                TourStop(address: "2911 W San Nicholas St, Tampa", price: "$489,000"),
+                TourStop(address: "4407 W Euclid Ave, Tampa", price: "$515,000"),
+                TourStop(address: "3606 W Wallcraft Ave, Tampa", price: "$535,000")
+            ])
         ]
     }
 

@@ -786,4 +786,8 @@ enum Route: Hashable {
     case vendors
     case sellerReport(UUID)
     case netSheet
+    case tours
+    case tour(UUID)
+    case buyerCosts
+    case tools
 }

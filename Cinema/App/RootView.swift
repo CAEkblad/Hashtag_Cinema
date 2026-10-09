@@ -202,6 +202,14 @@ struct RouteDestination: View {
             SellerReportView(listingID: id)
         case .netSheet:
             NetSheetView()
+        case .tours:
+            ToursView()
+        case .tour(let id):
+            TourDetailView(tourID: id)
+        case .buyerCosts:
+            BuyerCostsView()
+        case .tools:
+            ToolsView()
         }
     }
 

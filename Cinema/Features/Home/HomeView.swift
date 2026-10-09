@@ -190,80 +190,21 @@ struct HomeView: View {
     private var quickActions: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
             quickAction("Get ideas", icon: "lightbulb.fill") { selectedTab = .create }
-            NavigationLink(value: Route.findShooter) {
-                quickActionLabel("Find a photographer", icon: "person.crop.rectangle.stack.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.posterMaker) {
-                quickActionLabel("Make a poster", icon: "rectangle.portrait.on.rectangle.portrait.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.listings) {
-                quickActionLabel("My listings", icon: "house.and.flag.fill")
-            }
-            .buttonStyle(.plain)
-            quickAction("My library", icon: "film.stack") { selectedTab = .library }
-            NavigationLink(value: Route.paymentCalculator) {
-                quickActionLabel("Payment calculator", icon: "function")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.scriptWriter) {
-                quickActionLabel("Script writer", icon: "text.quote")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.weekPlan) {
-                quickActionLabel("Plan my week", icon: "calendar.badge.plus")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.insights) {
-                quickActionLabel("Insights", icon: "chart.xyaxis.line")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.marketUpdate) {
-                quickActionLabel("Market update", icon: "chart.bar.xaxis")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.testimonials) {
-                quickActionLabel("Testimonials", icon: "heart.text.square.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.greetings) {
-                quickActionLabel("Holiday posts", icon: "gift.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.linkInBio) {
-                quickActionLabel("Link in bio", icon: "link.circle.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.listingPitch) {
-                quickActionLabel("Listing pitch", icon: "doc.richtext.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.captionWriter) {
-                quickActionLabel("Captions", icon: "text.bubble.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.netSheet) {
-                quickActionLabel("Seller net sheet", icon: "dollarsign.circle.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.pastClients) {
-                quickActionLabel("Past clients", icon: "house.and.flag.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.vendors) {
-                quickActionLabel("Trusted pros", icon: "person.2.badge.gearshape.fill")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.referralNetwork) {
-                quickActionLabel("Agent referrals", icon: "arrow.triangle.branch")
-            }
-            .buttonStyle(.plain)
-            NavigationLink(value: Route.referrals) {
-                quickActionLabel("Invite agents", icon: "gift.fill")
-            }
-            .buttonStyle(.plain)
+            quickLink("Find a photographer", icon: "person.crop.rectangle.stack.fill", route: .findShooter)
+            quickLink("Make a poster", icon: "rectangle.portrait.on.rectangle.portrait.fill", route: .posterMaker)
+            quickLink("My listings", icon: "house.and.flag.fill", route: .listings)
+            quickLink("Showing tours", icon: "car.fill", route: .tours)
+            quickLink("Past clients", icon: "house.and.flag.fill", route: .pastClients)
+            quickLink("Script writer", icon: "text.quote", route: .scriptWriter)
+            quickLink("All tools", icon: "square.grid.2x2.fill", route: .tools)
         }
+    }
+
+    private func quickLink(_ title: String, icon: String, route: Route) -> some View {
+        NavigationLink(value: route) {
+            quickActionLabel(title, icon: icon)
+        }
+        .buttonStyle(.plain)
     }
 
     private func quickAction(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
