@@ -119,7 +119,8 @@ final class CinemaStore {
         restore()
         restoreBrandKit()
         restoreSphere()
-        if let upcoming = bookings.first(where: { $0.date > Date() }) {
+        restoreWork()
+        if shootMessages.isEmpty, let upcoming = bookings.first(where: { $0.date > Date() }) {
             shootMessages = [ShootMessage(bookingID: upcoming.id, fromAgent: false, text: "Hi! I'm confirmed for your shoot. Anything special about the home I should know?", date: Date().addingTimeInterval(-3_600), isRead: false)]
         }
         if let data = UserDefaults.standard.data(forKey: Self.bioKey), let page = try? JSONDecoder().decode(BioPage.self, from: data) {
@@ -149,8 +150,41 @@ final class CinemaStore {
 
     private static let sessionKey = "cinema.session.v2"
 
+    /// Listings, deals, tours, leads and bookings, saved on the phone until the backend syncs them.
+    private struct WorkData: Codable {
+        var listings: [Listing]
+        var deals: [Deal]
+        var tours: [ShowingTour]
+        var leads: [Lead]
+        var bookings: [Booking]
+        var agentReferrals: [AgentReferral]
+        var shootMessages: [ShootMessage]
+    }
+
+    private static let workKey = "cinema.work.v1"
+
+    private func persistWork() {
+        let work = WorkData(listings: listings, deals: deals, tours: tours, leads: leads, bookings: bookings, agentReferrals: agentReferrals, shootMessages: shootMessages)
+        if let data = try? JSONEncoder().encode(work) {
+            UserDefaults.standard.set(data, forKey: Self.workKey)
+        }
+    }
+
+    private func restoreWork() {
+        guard let data = UserDefaults.standard.data(forKey: Self.workKey),
+              let work = try? JSONDecoder().decode(WorkData.self, from: data) else { return }
+        listings = work.listings
+        deals = work.deals
+        tours = work.tours
+        leads = work.leads
+        bookings = work.bookings
+        agentReferrals = work.agentReferrals
+        shootMessages = work.shootMessages
+    }
+
     /// Saves who is signed in and their setup so the app opens where they left off.
     func persist() {
+        persistWork()
         let saved = SavedSession(
             isSignedIn: isSignedIn,
             hasOnboarded: hasOnboarded,
@@ -1489,7 +1523,7 @@ final class CinemaStore {
             struct Empty: Codable {}
             _ = try? await client.invoke("delete-account", body: Empty(), as: Empty.self)
         }
-        for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey] {
+        for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey, Self.workKey] {
             UserDefaults.standard.removeObject(forKey: key)
         }
         ReminderScheduler.cancel()

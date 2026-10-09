@@ -16,14 +16,14 @@ struct NetworkAgent: Identifiable, Hashable {
 }
 
 /// A client passed between agents, with the referral fee agreed up front.
-struct AgentReferral: Identifiable, Hashable {
-    enum Side: String, CaseIterable, Identifiable {
+struct AgentReferral: Identifiable, Hashable, Codable {
+    enum Side: String, CaseIterable, Identifiable, Codable {
         case buyer, seller
         var id: String { rawValue }
         var title: String { self == .buyer ? "Buyer" : "Seller" }
     }
 
-    enum Status: String, CaseIterable {
+    enum Status: String, CaseIterable, Codable {
         case sent, accepted, underContract, closed
 
         var title: String {

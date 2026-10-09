@@ -104,7 +104,7 @@ enum ListingFeature: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-struct OpenHouseVisitor: Identifiable, Hashable {
+struct OpenHouseVisitor: Identifiable, Hashable, Codable {
     var id = UUID()
     var name: String
     var phone: String
@@ -116,8 +116,8 @@ struct OpenHouseVisitor: Identifiable, Hashable {
 }
 
 /// What a buyer's agent said after a showing.
-struct ShowingFeedback: Identifiable, Hashable {
-    enum Interest: String, CaseIterable, Identifiable {
+struct ShowingFeedback: Identifiable, Hashable, Codable {
+    enum Interest: String, CaseIterable, Identifiable, Codable {
         case hot, maybe, pass
         var id: String { rawValue }
         var title: String {
@@ -144,7 +144,7 @@ struct ShowingFeedback: Identifiable, Hashable {
     var comment: String
 }
 
-struct OpenHouse: Identifiable, Hashable {
+struct OpenHouse: Identifiable, Hashable, Codable {
     var id = UUID()
     var start: Date
     var end: Date
@@ -207,7 +207,7 @@ enum MarketingTask: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-struct Listing: Identifiable, Hashable {
+struct Listing: Identifiable, Hashable, Codable {
     var id = UUID()
     var address: String
     var cityID: String

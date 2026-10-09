@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A message thread with the shooter for one booking. Phone numbers stay private,
 /// so every detail about the shoot lives here.
-struct ShootMessage: Identifiable, Hashable {
+struct ShootMessage: Identifiable, Hashable, Codable {
     var id = UUID()
     var bookingID: UUID
     var fromAgent: Bool

@@ -1,7 +1,7 @@
 import Foundation
 
 /// A day of showings for a buyer, in driving order.
-struct ShowingTour: Identifiable, Hashable {
+struct ShowingTour: Identifiable, Hashable, Codable {
     var id = UUID()
     var buyerName: String
     var start: Date
@@ -24,8 +24,8 @@ struct ShowingTour: Identifiable, Hashable {
     var label: String { start.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()) }
 }
 
-struct TourStop: Identifiable, Hashable {
-    enum Reaction: String, CaseIterable {
+struct TourStop: Identifiable, Hashable, Codable {
+    enum Reaction: String, CaseIterable, Codable {
         case love, maybe, no
         var title: String {
             switch self {

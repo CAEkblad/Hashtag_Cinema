@@ -1,7 +1,7 @@
 import Foundation
 
 /// A home under contract, tracked from the effective date to closing.
-struct Deal: Identifiable, Hashable {
+struct Deal: Identifiable, Hashable, Codable {
     var id = UUID()
     var address: String
     var clientName: String
@@ -44,7 +44,7 @@ struct Deal: Identifiable, Hashable {
     }
 }
 
-struct DealMilestone: Identifiable, Hashable {
+struct DealMilestone: Identifiable, Hashable, Codable {
     var id = UUID()
     var title: String
     var detail: String
