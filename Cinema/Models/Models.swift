@@ -809,6 +809,7 @@ enum Route: Hashable {
     case listingCalculator(UUID)
     case objections
     case farm
+    case brandShootPrep
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

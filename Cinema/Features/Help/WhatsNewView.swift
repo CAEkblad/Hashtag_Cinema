@@ -28,6 +28,8 @@ struct WhatsNewView: View {
         Item(icon: "target", title: "Business plan", detail: "Your income goal, worked back to videos a week.", route: .businessPlan),
         Item(icon: "quote.bubble.fill", title: "What to say when", detail: "Honest answers to the 12 objections you hear most, each one a video in a tap.", route: .objections),
         Item(icon: "map.fill", title: "My farm", detail: "Own a neighborhood: log monthly touches and get video ideas for it.", route: .farm),
+        Item(icon: "person.crop.square.filled.and.at.rectangle", title: "Brand shoot prep", detail: "Your story, locations and wardrobe, sent to the #Cinema producer before shoot day.", route: .brandShootPrep),
+        Item(icon: "chart.bar.fill", title: "Where your leads come from", detail: "A new chart in Insights shows which keywords and open houses bring in leads.", route: .insights),
         Item(icon: "waveform", title: "Siri and Shortcuts", detail: "Say \"Log mileage in #Cinema\", \"What's my video idea in #Cinema\" or \"Check my leads in #Cinema\".", route: .expenses),
         Item(icon: "square.grid.2x2.fill", title: "All tools", detail: "Everything in one place, grouped by what you're doing.", route: .tools)
     ]

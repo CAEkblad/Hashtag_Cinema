@@ -57,6 +57,7 @@ enum ToolCatalog {
         Tool(title: "Testimonials", keywords: "reviews client love", icon: "heart.text.square.fill", route: .testimonials, group: .clients),
         Tool(title: "Monthly newsletter", keywords: "email sphere past clients update", icon: "envelope.fill", route: .newsletter, group: .clients),
         Tool(title: "Agent referral network", keywords: "refer client relocation another city fee", icon: "arrow.triangle.branch", route: .referralNetwork, group: .clients),
+        Tool(title: "Brand shoot prep", keywords: "brand video story wardrobe locations producer", icon: "person.crop.square.filled.and.at.rectangle", route: .brandShootPrep, group: .brand),
         Tool(title: "Brand kit", keywords: "logo headshot color", icon: "paintpalette.fill", route: .brandKit, group: .brand),
         Tool(title: "Link in bio", keywords: "bio page instagram", icon: "link.circle.fill", route: .linkInBio, group: .brand),
         Tool(title: "My market", keywords: "city neighborhoods local", icon: "mappin.and.ellipse", route: .market, group: .brand),

@@ -46,6 +46,12 @@ struct BookingView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink(value: Route.brandShootPrep) {
+                    IconRow(icon: "person.crop.square.filled.and.at.rectangle", title: "Brand video prep", subtitle: "Your story, wardrobe and locations for the producer")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 NavigationLink(value: Route.sellerPrep) {
                     IconRow(icon: "checklist", title: "Seller prep checklist", subtitle: "Send it to your seller before the shoot")
                         .cardStyle()

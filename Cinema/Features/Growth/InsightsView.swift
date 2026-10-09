@@ -7,6 +7,24 @@ struct InsightsView: View {
 
     private var data: ContentInsights { store.insights }
 
+    private struct LeadSource { var label: String; var count: Int }
+
+    private var leadSources: [LeadSource] {
+        var counts: [String: Int] = [:]
+        for lead in store.leads {
+            let label: String
+            if lead.openHouseAddress != nil {
+                label = "Open house"
+            } else if lead.keyword.uppercased() == "REFERRAL" {
+                label = "Agent referrals"
+            } else {
+                label = "Comment \(lead.keyword.uppercased())"
+            }
+            counts[label, default: 0] += 1
+        }
+        return counts.map { LeadSource(label: $0.key, count: $0.value) }.sorted { $0.count > $1.count }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
@@ -52,6 +70,23 @@ struct InsightsView: View {
                     }
                     .chartXAxis(.hidden)
                     .frame(height: CGFloat(data.byCategory.count) * 36)
+                }
+
+                if !leadSources.isEmpty {
+                    chartCard("Where your leads come from", subtitle: "Every lead in Leads, by how they found you") {
+                        Chart(leadSources, id: \.label) { item in
+                            BarMark(x: .value("Leads", item.count), y: .value("Source", item.label))
+                                .foregroundStyle(Theme.red.gradient)
+                                .cornerRadius(5)
+                                .annotation(position: .trailing) {
+                                    Text("\(item.count)")
+                                        .font(.cinema(11, weight: .semibold))
+                                        .foregroundStyle(Theme.textSecondary)
+                                }
+                        }
+                        .chartXAxis(.hidden)
+                        .frame(height: CGFloat(leadSources.count) * 36)
+                    }
                 }
 
                 chartCard("Where views come from", subtitle: nil) {
