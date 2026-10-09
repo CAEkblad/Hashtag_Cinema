@@ -194,6 +194,10 @@ struct RouteDestination: View {
             SearchView()
         case .referralNetwork:
             ReferralNetworkScreen()
+        case .pastClients:
+            PastClientsView()
+        case .vendors:
+            VendorsView()
         }
     }
 

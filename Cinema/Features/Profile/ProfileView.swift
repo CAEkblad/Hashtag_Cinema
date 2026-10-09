@@ -74,6 +74,15 @@ struct ProfileView: View {
                     NavigationLink(value: Route.activity) {
                         IconRow(icon: "bell.badge.fill", title: "Activity", subtitle: "Edits, leads, bookings and rewards", badge: store.unreadActivityCount > 0 ? "\(store.unreadActivityCount) new" : nil)
                     }
+                    NavigationLink(value: Route.pastClients) {
+                        IconRow(icon: "house.and.flag.fill", title: "Past clients", subtitle: "Home anniversaries and value check-ins")
+                    }
+                    NavigationLink(value: Route.vendors) {
+                        IconRow(icon: "person.2.badge.gearshape.fill", title: "Trusted pros", subtitle: "Your lenders, inspectors and more")
+                    }
+                    NavigationLink(value: Route.referralNetwork) {
+                        IconRow(icon: "arrow.triangle.branch", title: "Agent referrals", subtitle: "Send clients to agents in other cities")
+                    }
                     NavigationLink(value: Route.referrals) {
                         IconRow(icon: "gift.fill", title: "Invite agents", subtitle: "Give 2 edits, get 2 edits", badge: store.creditsEarnedFromReferrals > 0 ? "+\(store.creditsEarnedFromReferrals)" : nil)
                     }

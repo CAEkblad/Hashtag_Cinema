@@ -60,6 +60,10 @@ final class CinemaStore {
     var networkAgents: [NetworkAgent] = NetworkDirectory.sample()
     var agentReferrals: [AgentReferral] = CinemaStore.sampleAgentReferrals()
 
+    // Past clients and trusted pros
+    var pastClients: [PastClient] = CinemaStore.samplePastClients()
+    var vendors: [Vendor] = CinemaStore.sampleVendors()
+
     // Weekly plan
     var weekPlan: [PlannedVideo] = []
 
@@ -105,6 +109,7 @@ final class CinemaStore {
         self.coach = coach
         restore()
         restoreBrandKit()
+        restoreSphere()
         if let data = UserDefaults.standard.data(forKey: Self.bioKey), let page = try? JSONDecoder().decode(BioPage.self, from: data) {
             bioPage = page
         }
@@ -1078,6 +1083,125 @@ final class CinemaStore {
         ]
     }
 
+    // MARK: Past clients
+
+    private static let pastClientsKey = "cinema.pastclients.v1"
+    private static let vendorsKey = "cinema.vendors.v1"
+
+    var anniversariesThisMonth: [PastClient] {
+        pastClients.filter { $0.daysUntilAnniversary() <= 30 }.sorted { $0.daysUntilAnniversary() < $1.daysUntilAnniversary() }
+    }
+
+    func addPastClient(_ client: PastClient, remind: Bool) {
+        pastClients.insert(client, at: 0)
+        savePastClients()
+        if remind { setAnniversaryReminder(client.id, on: true) }
+        showToast("\(client.name) added")
+    }
+
+    func deletePastClient(_ id: UUID) {
+        ReminderScheduler.cancelAnniversary(id)
+        pastClients.removeAll { $0.id == id }
+        savePastClients()
+    }
+
+    func setAnniversaryReminder(_ id: UUID, on: Bool) {
+        guard let index = pastClients.firstIndex(where: { $0.id == id }) else { return }
+        pastClients[index].reminderOn = on
+        savePastClients()
+        let client = pastClients[index]
+        if on {
+            Task {
+                guard await ReminderScheduler.requestPermission() else {
+                    self.showToast("Turn on notifications in Settings to get reminders")
+                    return
+                }
+                await ReminderScheduler.scheduleAnniversary(for: client)
+                self.showToast("We'll remind you every \(client.closeDate.formatted(.dateTime.month(.wide).day()))")
+            }
+        } else {
+            ReminderScheduler.cancelAnniversary(id)
+        }
+    }
+
+    private func savePastClients() {
+        if let data = try? JSONEncoder().encode(pastClients) {
+            UserDefaults.standard.set(data, forKey: Self.pastClientsKey)
+        }
+    }
+
+    private func restoreSphere() {
+        if let data = UserDefaults.standard.data(forKey: Self.pastClientsKey), let saved = try? JSONDecoder().decode([PastClient].self, from: data) {
+            pastClients = saved
+        }
+        if let data = UserDefaults.standard.data(forKey: Self.vendorsKey), let saved = try? JSONDecoder().decode([Vendor].self, from: data) {
+            vendors = saved
+        }
+    }
+
+    nonisolated static func samplePastClients() -> [PastClient] {
+        let calendar = Calendar.current
+        func closed(yearsAgo: Int, anniversaryInDays days: Int) -> Date {
+            calendar.date(byAdding: .year, value: -yearsAgo, to: MockData.day(days)) ?? Date()
+        }
+        return [
+            PastClient(name: "Maria and Luis Gomez", address: "4120 W Bay Vista Ave", cityName: "Tampa", closeDate: closed(yearsAgo: 2, anniversaryInDays: 3), side: .buyer),
+            PastClient(name: "Tom Becker", address: "88 Harbor Dr", cityName: "Clearwater", closeDate: closed(yearsAgo: 1, anniversaryInDays: 18), side: .seller),
+            PastClient(name: "Angela Price", address: "1503 Palm Sparrow Ct", cityName: "Brandon", closeDate: closed(yearsAgo: 4, anniversaryInDays: 140), side: .buyer)
+        ]
+    }
+
+    // MARK: Trusted pros
+
+    func addVendor(_ vendor: Vendor) {
+        vendors.append(vendor)
+        saveVendors()
+        showToast("\(vendor.name) added to your pros")
+    }
+
+    func deleteVendor(_ id: UUID) {
+        vendors.removeAll { $0.id == id }
+        saveVendors()
+    }
+
+    private func saveVendors() {
+        if let data = try? JSONEncoder().encode(vendors) {
+            UserDefaults.standard.set(data, forKey: Self.vendorsKey)
+        }
+    }
+
+    func vendorMessage(_ vendor: Vendor) -> String {
+        var lines = ["Here's my go-to for \(vendor.category.title.lowercased()): \(vendor.name), \(vendor.company)."]
+        if !vendor.contactLine.isEmpty { lines.append(vendor.contactLine) }
+        if !vendor.note.isEmpty { lines.append(vendor.note) }
+        lines.append("Tell them \(profile.firstName) sent you!")
+        return lines.joined(separator: "\n")
+    }
+
+    func vendorListMessage() -> String {
+        var lines = ["My trusted pros, from \(profile.name):", ""]
+        for category in Vendor.Category.allCases {
+            let group = vendors.filter { $0.category == category }
+            guard !group.isEmpty else { continue }
+            lines.append(category.title.uppercased())
+            for vendor in group {
+                lines.append("- \(vendor.name), \(vendor.company)\(vendor.contactLine.isEmpty ? "" : ": \(vendor.contactLine)")")
+            }
+            lines.append("")
+        }
+        lines.append("Questions about any of them? Just text me.")
+        return lines.joined(separator: "\n")
+    }
+
+    nonisolated static func sampleVendors() -> [Vendor] {
+        [
+            Vendor(name: "Rachel Kim", company: "Bayside Home Loans", category: .lender, phone: "(813) 555-0142", note: "Fast pre-approvals, great with first time buyers"),
+            Vendor(name: "Mike Dawson", company: "Gulf Coast Inspections", category: .inspector, phone: "(813) 555-0187", note: "Includes wind mitigation and 4 point"),
+            Vendor(name: "Sunshine Title", company: "Sunshine Title and Escrow", category: .title, phone: "(813) 555-0110"),
+            Vendor(name: "Carlos Ramos", company: "Crystal Clear Pools", category: .pool, phone: "(813) 555-0163", note: "Can get a green pool blue before photos")
+        ]
+    }
+
     // MARK: Script writer
 
     func saveScript(_ idea: Idea) {
@@ -1177,7 +1301,7 @@ final class CinemaStore {
             struct Empty: Codable {}
             _ = try? await client.invoke("delete-account", body: Empty(), as: Empty.self)
         }
-        for key in [Self.sessionKey, Self.brandKey, Self.bioKey] {
+        for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey] {
             UserDefaults.standard.removeObject(forKey: key)
         }
         ReminderScheduler.cancel()

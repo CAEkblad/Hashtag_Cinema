@@ -782,4 +782,6 @@ enum Route: Hashable {
     case sellerPrep
     case search
     case referralNetwork
+    case pastClients
+    case vendors
 }

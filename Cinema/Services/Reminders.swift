@@ -54,6 +54,21 @@ enum ReminderScheduler {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["cinema.follow-up.\(leadID.uuidString)"])
     }
 
+    static func scheduleAnniversary(for client: PastClient) async {
+        let content = UNMutableNotificationContent()
+        content.title = "\(client.name)'s home anniversary is today"
+        content.body = "A quick note keeps you their agent for life. Your text is ready in #Cinema."
+        content.sound = .default
+        var parts = Calendar.current.dateComponents([.month, .day], from: client.closeDate)
+        parts.hour = 9
+        let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: true)
+        try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "cinema.anniversary.\(client.id.uuidString)", content: content, trigger: trigger))
+    }
+
+    static func cancelAnniversary(_ id: UUID) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["cinema.anniversary.\(id.uuidString)"])
+    }
+
     static func cancel() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
     }

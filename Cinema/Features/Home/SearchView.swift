@@ -36,6 +36,8 @@ struct SearchView: View {
         Tool(title: "Link in bio", keywords: "bio page instagram", icon: "link.circle.fill", route: .linkInBio),
         Tool(title: "My market", keywords: "city neighborhoods local", icon: "mappin.and.ellipse", route: .market),
         Tool(title: "Agent referral network", keywords: "refer client relocation another city fee", icon: "arrow.triangle.branch", route: .referralNetwork),
+        Tool(title: "Past clients", keywords: "home anniversary sphere repeat value check in", icon: "house.and.flag.fill", route: .pastClients),
+        Tool(title: "Trusted pros", keywords: "vendors lender inspector title insurance pool movers", icon: "person.2.badge.gearshape.fill", route: .vendors),
         Tool(title: "Invite agents", keywords: "referral credits", icon: "gift.fill", route: .referrals),
         Tool(title: "Achievements", keywords: "badges level leaderboard", icon: "trophy.fill", route: .achievements),
         Tool(title: "Courses", keywords: "learn lessons", icon: "play.rectangle.on.rectangle.fill", route: .courses),

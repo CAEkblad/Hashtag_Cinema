@@ -31,6 +31,13 @@ struct HomeView: View {
                         onLeads: { path.append(Route.leads) }
                     )
                     WeeklyGoalCard()
+                    if let client = store.anniversariesThisMonth.first(where: { $0.daysUntilAnniversary() <= 7 }) {
+                        NavigationLink(value: Route.pastClients) {
+                            IconRow(icon: "house.and.flag.fill", title: "\(client.firstName)'s \(client.anniversaryLine.lowercased())", subtitle: "Tap to send a home anniversary text")
+                                .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
                     VStack(spacing: 8) {
                         TipView(MarketTip())
                             .tint(Theme.red)
@@ -234,6 +241,18 @@ struct HomeView: View {
             .buttonStyle(.plain)
             NavigationLink(value: Route.captionWriter) {
                 quickActionLabel("Captions", icon: "text.bubble.fill")
+            }
+            .buttonStyle(.plain)
+            NavigationLink(value: Route.pastClients) {
+                quickActionLabel("Past clients", icon: "house.and.flag.fill")
+            }
+            .buttonStyle(.plain)
+            NavigationLink(value: Route.vendors) {
+                quickActionLabel("Trusted pros", icon: "person.2.badge.gearshape.fill")
+            }
+            .buttonStyle(.plain)
+            NavigationLink(value: Route.referralNetwork) {
+                quickActionLabel("Agent referrals", icon: "arrow.triangle.branch")
             }
             .buttonStyle(.plain)
             NavigationLink(value: Route.referrals) {
