@@ -32,6 +32,7 @@ enum ToolCatalog {
         Tool(title: "Caption writer", keywords: "caption hashtags", icon: "text.bubble.fill", route: .captionWriter, group: .create),
         Tool(title: "Plan my week", keywords: "calendar schedule plan", icon: "calendar.badge.plus", route: .weekPlan, group: .create),
         Tool(title: "Content calendar", keywords: "scheduled posts", icon: "calendar", route: .calendar, group: .create),
+        Tool(title: "Photo reel", keywords: "video slideshow photos listing reel tiktok", icon: "film.stack.fill", route: .photoReel, group: .create),
         Tool(title: "Poster maker", keywords: "just listed just sold coming soon open house graphic", icon: "rectangle.portrait.on.rectangle.portrait.fill", route: .posterMaker, group: .create),
         Tool(title: "Holiday posts", keywords: "greeting thanksgiving christmas", icon: "gift.fill", route: .greetings, group: .create),
         Tool(title: "Market update graphic", keywords: "stats numbers median price", icon: "chart.bar.xaxis", route: .marketUpdate, group: .create),

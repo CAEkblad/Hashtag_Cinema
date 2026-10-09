@@ -218,6 +218,8 @@ struct RouteDestination: View {
             NewsletterView()
         case .deals:
             DealsView()
+        case .photoReel:
+            PhotoReelView()
         case .deal(let id):
             DealDetailView(dealID: id)
         case .bookingChat(let id):

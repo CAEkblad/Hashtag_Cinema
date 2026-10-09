@@ -202,7 +202,7 @@ struct HomeView: View {
             quickLink("My listings", icon: "house.and.flag.fill", route: .listings)
             quickLink("Showing tours", icon: "car.fill", route: .tours)
             quickLink("Past clients", icon: "house.and.flag.fill", route: .pastClients)
-            quickLink("Script writer", icon: "text.quote", route: .scriptWriter)
+            quickLink("Photo reel", icon: "film.stack.fill", route: .photoReel)
             quickLink("All tools", icon: "square.grid.2x2.fill", route: .tools)
         }
     }

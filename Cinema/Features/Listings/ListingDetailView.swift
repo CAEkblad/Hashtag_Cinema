@@ -15,6 +15,7 @@ struct ListingDetailView: View {
     @State private var showCalculator = false
     @State private var showFlyer = false
     @State private var showNetSheet = false
+    @State private var showReel = false
 
     var body: some View {
         if let listing = store.listing(listingID) {
@@ -46,6 +47,13 @@ struct ListingDetailView: View {
                 }
                 .buttonStyle(.plain)
                 Button {
+                    showReel = true
+                } label: {
+                    IconRow(icon: "film.stack.fill", title: "Make a photo reel", subtitle: "Turn listing photos into a vertical video")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+                Button {
                     showFlyer = true
                 } label: {
                     IconRow(icon: "printer.fill", title: "Printable flyer", subtitle: "Letter size PDF with photos, QR code and your brand")
@@ -70,6 +78,9 @@ struct ListingDetailView: View {
         }
         .navigationDestination(isPresented: $showCalculator) {
             PaymentCalculatorView(startingPrice: Double(listing.price))
+        }
+        .navigationDestination(isPresented: $showReel) {
+            PhotoReelView(listing: listing)
         }
         .navigationDestination(isPresented: $showNetSheet) {
             NetSheetView(startingPrice: Double(listing.price), address: listing.address)
