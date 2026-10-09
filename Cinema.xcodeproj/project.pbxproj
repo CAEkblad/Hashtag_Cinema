@@ -256,6 +256,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "#Cinema";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "#Cinema uses the camera so you can film content with the teleprompter and framing guides.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "#Cinema uses the microphone to record audio for your videos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "#Cinema lets you upload clips from your camera roll for editing.";
@@ -289,6 +290,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "#Cinema";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "#Cinema uses the camera so you can film content with the teleprompter and framing guides.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "#Cinema uses the microphone to record audio for your videos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "#Cinema lets you upload clips from your camera roll for editing.";
