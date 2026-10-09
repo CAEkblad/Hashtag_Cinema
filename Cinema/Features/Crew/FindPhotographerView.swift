@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 /// Browse #Cinema Crew photographers and videographers near the agent's city.
 /// Contact details stay private: every request and booking runs through #Cinema.
@@ -9,6 +10,24 @@ struct FindPhotographerView: View {
     @State private var cityID: String?
     @State private var showCityPicker = false
     @State private var onlyFavorites = false
+    @State private var showMap = false
+    @State private var mapPick: Shooter?
+
+    private struct Pin: Identifiable {
+        var id: UUID { shooter.id }
+        var shooter: Shooter
+        var coordinate: CLLocationCoordinate2D
+    }
+
+    /// Shooters in the same city get spread out a little so every pin is tappable.
+    private var pins: [Pin] {
+        results.enumerated().compactMap { index, shooter in
+            guard let base = shooter.city?.coordinate else { return nil }
+            let angle = Double(index) * 2.4
+            let offset = 0.018 * Double(index % 4 + 1)
+            return Pin(shooter: shooter, coordinate: CLLocationCoordinate2D(latitude: base.latitude + offset * sin(angle), longitude: base.longitude + offset * cos(angle)))
+        }
+    }
 
     enum Sort: String, CaseIterable, Identifiable {
         case bestMatch = "Best match"
@@ -48,6 +67,19 @@ struct FindPhotographerView: View {
                             .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
                     .accessibilityLabel("Show favorites only")
+                    Button {
+                        withAnimation { showMap.toggle() }
+                    } label: {
+                        Image(systemName: showMap ? "list.bullet" : "map.fill")
+                            .foregroundStyle(Theme.red)
+                            .frame(width: 36, height: 32)
+                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                    .accessibilityLabel(showMap ? "Show list" : "Show map")
+                }
+
+                if showMap && !results.isEmpty {
+                    mapView
                 }
 
                 if results.isEmpty {
@@ -62,7 +94,7 @@ struct FindPhotographerView: View {
                     .buttonStyle(PrimaryButtonStyle())
                 }
 
-                ForEach(results) { shooter in
+                ForEach(showMap ? [] : results) { shooter in
                     NavigationLink(value: Route.shooter(shooter.id)) {
                         ShooterCard(shooter: shooter, homeCity: city, isFavorite: store.favoriteShooterIDs.contains(shooter.id))
                     }
@@ -90,6 +122,38 @@ struct FindPhotographerView: View {
             CityPickerView(title: "Shoot location", selectedIDs: [city.id]) { picked in
                 cityID = picked.id
             }
+        }
+    }
+
+    private var mapView: some View {
+        VStack(spacing: 12) {
+            Map(initialPosition: .region(MKCoordinateRegion(center: city.coordinate, span: MKCoordinateSpan(latitudeDelta: 1.1, longitudeDelta: 1.1)))) {
+                ForEach(pins) { pin in
+                    Annotation(pin.shooter.name, coordinate: pin.coordinate) {
+                        Button {
+                            mapPick = pin.shooter
+                        } label: {
+                            Avatar(initials: pin.shooter.initials, size: mapPick?.id == pin.shooter.id ? 44 : 34, paletteIndex: pin.shooter.name.count)
+                                .overlay(Circle().stroke(mapPick?.id == pin.shooter.id ? Theme.red : .white, lineWidth: 3))
+                                .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .id(city.id)
+            .frame(height: 380)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+            if let pick = mapPick ?? results.first {
+                NavigationLink(value: Route.shooter(pick.id)) {
+                    ShooterCard(shooter: pick, homeCity: city, isFavorite: store.favoriteShooterIDs.contains(pick.id))
+                }
+                .buttonStyle(.plain)
+            }
+            Text("Tap a photo to see who it is. Pins show the area each shooter covers, not a home address.")
+                .font(.cinema(11))
+                .foregroundStyle(Theme.textTertiary)
         }
     }
 

@@ -210,6 +210,10 @@ struct RouteDestination: View {
             BuyerCostsView()
         case .tools:
             ToolsView()
+        case .packageAdvisor:
+            PackageAdvisorView()
+        case .bookingChat(let id):
+            BookingChatView(bookingID: id)
         }
     }
 

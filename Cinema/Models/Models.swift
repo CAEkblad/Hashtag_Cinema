@@ -790,4 +790,6 @@ enum Route: Hashable {
     case tour(UUID)
     case buyerCosts
     case tools
+    case packageAdvisor
+    case bookingChat(UUID)
 }

@@ -40,6 +40,12 @@ struct BookingView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink(value: Route.packageAdvisor) {
+                    IconRow(icon: "wand.and.stars", title: "Not sure what to book?", subtitle: "Answer 4 quick questions and we'll pick the package")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 NavigationLink(value: Route.sellerPrep) {
                     IconRow(icon: "checklist", title: "Seller prep checklist", subtitle: "Send it to your seller before the shoot")
                         .cardStyle()
@@ -105,6 +111,7 @@ struct BookingView: View {
                 if !store.bookings.isEmpty {
                     SectionHeader(title: "Your bookings")
                     ForEach(store.bookings.sorted { $0.date < $1.date }) { booking in
+                        NavigationLink(value: Route.bookingChat(booking.id)) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(booking.packageName ?? booking.service.name)
@@ -123,9 +130,16 @@ struct BookingView: View {
                                 }
                             }
                             Spacer()
-                            Pill(text: booking.status.title, icon: "checkmark.seal.fill")
+                            VStack(alignment: .trailing, spacing: 8) {
+                                Pill(text: booking.status.title, icon: "checkmark.seal.fill")
+                                Label(store.unreadShootMessages(booking.id) > 0 ? "\(store.unreadShootMessages(booking.id)) new" : "Message", systemImage: "bubble.left.and.bubble.right.fill")
+                                    .font(.cinema(12, weight: .semibold))
+                                    .foregroundStyle(Theme.red)
+                            }
                         }
                         .cardStyle()
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -203,6 +217,8 @@ struct RateShootView: View {
 struct BookingFormView: View {
     let service: ServiceType
     var preferredShooter: Shooter? = nil
+    var presetPackageID: String? = nil
+    var presetAddOnIDs: Set<String> = []
 
     @Environment(CinemaStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -263,6 +279,10 @@ struct BookingFormView: View {
             .onAppear {
                 if !didSetShooter {
                     shooterID = preferredShooter?.id
+                    if let presetPackageID, let preset = ShootPackage.listing.first(where: { $0.id == presetPackageID }) {
+                        package = preset
+                    }
+                    if !presetAddOnIDs.isEmpty { addOnIDs = presetAddOnIDs }
                     didSetShooter = true
                 }
             }

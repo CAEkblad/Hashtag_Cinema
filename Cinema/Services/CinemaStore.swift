@@ -67,6 +67,9 @@ final class CinemaStore {
     // Showing tours
     var tours: [ShowingTour] = CinemaStore.sampleTours()
 
+    // Shoot chat with the shooter, per booking
+    var shootMessages: [ShootMessage] = []
+
     // Weekly plan
     var weekPlan: [PlannedVideo] = []
 
@@ -113,6 +116,9 @@ final class CinemaStore {
         restore()
         restoreBrandKit()
         restoreSphere()
+        if let upcoming = bookings.first(where: { $0.date > Date() }) {
+            shootMessages = [ShootMessage(bookingID: upcoming.id, fromAgent: false, text: "Hi! I'm confirmed for your shoot. Anything special about the home I should know?", date: Date().addingTimeInterval(-3_600), isRead: false)]
+        }
         if let data = UserDefaults.standard.data(forKey: Self.bioKey), let page = try? JSONDecoder().decode(BioPage.self, from: data) {
             bioPage = page
         }
@@ -1255,6 +1261,47 @@ final class CinemaStore {
                 TourStop(address: "3606 W Wallcraft Ave, Tampa", price: "$535,000")
             ])
         ]
+    }
+
+    // MARK: Shoot chat
+
+    func shootMessages(for bookingID: UUID) -> [ShootMessage] {
+        shootMessages.filter { $0.bookingID == bookingID }.sorted { $0.date < $1.date }
+    }
+
+    func unreadShootMessages(_ bookingID: UUID) -> Int {
+        shootMessages.filter { $0.bookingID == bookingID && !$0.isRead }.count
+    }
+
+    func markShootMessagesRead(_ bookingID: UUID) {
+        for index in shootMessages.indices where shootMessages[index].bookingID == bookingID && !shootMessages[index].isRead {
+            shootMessages[index].isRead = true
+        }
+    }
+
+    func sendShootMessage(_ text: String, bookingID: UUID) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        shootMessages.append(ShootMessage(bookingID: bookingID, fromAgent: true, text: trimmed, date: Date()))
+        // Demo: the shooter answers a few seconds later. Live replies come from the Crew app.
+        let booking = bookings.first { $0.id == bookingID }
+        let shooterName = booking?.shooterID.flatMap { shooter($0) }?.name.split(separator: " ").first.map(String.init) ?? "Your shooter"
+        let reply = Self.demoReply(to: trimmed)
+        Task {
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            self.shootMessages.append(ShootMessage(bookingID: bookingID, fromAgent: false, text: reply, date: Date(), isRead: false))
+            self.notify(.booking, "\(shooterName) replied", detail: reply, route: .bookingChat(bookingID))
+        }
+    }
+
+    nonisolated static func demoReply(to text: String) -> String {
+        let lower = text.lowercased()
+        if lower.contains("late") { return "No problem at all, I'll start on the exterior shots." }
+        if lower.contains("sunset") || lower.contains("twilight") { return "Love it. I'll time the pool and lanai for golden hour." }
+        if lower.contains("lockbox") || lower.contains("code") || lower.contains("gate") { return "Got it, thanks. I'll text through here when I'm on site." }
+        if lower.contains("home") { return "Sounds good. I'll introduce myself and keep it quick and tidy." }
+        if lower.contains("neighborhood") || lower.contains("area") { return "Absolutely. I'll grab the park, the water and a few street scenes." }
+        return "Thanks! Noted for the shoot. See you there."
     }
 
     // MARK: Script writer
