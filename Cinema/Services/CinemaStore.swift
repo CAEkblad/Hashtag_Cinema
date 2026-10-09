@@ -73,6 +73,10 @@ final class CinemaStore {
     // Deals under contract
     var deals: [Deal] = CinemaStore.sampleDeals()
 
+    // Mileage and expenses
+    var expenses: [BusinessExpense] = (try? JSONDecoder().decode([BusinessExpense].self, from: UserDefaults.standard.data(forKey: "cinema.expenses.v1") ?? Data())) ?? []
+    var mileageRate: Double = UserDefaults.standard.object(forKey: "cinema.mileageRate") as? Double ?? 0.70
+
     // Office announcements
     var announcements: [OfficeAnnouncement] = [
         OfficeAnnouncement(title: "Listing video challenge starts Monday", body: "Post 3 listing or neighborhood videos this week. Top 3 agents get a free pro shoot from #Cinema.", author: "Your team leader", office: "Your office", date: MockData.day(0, hour: 8))
@@ -1291,6 +1295,38 @@ final class CinemaStore {
         return tour.id
     }
 
+    // MARK: Mileage and expenses
+
+    /// Manual entries plus every #Cinema shoot, which counts as marketing.
+    var allExpenses: [BusinessExpense] {
+        let shoots = bookings.filter { $0.status != .depositPending }.map { booking in
+            BusinessExpense(id: booking.id, date: booking.date, category: .marketing, amount: Double(booking.estimatedTotal ?? booking.depositAmount), note: "#Cinema: \(booking.packageName ?? booking.service.name)")
+        }
+        return expenses + shoots
+    }
+
+    func addExpense(_ expense: BusinessExpense) {
+        expenses.append(expense)
+        saveExpenses()
+        showToast(expense.category == .mileage ? "\(Int(expense.amount)) miles logged" : "Expense saved")
+    }
+
+    func deleteExpense(_ id: UUID) {
+        expenses.removeAll { $0.id == id }
+        saveExpenses()
+    }
+
+    func setMileageRate(_ rate: Double) {
+        mileageRate = rate
+        UserDefaults.standard.set(rate, forKey: "cinema.mileageRate")
+    }
+
+    private func saveExpenses() {
+        if let data = try? JSONEncoder().encode(expenses) {
+            UserDefaults.standard.set(data, forKey: "cinema.expenses.v1")
+        }
+    }
+
     // MARK: Office announcements
 
     var latestAnnouncement: OfficeAnnouncement? {
@@ -1651,6 +1687,8 @@ final class CinemaStore {
         pastClients = []
         vendors = []
         keywordRules = KeywordRule.defaults(city: homeCity.name)
+        expenses = []
+        UserDefaults.standard.removeObject(forKey: "cinema.expenses.v1")
         signOut()
         // signOut saves the session, so clear storage after it.
         for key in [Self.sessionKey, Self.brandKey, Self.bioKey, Self.pastClientsKey, Self.vendorsKey, Self.workKey, Self.planKey, Self.keywordsKey] {

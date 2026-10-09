@@ -107,6 +107,7 @@ struct TourDetailView: View {
 
     @State private var address = ""
     @State private var price = ""
+    @State private var showMileage = false
 
     var body: some View {
         if let tour = store.tour(tourID) {
@@ -210,6 +211,11 @@ struct TourDetailView: View {
                     Label("Send the recap", systemImage: "heart.text.square.fill")
                 }
                 .disabled(!tour.stops.contains { $0.reaction != nil })
+                Button {
+                    showMileage = true
+                } label: {
+                    Label("Log the miles for this tour", systemImage: "car.fill")
+                }
             }
             .listRowBackground(Theme.surface)
 
@@ -228,6 +234,9 @@ struct TourDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 EditButton()
             }
+        }
+        .sheet(isPresented: $showMileage) {
+            AddExpenseView(presetNote: "Showings with \(tour.buyerName)")
         }
     }
 }

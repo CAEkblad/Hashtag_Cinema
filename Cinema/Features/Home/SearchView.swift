@@ -61,6 +61,7 @@ enum ToolCatalog {
         Tool(title: "My market", keywords: "city neighborhoods local", icon: "mappin.and.ellipse", route: .market, group: .brand),
         Tool(title: "Moving to Florida guide", keywords: "relocation out of state buyers homestead pdf", icon: "airplane.arrival", route: .relocationGuide, group: .brand),
         Tool(title: "Insights", keywords: "analytics views stats", icon: "chart.xyaxis.line", route: .insights, group: .brand),
+        Tool(title: "Mileage and expenses", keywords: "tax deduction miles receipts accountant csv", icon: "car.fill", route: .expenses, group: .grow),
         Tool(title: "Business plan", keywords: "gci goal income closings how many videos", icon: "target", route: .businessPlan, group: .grow),
         Tool(title: "Courses", keywords: "learn lessons", icon: "play.rectangle.on.rectangle.fill", route: .courses, group: .grow),
         Tool(title: "Coach", keywords: "tips feedback", icon: "graduationcap.fill", route: .coach, group: .grow),

@@ -232,6 +232,8 @@ struct RouteDestination: View {
             WhatsNewList()
         case .launchPlan(let id):
             LaunchPlanView(listingID: id)
+        case .expenses:
+            ExpensesView()
         case .buyer(let id):
             BuyerDetailView(buyerID: id)
         case .deal(let id):
