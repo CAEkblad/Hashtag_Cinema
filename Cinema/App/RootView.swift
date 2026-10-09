@@ -230,6 +230,8 @@ struct RouteDestination: View {
             HomeValueView()
         case .whatsNew:
             WhatsNewList()
+        case .launchPlan(let id):
+            LaunchPlanView(listingID: id)
         case .buyer(let id):
             BuyerDetailView(buyerID: id)
         case .deal(let id):

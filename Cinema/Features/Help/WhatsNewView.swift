@@ -14,6 +14,7 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "calendar.badge.clock", title: "Listing launch plan", detail: "Open any active listing for a dated countdown with every tool one tap away.", route: .listings),
         Item(icon: "film.stack.fill", title: "Photo reel", detail: "Listing photos in, a branded vertical video out, made on your phone.", route: .photoReel),
         Item(icon: "person.crop.rectangle.stack.fill", title: "Find a photographer, now with a map", detail: "See Crew near you, pick a package with Help me choose, and chat with your shooter.", route: .findShooter),
         Item(icon: "doc.text.fill", title: "Under contract", detail: "Every Florida contract deadline, with reminders and a timeline for your client.", route: .deals),

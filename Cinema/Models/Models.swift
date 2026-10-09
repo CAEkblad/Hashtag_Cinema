@@ -800,6 +800,7 @@ enum Route: Hashable {
     case keywords
     case homeValue
     case whatsNew
+    case launchPlan(UUID)
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

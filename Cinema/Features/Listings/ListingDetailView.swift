@@ -32,6 +32,13 @@ struct ListingDetailView: View {
             VStack(alignment: .leading, spacing: 20) {
                 header(listing)
                 statusPicker(listing)
+                if listing.status == .comingSoon || listing.status == .active {
+                    NavigationLink(value: Route.launchPlan(listing.id)) {
+                        IconRow(icon: "calendar.badge.clock", title: "Launch plan", subtitle: "Dated steps from the shoot to the first seller report")
+                            .cardStyle()
+                    }
+                    .buttonStyle(.plain)
+                }
                 checklist(listing)
                 descriptionCard(listing)
                 openHouses(listing)
