@@ -212,6 +212,10 @@ struct RouteDestination: View {
             ToolsView()
         case .packageAdvisor:
             PackageAdvisorView()
+        case .relocationGuide:
+            RelocationGuideView()
+        case .newsletter:
+            NewsletterView()
         case .bookingChat(let id):
             BookingChatView(bookingID: id)
         }

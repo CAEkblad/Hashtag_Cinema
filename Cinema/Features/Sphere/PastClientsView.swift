@@ -47,6 +47,12 @@ struct PastClientsView: View {
                 }
                 .cardStyle()
 
+                NavigationLink(value: Route.newsletter) {
+                    IconRow(icon: "envelope.fill", title: "Monthly newsletter", subtitle: "Market, listings and a homeowner tip, ready to send")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 if !upcoming.isEmpty {
                     SectionHeader(title: "Coming up")
                     ForEach(upcoming) { client in
