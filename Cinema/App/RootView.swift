@@ -186,6 +186,12 @@ struct RouteDestination: View {
             TeleprompterScriptView()
         case .captionWriter:
             CaptionWriterView()
+        case .listingPitch:
+            ListingPitchView()
+        case .sellerPrep:
+            SellerPrepView()
+        case .search:
+            SearchView()
         }
     }
 

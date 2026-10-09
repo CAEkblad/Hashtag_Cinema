@@ -102,6 +102,12 @@ struct ProfileView: View {
                     NavigationLink(value: Route.testimonials) {
                         IconRow(icon: "heart.text.square.fill", title: "Testimonials", subtitle: "\(store.testimonials.count) saved. Ask, share, make videos")
                     }
+                    NavigationLink(value: Route.listingPitch) {
+                        IconRow(icon: "doc.richtext.fill", title: "Listing presentation", subtitle: "Your marketing plan as a PDF for sellers")
+                    }
+                    NavigationLink(value: Route.sellerPrep) {
+                        IconRow(icon: "checklist", title: "Seller prep checklist", subtitle: "Send before the shoot")
+                    }
                     NavigationLink(value: Route.linkInBio) {
                         IconRow(icon: "link.circle.fill", title: "Link in bio", subtitle: "One link for your Instagram and TikTok")
                     }

@@ -40,6 +40,12 @@ struct BookingView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink(value: Route.sellerPrep) {
+                    IconRow(icon: "checklist", title: "Seller prep checklist", subtitle: "Send it to your seller before the shoot")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 ForEach(store.bookingsToRate) { booking in
                     Button {
                         rating = booking

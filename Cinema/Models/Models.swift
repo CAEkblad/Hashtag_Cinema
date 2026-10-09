@@ -778,4 +778,7 @@ enum Route: Hashable {
     case linkInBio
     case teleprompter
     case captionWriter
+    case listingPitch
+    case sellerPrep
+    case search
 }

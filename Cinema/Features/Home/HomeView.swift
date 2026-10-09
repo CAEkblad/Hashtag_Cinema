@@ -94,6 +94,12 @@ struct HomeView: View {
                     CinemaLogo(size: 20)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: Route.search) {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .accessibilityLabel("Search")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(value: Route.help) {
                         Image(systemName: "questionmark.circle")
                     }
@@ -220,6 +226,10 @@ struct HomeView: View {
             .buttonStyle(.plain)
             NavigationLink(value: Route.linkInBio) {
                 quickActionLabel("Link in bio", icon: "link.circle.fill")
+            }
+            .buttonStyle(.plain)
+            NavigationLink(value: Route.listingPitch) {
+                quickActionLabel("Listing pitch", icon: "doc.richtext.fill")
             }
             .buttonStyle(.plain)
             NavigationLink(value: Route.captionWriter) {
