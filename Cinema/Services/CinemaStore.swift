@@ -56,6 +56,10 @@ final class CinemaStore {
     ]
     var savedScripts: [Idea] = []
 
+    // Agent referral network
+    var networkAgents: [NetworkAgent] = NetworkDirectory.sample()
+    var agentReferrals: [AgentReferral] = CinemaStore.sampleAgentReferrals()
+
     // Weekly plan
     var weekPlan: [PlannedVideo] = []
 
@@ -1021,6 +1025,57 @@ final class CinemaStore {
             self.notify(.referral, "You earned 2 credits", detail: "\(trimmed) joined #Cinema with your invite.", route: .referrals)
             self.showToast("\(trimmed) joined. You both got 2 credits.")
         }
+    }
+
+    // MARK: Agent referral network
+
+    /// Agents in the city first, then the closest markets around it.
+    func networkAgents(near city: FloridaCity) -> [NetworkAgent] {
+        let sorted = networkAgents.sorted { lhs, rhs in
+            let l = lhs.city?.distance(to: city) ?? .greatestFiniteMagnitude
+            let r = rhs.city?.distance(to: city) ?? .greatestFiniteMagnitude
+            return l < r
+        }
+        return Array(sorted.prefix(6))
+    }
+
+    func acceptReferral(_ id: UUID) {
+        guard let index = agentReferrals.firstIndex(where: { $0.id == id }) else { return }
+        agentReferrals[index].status = .accepted
+        let referral = agentReferrals[index]
+        let lead = Lead(name: referral.clientName, handle: "Agent referral", platform: .facebook, keyword: "REFERRAL", sourceClip: "From \(referral.otherAgentName)", message: "\(referral.side.title) in \(referral.city?.name ?? "Florida"), \(referral.priceRange). \(referral.notes)", date: Date(), status: .new, notes: "\(referral.feePercent)% referral fee to \(referral.otherAgentName) at closing.")
+        leads.insert(lead, at: 0)
+        notify(.referral, "Referral accepted", detail: "\(referral.clientName) is in your Leads. Reach out today.", route: .lead(lead.id))
+        showToast("Accepted. \(referral.clientName) is in your Leads.")
+    }
+
+    func declineReferral(_ id: UUID) {
+        guard let referral = agentReferrals.first(where: { $0.id == id }) else { return }
+        agentReferrals.removeAll { $0.id == id }
+        showToast("Passed. We'll let \(referral.otherAgentName) know.")
+    }
+
+    func sendReferral(to agent: NetworkAgent, clientName: String, side: AgentReferral.Side, priceRange: String, notes: String, fee: Int) {
+        let name = clientName.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        let referral = AgentReferral(clientName: name, side: side, cityID: agent.cityID, priceRange: priceRange, notes: notes, otherAgentName: agent.name, feePercent: fee, status: .sent, isIncoming: false, date: Date())
+        agentReferrals.insert(referral, at: 0)
+        showToast("Referral sent to \(agent.name)")
+        // Demo: the other agent accepts a few seconds later.
+        let id = referral.id
+        Task {
+            try? await Task.sleep(nanoseconds: 8_000_000_000)
+            guard let index = self.agentReferrals.firstIndex(where: { $0.id == id }) else { return }
+            self.agentReferrals[index].status = .accepted
+            self.notify(.referral, "\(agent.name) accepted your referral", detail: "\(name) is in good hands in \(agent.city?.name ?? "their city"). \(fee)% fee at closing.", route: .referralNetwork)
+        }
+    }
+
+    nonisolated static func sampleAgentReferrals() -> [AgentReferral] {
+        [
+            AgentReferral(clientName: "Marcus and Jen Reed", side: .buyer, cityID: FloridaMarkets.all.first?.id ?? "", priceRange: "$400K to $550K", notes: "Relocating from Atlanta in March. Two kids, want a good school zone and a pool.", otherAgentName: "Carla Mendez", feePercent: 25, status: .sent, isIncoming: true, date: MockData.day(0, hour: 9)),
+            AgentReferral(clientName: "Diane Foster", side: .seller, cityID: FloridaMarkets.all.dropFirst(3).first?.id ?? "", priceRange: "$700K to $800K", notes: "Downsizing after retirement. Wants to list in spring.", otherAgentName: "Luis Ortiz", feePercent: 25, status: .underContract, isIncoming: false, date: MockData.day(-12))
+        ]
     }
 
     // MARK: Script writer

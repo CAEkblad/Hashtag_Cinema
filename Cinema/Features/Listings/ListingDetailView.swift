@@ -273,6 +273,10 @@ struct ListingDetailView: View {
                         Label("Start sign-in on this phone", systemImage: "ipad.and.iphone")
                     }
                     .buttonStyle(PrimaryButtonStyle())
+                    ShareLink(item: ListingCopywriter.neighborInvite(for: listing, openHouse: openHouse, agentName: store.profile.name)) {
+                        Label("Invite the neighbors", systemImage: "envelope.open.fill")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
                     Text("Or print the QR code so visitors sign in on their own phones (live once the backend is on).")
                         .font(.cinema(11))
                         .foregroundStyle(Theme.textTertiary)

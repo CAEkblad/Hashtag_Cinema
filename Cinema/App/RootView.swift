@@ -192,6 +192,8 @@ struct RouteDestination: View {
             SellerPrepView()
         case .search:
             SearchView()
+        case .referralNetwork:
+            ReferralNetworkScreen()
         }
     }
 

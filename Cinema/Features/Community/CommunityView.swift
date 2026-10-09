@@ -8,8 +8,9 @@ struct CommunityView: View {
 
     enum CommunitySection: String, CaseIterable, Identifiable {
         case feed = "Feed"
-        case stories = "Success stories"
+        case stories = "Stories"
         case groups = "Groups"
+        case referrals = "Referrals"
 
         var id: String { rawValue }
     }
@@ -29,6 +30,7 @@ struct CommunityView: View {
                     case .feed: feed
                     case .stories: storiesList
                     case .groups: groupsList
+                    case .referrals: ReferralNetworkSection()
                     }
                 }
                 .padding(Theme.gutter)

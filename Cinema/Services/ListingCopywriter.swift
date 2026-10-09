@@ -72,6 +72,13 @@ enum ListingCopywriter {
         return "Hi \(first), it's \(me). Thanks for coming to the open house at \(listing.address). Want me to send you similar homes and connect you with a great local lender? No pressure at all."
     }
 
+    /// A friendly note for the neighbors. Neighbors often know the next buyer, or are the next seller.
+    static func neighborInvite(for listing: Listing, openHouse: OpenHouse, agentName: String) -> String {
+        let me = agentName.split(separator: " ").first.map { String($0) } ?? agentName
+        let rooms = "\(listing.beds) bed, \(listing.baths.formatted()) bath"
+        return "Hi neighbor! I'm \(me), the agent for \(listing.address). You're invited to our open house, \(openHouse.label). Stop by early for a first look before the crowds. It's a \(rooms) home listed at \(listing.priceLabel). Know someone who'd love to live by you? Bring them along. And if you're curious what your own home is worth, I'm happy to put together a free value report."
+    }
+
     private static func areaLine(_ listing: Listing) -> String {
         guard let city = listing.city else { return "" }
         if let highlight = city.highlights.first(where: { !$0.lowercased().contains("spring training") }) {
