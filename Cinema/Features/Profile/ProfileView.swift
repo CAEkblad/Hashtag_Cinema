@@ -61,6 +61,12 @@ struct ProfileView: View {
                 }
 
                 Section("Grow") {
+                    NavigationLink(value: Route.achievements) {
+                        IconRow(icon: store.creatorLevel.icon, title: "Achievements", subtitle: "\(store.creatorLevel.title) · \(store.achievements.filter(\.isUnlocked).count) badges")
+                    }
+                    NavigationLink(value: Route.weekPlan) {
+                        IconRow(icon: "calendar.badge.plus", title: "Plan my week", subtitle: store.weekPlan.isEmpty ? "\(store.profile.weeklyGoal) videos, planned for you" : "\(store.weekPlanDone) of \(store.weekPlan.count) filmed")
+                    }
                     NavigationLink(value: Route.activity) {
                         IconRow(icon: "bell.badge.fill", title: "Activity", subtitle: "Edits, leads, bookings and rewards", badge: store.unreadActivityCount > 0 ? "\(store.unreadActivityCount) new" : nil)
                     }

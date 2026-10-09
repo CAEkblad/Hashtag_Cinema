@@ -14,9 +14,22 @@ struct LeadsView: View {
                 .listRowBackground(Color.clear)
             }
 
+            if !store.leadsDueForFollowUp.isEmpty {
+                Section("Follow up today") {
+                    ForEach(store.leadsDueForFollowUp) { lead in
+                        NavigationLink(value: Route.lead(lead.id)) {
+                            LeadRow(lead: lead)
+                        }
+                    }
+                }
+                .listRowBackground(Theme.redSoft)
+            }
+
             Section {
                 ForEach(store.leads.sorted { $0.date > $1.date }) { lead in
-                    LeadRow(lead: lead)
+                    NavigationLink(value: Route.lead(lead.id)) {
+                        LeadRow(lead: lead)
+                    }
                 }
             } header: {
                 Text("Comment-to-DM and open house leads")
@@ -49,13 +62,7 @@ struct LeadRow: View {
                         .lineLimit(1)
                 }
                 Spacer()
-                Menu {
-                    ForEach(LeadStatus.allCases) { status in
-                        Button(status.title) { store.setLeadStatus(status, for: lead.id) }
-                    }
-                } label: {
-                    Pill(text: lead.status.title, color: lead.status == .new ? Theme.red : Theme.surfaceRaised, textColor: lead.status == .new ? .white : Theme.textPrimary)
-                }
+                Pill(text: lead.status.title, color: lead.status == .new ? Theme.red : Theme.surfaceRaised, textColor: lead.status == .new ? .white : Theme.textPrimary)
             }
             Text("\u{201C}\(lead.message)\u{201D}")
                 .font(.cinema(14))

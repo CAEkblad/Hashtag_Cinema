@@ -104,8 +104,15 @@ struct WeeklyGoalCard: View {
                 }
                 .frame(height: 8)
             }
-            Stepper("Weekly goal", value: Binding(get: { store.profile.weeklyGoal }, set: { store.setWeeklyGoal($0) }), in: 1...14)
-                .labelsHidden()
+            VStack(alignment: .trailing, spacing: 8) {
+                Stepper("Weekly goal", value: Binding(get: { store.profile.weeklyGoal }, set: { store.setWeeklyGoal($0) }), in: 1...14)
+                    .labelsHidden()
+                NavigationLink(value: Route.weekPlan) {
+                    Label(store.weekPlan.isEmpty ? "Plan my week" : "My plan", systemImage: "calendar")
+                        .font(.cinema(13, weight: .semibold))
+                        .foregroundStyle(Theme.red)
+                }
+            }
         }
         .cardStyle()
     }

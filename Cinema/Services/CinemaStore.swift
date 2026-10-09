@@ -56,6 +56,9 @@ final class CinemaStore {
     ]
     var savedScripts: [Idea] = []
 
+    // Weekly plan
+    var weekPlan: [PlannedVideo] = []
+
     // Brand kit and social proof
     var brandKit = BrandKit()
     var testimonials: [Testimonial] = [
@@ -559,6 +562,38 @@ final class CinemaStore {
         leads[index].status = status
     }
 
+    func lead(_ id: UUID) -> Lead? { leads.first { $0.id == id } }
+
+    func updateLead(_ lead: Lead) {
+        guard let index = leads.firstIndex(where: { $0.id == lead.id }) else { return }
+        leads[index] = lead
+    }
+
+    func markContacted(_ leadID: UUID) {
+        guard let index = leads.firstIndex(where: { $0.id == leadID }) else { return }
+        leads[index].lastContacted = Date()
+        if leads[index].status == .new { leads[index].status = .contacted }
+    }
+
+    var leadsDueForFollowUp: [Lead] {
+        leads.filter { lead in
+            guard let due = lead.followUpDate else { return false }
+            return due <= Date() && lead.status != .booked
+        }
+    }
+
+    func setFollowUp(_ leadID: UUID, on date: Date?) async {
+        guard let index = leads.firstIndex(where: { $0.id == leadID }) else { return }
+        leads[index].followUpDate = date
+        if let date {
+            let allowed = await ReminderScheduler.requestPermission()
+            if allowed { await ReminderScheduler.scheduleFollowUp(for: leads[index], at: date) }
+            showToast("Reminder set for \(date.shortDay)")
+        } else {
+            ReminderScheduler.cancelFollowUp(for: leadID)
+        }
+    }
+
     // MARK: Challenges
 
     func join(_ challengeID: UUID) {
@@ -937,6 +972,79 @@ final class CinemaStore {
     func saveScript(_ idea: Idea) {
         savedScripts.insert(idea, at: 0)
         addIdea(idea)
+    }
+
+    // MARK: Plan my week
+
+    var weekPlanDone: Int { weekPlan.filter(\.isDone).count }
+
+    /// Spreads the weekly goal across the next 7 days with a mix of ideas from every city served.
+    func buildWeekPlan() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let count = max(1, min(profile.weeklyGoal, 7))
+        let step = 7.0 / Double(count)
+        let days = (0..<count).compactMap { calendar.date(byAdding: .day, value: Int((Double($0) * step).rounded(.down)), to: today) }
+        let weekSeed = UInt64(calendar.component(.weekOfYear, from: today)) &* 7919 &+ UInt64(weekPlan.count)
+        let pool = localEngine.ideas(for: profile, count: count + 4, seed: weekSeed &+ UInt64.random(in: 0...999))
+        weekPlan = zip(days, pool).map { PlannedVideo(day: $0, idea: $1) }
+        for item in weekPlan { addIdea(item.idea, announce: false) }
+        showToast("Your week is planned: \(weekPlan.count) videos")
+    }
+
+    func swapPlanned(_ item: PlannedVideo) {
+        guard let index = weekPlan.firstIndex(where: { $0.id == item.id }) else { return }
+        let used = Set(weekPlan.map(\.idea.title))
+        let fresh = localEngine.ideas(for: profile, count: 12, seed: UInt64.random(in: 1...UInt64.max))
+        if let replacement = fresh.first(where: { !used.contains($0.title) }) {
+            weekPlan[index].idea = replacement
+            addIdea(replacement, announce: false)
+        }
+    }
+
+    func togglePlanned(_ item: PlannedVideo) {
+        guard let index = weekPlan.firstIndex(where: { $0.id == item.id }) else { return }
+        weekPlan[index].isDone.toggle()
+        if weekPlan[index].isDone { profile.points += 15 }
+    }
+
+    // MARK: Achievements
+
+    var creatorLevel: CreatorLevel { CreatorLevel.forPoints(profile.points) }
+
+    var achievements: [Achievement] {
+        let filmed = clips.filter { $0.source == .phoneEdit }.count
+        let posted = posts.filter { $0.status == .posted }.count
+        let openHouseLeads = leads.filter { $0.openHouseAddress != nil }.count
+        let fiveStars = testimonials.filter { $0.stars == 5 }.count
+        let coursesDone = courses.filter(\.isComplete).count
+        let challengeDone = challenges.filter { $0.isJoined && $0.completedDays >= $0.totalDays }.count
+        let rewarded = referrals.filter { $0.status == .rewarded }.count
+        return [
+            Achievement(id: "first-video", title: "Lights, camera", detail: "Film your first video", icon: "video.fill", progress: filmed, goal: 1, points: 50),
+            Achievement(id: "ten-videos", title: "On a roll", detail: "Film 10 videos", icon: "film.stack.fill", progress: filmed, goal: 10, points: 200),
+            Achievement(id: "five-posts", title: "Everywhere at once", detail: "Post 5 videos", icon: "paperplane.fill", progress: posted, goal: 5, points: 100),
+            Achievement(id: "streak", title: "Week strong", detail: "Keep a 7 day streak", icon: "flame.fill", progress: profile.streakDays, goal: 7, points: 150),
+            Achievement(id: "first-lead", title: "Hello, lead", detail: "Get your first lead", icon: "person.badge.plus", progress: leads.count, goal: 1, points: 50),
+            Achievement(id: "open-house", title: "Open house pro", detail: "Collect 5 open house sign ins", icon: "door.left.hand.open", progress: openHouseLeads, goal: 5, points: 100),
+            Achievement(id: "poster", title: "Just listed", detail: "Make your first poster", icon: "rectangle.portrait.on.rectangle.portrait.fill", progress: posters.count, goal: 1, points: 30),
+            Achievement(id: "brand", title: "On brand", detail: "Fill in 3 parts of your brand kit", icon: "paintpalette.fill", progress: brandKit.completion, goal: 3, points: 50),
+            Achievement(id: "five-star", title: "Client love", detail: "Save 3 five star testimonials", icon: "heart.fill", progress: fiveStars, goal: 3, points: 100),
+            Achievement(id: "recruiter", title: "Recruiter", detail: "Invite an agent who joins", icon: "gift.fill", progress: rewarded, goal: 1, points: 100),
+            Achievement(id: "markets", title: "Market expert", detail: "Serve 2 or more cities", icon: "map.fill", progress: allMarkets.count, goal: 2, points: 50),
+            Achievement(id: "course", title: "Graduate", detail: "Finish a course", icon: "graduationcap.fill", progress: coursesDone, goal: 1, points: 150),
+            Achievement(id: "challenge", title: "Champion", detail: "Finish a challenge", icon: "trophy.fill", progress: challengeDone, goal: 1, points: 200)
+        ]
+    }
+
+    /// Top creators in the agent's city this month. Sample names until the backend is live.
+    var cityLeaderboard: [LeaderboardEntry] {
+        let names = ["Taylor Brooks", "Chris Nguyen", "Morgan Lee", "Sam Patel", "Avery Collins", "Jamie Ortiz", "Riley Chen"]
+        var rows = names.enumerated().map { index, name in
+            LeaderboardEntry(name: name, market: homeCity.name, points: max(60, profile.points + 260 - index * 95))
+        }
+        rows.append(LeaderboardEntry(name: profile.name, market: homeCity.name, points: profile.points, isMe: true))
+        return rows.sorted { $0.points > $1.points }
     }
 
     // MARK: Brand kit

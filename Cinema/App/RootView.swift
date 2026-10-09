@@ -168,6 +168,12 @@ struct RouteDestination: View {
             TestimonialsView()
         case .marketUpdate:
             MarketUpdateView()
+        case .weekPlan:
+            WeekPlanView()
+        case .achievements:
+            AchievementsView()
+        case .lead(let id):
+            LeadDetailView(leadID: id)
         }
     }
 

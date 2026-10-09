@@ -512,6 +512,9 @@ struct Lead: Identifiable, Hashable, Codable {
     var status: LeadStatus
     /// Set when the lead signed in at an open house instead of commenting.
     var openHouseAddress: String? = nil
+    var notes: String = ""
+    var followUpDate: Date? = nil
+    var lastContacted: Date? = nil
 }
 
 // MARK: - Challenges
@@ -766,4 +769,7 @@ enum Route: Hashable {
     case brandKit
     case testimonials
     case marketUpdate
+    case weekPlan
+    case achievements
+    case lead(UUID)
 }

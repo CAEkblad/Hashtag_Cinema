@@ -40,6 +40,20 @@ enum ReminderScheduler {
         try? await center.add(request)
     }
 
+    static func scheduleFollowUp(for lead: Lead, at date: Date) async {
+        let content = UNMutableNotificationContent()
+        content.title = "Follow up with \(lead.name)"
+        content.body = lead.openHouseAddress.map { "They visited \($0). A quick text keeps you top of mind." } ?? "They commented \(lead.keyword). A quick text keeps you top of mind."
+        content.sound = .default
+        let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
+        try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "cinema.follow-up.\(lead.id.uuidString)", content: content, trigger: trigger))
+    }
+
+    static func cancelFollowUp(for leadID: UUID) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["cinema.follow-up.\(leadID.uuidString)"])
+    }
+
     static func cancel() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
     }
