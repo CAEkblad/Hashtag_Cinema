@@ -795,6 +795,8 @@ enum Route: Hashable {
     case newsletter
     case deals
     case photoReel
+    case buyers
+    case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)
 }

@@ -48,6 +48,7 @@ enum ToolCatalog {
         Tool(title: "Buyer cash to close", keywords: "closing costs down payment intangible tax doc stamps", icon: "creditcard.fill", route: .buyerCosts, group: .listings),
         Tool(title: "Payment calculator", keywords: "mortgage monthly payment", icon: "function", route: .paymentCalculator, group: .listings),
         Tool(title: "Leads", keywords: "contacts follow up", icon: "person.badge.plus", route: .leads, group: .clients),
+        Tool(title: "Buyer wishlists", keywords: "buyer needs match criteria search alert", icon: "heart.text.square", route: .buyers, group: .clients),
         Tool(title: "Past clients", keywords: "home anniversary sphere repeat value check in", icon: "house.and.flag.fill", route: .pastClients, group: .clients),
         Tool(title: "Trusted pros", keywords: "vendors lender inspector title insurance pool movers", icon: "person.2.badge.gearshape.fill", route: .vendors, group: .clients),
         Tool(title: "Testimonials", keywords: "reviews client love", icon: "heart.text.square.fill", route: .testimonials, group: .clients),

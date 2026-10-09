@@ -16,6 +16,7 @@ struct ListingDetailView: View {
     @State private var showFlyer = false
     @State private var showNetSheet = false
     @State private var showReel = false
+    @State private var showShots = false
 
     var body: some View {
         if let listing = store.listing(listingID) {
@@ -43,6 +44,13 @@ struct ListingDetailView: View {
                     showNetSheet = true
                 } label: {
                     IconRow(icon: "dollarsign.circle.fill", title: "Seller net sheet", subtitle: "What your seller walks away with")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+                Button {
+                    showShots = true
+                } label: {
+                    IconRow(icon: "video.badge.checkmark", title: "Shot list to film it yourself", subtitle: "Built from this home's features, with a voiceover")
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
@@ -78,6 +86,9 @@ struct ListingDetailView: View {
         }
         .navigationDestination(isPresented: $showCalculator) {
             PaymentCalculatorView(startingPrice: Double(listing.price))
+        }
+        .navigationDestination(isPresented: $showShots) {
+            ShotListView(listing: listing)
         }
         .navigationDestination(isPresented: $showReel) {
             PhotoReelView(listing: listing)

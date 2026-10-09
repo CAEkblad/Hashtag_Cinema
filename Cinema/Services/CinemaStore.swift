@@ -73,6 +73,11 @@ final class CinemaStore {
     // Deals under contract
     var deals: [Deal] = CinemaStore.sampleDeals()
 
+    // Buyer wishlists
+    var buyers: [BuyerWish] = [
+        BuyerWish(name: "Dana and Chris Wolfe", cityNames: ["Tampa"], maxPrice: 1_400_000, minBeds: 3, mustHaves: [.pool], notes: "Moving from Chicago by spring. Want to be near South Tampa schools.")
+    ]
+
     // Weekly plan
     var weekPlan: [PlannedVideo] = []
 
@@ -159,12 +164,13 @@ final class CinemaStore {
         var bookings: [Booking]
         var agentReferrals: [AgentReferral]
         var shootMessages: [ShootMessage]
+        var buyers: [BuyerWish]?
     }
 
     private static let workKey = "cinema.work.v1"
 
     private func persistWork() {
-        let work = WorkData(listings: listings, deals: deals, tours: tours, leads: leads, bookings: bookings, agentReferrals: agentReferrals, shootMessages: shootMessages)
+        let work = WorkData(listings: listings, deals: deals, tours: tours, leads: leads, bookings: bookings, agentReferrals: agentReferrals, shootMessages: shootMessages, buyers: buyers)
         if let data = try? JSONEncoder().encode(work) {
             UserDefaults.standard.set(data, forKey: Self.workKey)
         }
@@ -180,6 +186,7 @@ final class CinemaStore {
         bookings = work.bookings
         agentReferrals = work.agentReferrals
         shootMessages = work.shootMessages
+        if let saved = work.buyers { buyers = saved }
     }
 
     /// Saves who is signed in and their setup so the app opens where they left off.
@@ -846,6 +853,10 @@ final class CinemaStore {
         new.description = ListingCopywriter.description(for: new, tone: .warm)
         listings.insert(new, at: 0)
         showToast("Listing added with a marketing plan")
+        let fans = buyers.filter { $0.matches(new) }
+        if let first = fans.first {
+            notify(.lead, fans.count == 1 ? "\(first.name) is a match" : "\(fans.count) buyers match", detail: "\(new.address) fits what \(fans.count == 1 ? "they're" : "they're each") looking for. Send it before it hits the portals.", route: .buyer(first.id))
+        }
         return new
     }
 
@@ -1258,10 +1269,24 @@ final class CinemaStore {
 
     func tour(_ id: UUID) -> ShowingTour? { tours.first { $0.id == id } }
 
-    func createTour(buyerName: String, start: Date, minutesPerStop: Int) {
-        let tour = ShowingTour(buyerName: buyerName, start: start, minutesPerStop: minutesPerStop)
+    @discardableResult
+    func createTour(buyerName: String, start: Date, minutesPerStop: Int, stops: [TourStop] = []) -> UUID {
+        let tour = ShowingTour(buyerName: buyerName, start: start, minutesPerStop: minutesPerStop, stops: stops)
         tours.append(tour)
-        showToast("Tour for \(buyerName) created. Add the homes next.")
+        showToast(stops.isEmpty ? "Tour for \(buyerName) created. Add the homes next." : "Tour with \(stops.count) homes is in Showing tours")
+        return tour.id
+    }
+
+    // MARK: Buyer wishlists
+
+    func addBuyer(_ buyer: BuyerWish) {
+        buyers.insert(buyer, at: 0)
+        let count = listings.filter { buyer.matches($0) }.count
+        showToast(count > 0 ? "\(buyer.firstName) matches \(count) of your listings" : "\(buyer.firstName) saved. We'll watch for matches.")
+    }
+
+    func deleteBuyer(_ id: UUID) {
+        buyers.removeAll { $0.id == id }
     }
 
     func addStop(_ stop: TourStop, to tourID: UUID) {

@@ -19,11 +19,15 @@ struct ListingsView: View {
 
                 HStack(spacing: 12) {
                     NavigationLink(value: Route.deals) {
-                        quickTile("Under contract", value: "\(store.deals.filter { !$0.isClosed }.count)", icon: "doc.text.fill")
+                        quickTile("Pending", value: "\(store.deals.filter { !$0.isClosed }.count)", icon: "doc.text.fill")
                     }
                     .buttonStyle(.plain)
                     NavigationLink(value: Route.tours) {
-                        quickTile("Showing tours", value: "\(store.tours.count)", icon: "car.fill")
+                        quickTile("Tours", value: "\(store.tours.count)", icon: "car.fill")
+                    }
+                    .buttonStyle(.plain)
+                    NavigationLink(value: Route.buyers) {
+                        quickTile("Buyers", value: "\(store.buyers.count)", icon: "heart.text.square")
                     }
                     .buttonStyle(.plain)
                 }
