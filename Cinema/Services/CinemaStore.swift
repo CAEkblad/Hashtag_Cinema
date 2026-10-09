@@ -70,6 +70,9 @@ final class CinemaStore {
     // Shoot chat with the shooter, per booking
     var shootMessages: [ShootMessage] = []
 
+    // Deals under contract
+    var deals: [Deal] = CinemaStore.sampleDeals()
+
     // Weekly plan
     var weekPlan: [PlannedVideo] = []
 
@@ -1302,6 +1305,89 @@ final class CinemaStore {
         if lower.contains("home") { return "Sounds good. I'll introduce myself and keep it quick and tidy." }
         if lower.contains("neighborhood") || lower.contains("area") { return "Absolutely. I'll grab the park, the water and a few street scenes." }
         return "Thanks! Noted for the shoot. See you there."
+    }
+
+    // MARK: Deals
+
+    func deal(_ id: UUID) -> Deal? { deals.first { $0.id == id } }
+
+    /// The soonest open deadline across every pending deal.
+    var nextDealDeadline: (Deal, DealMilestone)? {
+        deals.filter { !$0.isClosed }
+            .compactMap { deal in deal.nextMilestone.map { (deal, $0) } }
+            .min { $0.1.dueDate < $1.1.dueDate }
+    }
+
+    /// A deadline worth a Home card: overdue or due in the next 2 days.
+    var urgentDealDeadline: (Deal, DealMilestone)? {
+        guard let next = nextDealDeadline else { return nil }
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: next.1.dueDate)).day ?? 99
+        return next.1.isOverdue || days <= 2 ? next : nil
+    }
+
+    func addDeal(_ deal: Deal) {
+        deals.append(deal)
+        notify(.system, "Under contract!", detail: "\(deal.address) is pending. \(deal.milestones.count) deadlines are on your timeline.", route: .deal(deal.id))
+        showToast("Deal added with \(deal.milestones.count) deadlines")
+    }
+
+    func toggleMilestone(_ milestoneID: UUID, dealID: UUID) {
+        guard let d = deals.firstIndex(where: { $0.id == dealID }),
+              let m = deals[d].milestones.firstIndex(where: { $0.id == milestoneID }) else { return }
+        deals[d].milestones[m].isDone.toggle()
+    }
+
+    func setMilestoneDate(_ date: Date, milestoneID: UUID, dealID: UUID) {
+        guard let d = deals.firstIndex(where: { $0.id == dealID }),
+              let m = deals[d].milestones.firstIndex(where: { $0.id == milestoneID }) else { return }
+        deals[d].milestones[m].dueDate = date
+        deals[d].milestones.sort { $0.dueDate < $1.dueDate }
+        if deals[d].remindersOn { setDealReminders(dealID, on: true) }
+    }
+
+    func setDealReminders(_ dealID: UUID, on: Bool) {
+        guard let d = deals.firstIndex(where: { $0.id == dealID }) else { return }
+        deals[d].remindersOn = on
+        let deal = deals[d]
+        let ids = deal.milestones.map { "cinema.deal.\($0.id.uuidString)" }
+        ReminderScheduler.cancel(ids: ids)
+        guard on else { return }
+        Task {
+            guard await ReminderScheduler.requestPermission() else {
+                self.showToast("Turn on notifications in Settings to get reminders")
+                return
+            }
+            for milestone in deal.milestones where !milestone.isDone {
+                await ReminderScheduler.scheduleOnce(id: "cinema.deal.\(milestone.id.uuidString)", title: "Today: \(milestone.title)", body: deal.address, on: milestone.dueDate)
+            }
+            self.showToast("Reminders set for every deadline")
+        }
+    }
+
+    func closeDeal(_ dealID: UUID) {
+        guard let d = deals.firstIndex(where: { $0.id == dealID }) else { return }
+        deals[d].isClosed = true
+        for m in deals[d].milestones.indices { deals[d].milestones[m].isDone = true }
+        let deal = deals[d]
+        ReminderScheduler.cancel(ids: deal.milestones.map { "cinema.deal.\($0.id.uuidString)" })
+        let parts = deal.address.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        addPastClient(PastClient(name: deal.clientName, address: parts.first ?? deal.address, cityName: parts.count > 1 ? parts[1] : homeCity.name, closeDate: deal.closingDate, side: deal.side), remind: true)
+        if let l = listings.firstIndex(where: { $0.address == deal.address }), listings[l].status != .sold {
+            setStatus(.sold, for: listings[l].id)
+        } else {
+            notify(.system, "Closed! Ask for a testimonial", detail: "\(deal.clientName) just closed on \(deal.address). Happy clients write the best reviews in the first week.", route: .testimonials)
+        }
+        showToast("Congrats on closing \(deal.address)!")
+    }
+
+    nonisolated static func sampleDeals() -> [Deal] {
+        let effective = MockData.day(-13)
+        let closing = MockData.day(22)
+        var milestones = Deal.defaultMilestones(effective: effective, closing: closing, financed: true)
+        for index in milestones.indices where milestones[index].dueDate < MockData.day(0) && index < 2 {
+            milestones[index].isDone = true
+        }
+        return [Deal(address: "4407 W Euclid Ave, Tampa", clientName: "Marcus Reed", side: .buyer, price: 505_000, effectiveDate: effective, closingDate: closing, commissionPercent: 2.5, milestones: milestones)]
     }
 
     // MARK: Script writer

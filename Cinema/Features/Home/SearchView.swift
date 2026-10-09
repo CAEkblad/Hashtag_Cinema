@@ -39,6 +39,7 @@ enum ToolCatalog {
         Tool(title: "Book a pro shoot", keywords: "booking deposit listing package", icon: "camera.fill", route: .bookings, group: .listings),
         Tool(title: "Find a photographer", keywords: "shooter crew book drone video photos map", icon: "person.crop.rectangle.stack.fill", route: .findShooter, group: .listings),
         Tool(title: "Help me choose a package", keywords: "which package recommend add ons twilight 3d tour", icon: "wand.and.stars", route: .packageAdvisor, group: .listings),
+        Tool(title: "Under contract", keywords: "deals pending deadlines inspection closing escrow timeline", icon: "doc.text.fill", route: .deals, group: .listings),
         Tool(title: "Listing presentation", keywords: "pitch seller marketing plan", icon: "doc.richtext.fill", route: .listingPitch, group: .listings),
         Tool(title: "Seller prep checklist", keywords: "prepare home shoot", icon: "checklist", route: .sellerPrep, group: .listings),
         Tool(title: "Seller net sheet", keywords: "net proceeds closing costs doc stamps title commission", icon: "dollarsign.circle.fill", route: .netSheet, group: .listings),

@@ -17,6 +17,17 @@ struct ListingsView: View {
                     .font(.cinema(14))
                     .foregroundStyle(Theme.textSecondary)
 
+                HStack(spacing: 12) {
+                    NavigationLink(value: Route.deals) {
+                        quickTile("Under contract", value: "\(store.deals.filter { !$0.isClosed }.count)", icon: "doc.text.fill")
+                    }
+                    .buttonStyle(.plain)
+                    NavigationLink(value: Route.tours) {
+                        quickTile("Showing tours", value: "\(store.tours.count)", icon: "car.fill")
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         chip("All \(store.listings.count)", isOn: filter == nil) { filter = nil }
@@ -60,6 +71,23 @@ struct ListingsView: View {
         .sheet(isPresented: $showAdd) {
             AddListingView()
         }
+    }
+
+    private func quickTile(_ title: String, value: String, icon: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .foregroundStyle(Theme.red)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(value)
+                    .font(.cinema(18, weight: .bold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(title)
+                    .font(.cinema(12))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .cardStyle(padding: 14)
     }
 
     private func chip(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {

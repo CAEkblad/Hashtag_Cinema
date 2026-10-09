@@ -69,6 +69,23 @@ enum ReminderScheduler {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["cinema.anniversary.\(id.uuidString)"])
     }
 
+    /// A one time reminder at 9 AM on a date, used for deal deadlines.
+    static func scheduleOnce(id: String, title: String, body: String, on date: Date) async {
+        var parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        parts.hour = 9
+        guard let fire = Calendar.current.date(from: parts), fire > Date() else { return }
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
+        try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
+    static func cancel(ids: [String]) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+    }
+
     static func cancel() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
     }

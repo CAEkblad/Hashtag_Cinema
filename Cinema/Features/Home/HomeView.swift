@@ -38,6 +38,13 @@ struct HomeView: View {
                         }
                         .buttonStyle(.plain)
                     }
+                    if let urgent = store.urgentDealDeadline {
+                        NavigationLink(value: Route.deal(urgent.0.id)) {
+                            IconRow(icon: urgent.1.isOverdue ? "exclamationmark.triangle.fill" : "clock.badge.exclamationmark.fill", title: "\(urgent.1.title) \(urgent.1.isOverdue ? "is overdue" : urgent.1.dueDate.relativeDayLabel)", subtitle: urgent.0.address)
+                                .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
                     VStack(spacing: 8) {
                         TipView(MarketTip())
                             .tint(Theme.red)

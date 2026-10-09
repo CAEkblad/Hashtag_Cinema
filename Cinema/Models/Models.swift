@@ -793,5 +793,7 @@ enum Route: Hashable {
     case packageAdvisor
     case relocationGuide
     case newsletter
+    case deals
+    case deal(UUID)
     case bookingChat(UUID)
 }
