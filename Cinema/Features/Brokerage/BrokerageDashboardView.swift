@@ -5,6 +5,7 @@ struct BrokerageDashboardView: View {
     @State private var creditPool = 40
     @State private var seats = 25
     @State private var showChallenge = false
+    @State private var showAnnouncement = false
 
     private var activeAgents: Int { store.brokerageMembers.filter { $0.postsThisMonth > 0 }.count }
     private var totalPosts: Int { store.brokerageMembers.reduce(0) { $0 + $1.postsThisMonth } }
@@ -28,6 +29,13 @@ struct BrokerageDashboardView: View {
                     StatTile(value: "\(totalLeads)", label: "Leads from video", icon: "person.badge.plus")
                     StatTile(value: "\(creditPool)", label: "Credits in pool", icon: "ticket.fill")
                 }
+
+                Button {
+                    showAnnouncement = true
+                } label: {
+                    Label("Post an announcement", systemImage: "megaphone.fill")
+                }
+                .buttonStyle(PrimaryButtonStyle())
 
                 SectionHeader(title: "Agents")
                 VStack(spacing: 0) {
@@ -57,6 +65,11 @@ struct BrokerageDashboardView: View {
                             Text("\(member.challengeDays)").frame(width: 50)
                             Text("\(member.leads)").frame(width: 50)
                         }
+                        .contextMenu {
+                            ShareLink(item: "Hey \(member.name.split(separator: " ").first.map(String.init) ?? member.name)! Haven't seen a video from you this month. Open #Cinema, today's idea takes 60 seconds to film. I'll share it with the office!") {
+                                Label("Nudge \(member.name)", systemImage: "hand.wave.fill")
+                            }
+                        }
                         .font(.cinema(14))
                         .foregroundStyle(Theme.textPrimary)
                         .padding(.horizontal, 14)
@@ -65,7 +78,7 @@ struct BrokerageDashboardView: View {
                 }
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
 
-                Text("Orange dot: hasn't posted this month. Nudge them or invite them to the office challenge.")
+                Text("Orange dot: hasn't posted this month. Press and hold an agent to send a nudge, or invite them to the office challenge.")
                     .font(.cinema(12))
                     .foregroundStyle(Theme.textTertiary)
 
@@ -125,6 +138,9 @@ struct BrokerageDashboardView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showChallenge) {
             CreateChallengeView()
+        }
+        .sheet(isPresented: $showAnnouncement) {
+            ComposeAnnouncementView()
         }
     }
 }

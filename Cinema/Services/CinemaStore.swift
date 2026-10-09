@@ -73,6 +73,12 @@ final class CinemaStore {
     // Deals under contract
     var deals: [Deal] = CinemaStore.sampleDeals()
 
+    // Office announcements
+    var announcements: [OfficeAnnouncement] = [
+        OfficeAnnouncement(title: "Listing video challenge starts Monday", body: "Post 3 listing or neighborhood videos this week. Top 3 agents get a free pro shoot from #Cinema.", author: "Your team leader", office: "Your office", date: MockData.day(0, hour: 8))
+    ]
+    var dismissedAnnouncementIDs: Set<UUID> = Set((UserDefaults.standard.stringArray(forKey: "cinema.announcements.dismissed") ?? []).compactMap(UUID.init(uuidString:)))
+
     // Comment to DM keywords
     var keywordRules: [KeywordRule] = []
 
@@ -1283,6 +1289,24 @@ final class CinemaStore {
         tours.append(tour)
         showToast(stops.isEmpty ? "Tour for \(buyerName) created. Add the homes next." : "Tour with \(stops.count) homes is in Showing tours")
         return tour.id
+    }
+
+    // MARK: Office announcements
+
+    var latestAnnouncement: OfficeAnnouncement? {
+        announcements.filter { !dismissedAnnouncementIDs.contains($0.id) }.max { $0.date < $1.date }
+    }
+
+    func postAnnouncement(title: String, body: String) {
+        let office = myMarketCenter?.name ?? profile.brokerage
+        announcements.append(OfficeAnnouncement(title: title, body: body, author: profile.name, office: office.isEmpty ? "Your office" : office, date: Date()))
+        notify(.office, "Announcement posted", detail: "\(title) is on your agents' Home screens.", route: .brokerage)
+        showToast("Posted to your agents")
+    }
+
+    func dismissAnnouncement(_ id: UUID) {
+        dismissedAnnouncementIDs.insert(id)
+        UserDefaults.standard.set(dismissedAnnouncementIDs.map(\.uuidString), forKey: "cinema.announcements.dismissed")
     }
 
     // MARK: Comment to DM keywords

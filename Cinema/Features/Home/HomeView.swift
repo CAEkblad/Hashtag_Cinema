@@ -15,6 +15,9 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     greeting
+                    if let announcement = store.latestAnnouncement {
+                        AnnouncementCard(announcement: announcement)
+                    }
                     if store.showGettingStarted {
                         GettingStartedCard { stepID in
                             switch stepID {
