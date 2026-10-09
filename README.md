@@ -18,7 +18,7 @@ To run on your iPhone: select the **Cinema** target > **Signing & Capabilities**
 | Create | Idea feed with AI refresh, idea detail with shot list and script, camera with teleprompter and framing guides, practice mode with coach notes, upload from camera roll, send to editing |
 | Library | All clips with filters and search, video review with time-stamped notes, approve or request changes, 3 formats, post or share |
 | Community | Feed with likes, remix an idea, report and block, success stories, groups |
-| Me | Leads, coach, courses (lessons, filming assignments, certificates), challenges, content calendar, pro shoot booking with $500 deposit, connected accounts, plan and credits, brokerage dashboard |
+| Me | Leader tools (free promotion for team leads, MCAs and admins), leads, coach, courses (lessons, filming assignments, certificates), challenges, content calendar, pro shoot booking with $500 deposit, connected accounts, plan and credits, brokerage dashboard |
 
 ## Project layout
 

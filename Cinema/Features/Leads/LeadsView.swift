@@ -54,7 +54,7 @@ struct LeadRow: View {
                         Button(status.title) { store.setLeadStatus(status, for: lead.id) }
                     }
                 } label: {
-                    Pill(text: lead.status.title, color: lead.status == .new ? Theme.red : Theme.surfaceRaised, textColor: .white)
+                    Pill(text: lead.status.title, color: lead.status == .new ? Theme.red : Theme.surfaceRaised, textColor: lead.status == .new ? .white : Theme.textPrimary)
                 }
             }
             Text("\u{201C}\(lead.message)\u{201D}")

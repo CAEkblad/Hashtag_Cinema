@@ -91,8 +91,8 @@ final class CinemaStore {
         profile.role = role
         if !market.isEmpty { profile.market = market }
         profile.niche = niche
-        profile.plan = plan
-        profile.credits = max(profile.credits, plan.monthlyCredits)
+        profile.plan = role.isLeader ? .leader : plan
+        profile.credits = max(profile.credits, profile.plan.monthlyCredits)
         hasOnboarded = true
     }
 
@@ -334,6 +334,35 @@ final class CinemaStore {
         } catch {
             showToast("Purchase failed. Try again.")
         }
+    }
+
+    // MARK: Leaders: free promotion
+
+    var isLeader: Bool { profile.role.isLeader }
+    var promotions: [CommunityPost] { communityPosts.filter { $0.postedAs == profile.brokerage } }
+
+    /// Featured post on behalf of the brokerage, office or team. Free for leaders.
+    func promote(kind: CommunityPostKind, body: String, alsoToSocials: Bool) {
+        let post = CommunityPost(
+            author: profile.name,
+            market: profile.market,
+            niche: profile.role.orgWord.capitalized,
+            kind: kind,
+            body: body,
+            stat: nil,
+            likes: 0,
+            replies: 0,
+            createdAt: Date(),
+            postedAs: profile.brokerage,
+            isFeatured: true
+        )
+        communityPosts.insert(post, at: 0)
+        showToast(alsoToSocials ? "Featured in Community and posted to your socials" : "Featured in Community")
+    }
+
+    func spotlight(_ member: BrokerageMember) {
+        let body = "Agent spotlight: \(member.name) posted \(member.postsThisMonth) videos this month and brought in \(member.leads) leads from video. Proud to have them at \(profile.brokerage)."
+        promote(kind: .win, body: body, alsoToSocials: false)
     }
 
     // MARK: Plans

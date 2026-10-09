@@ -5,6 +5,7 @@ import Foundation
 enum UserRole: String, CaseIterable, Identifiable, Codable {
     case agent
     case teamLead
+    case marketCenter
     case brokerageAdmin
 
     var id: String { rawValue }
@@ -13,6 +14,7 @@ enum UserRole: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .agent: return "Agent"
         case .teamLead: return "Team lead"
+        case .marketCenter: return "Market center leader (MCA)"
         case .brokerageAdmin: return "Brokerage admin"
         }
     }
@@ -20,8 +22,9 @@ enum UserRole: String, CaseIterable, Identifiable, Codable {
     var subtitle: String {
         switch self {
         case .agent: return "I market myself and my listings"
-        case .teamLead: return "I run a team and share credits"
-        case .brokerageAdmin: return "I manage agents and seats"
+        case .teamLead: return "I run a team. Free to promote my team"
+        case .marketCenter: return "I lead an office. Free to promote it"
+        case .brokerageAdmin: return "I manage agents and seats. Free"
         }
     }
 
@@ -29,7 +32,19 @@ enum UserRole: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .agent: return "person.fill"
         case .teamLead: return "person.3.fill"
+        case .marketCenter: return "building.columns.fill"
         case .brokerageAdmin: return "building.2.fill"
+        }
+    }
+
+    /// Team leads, market center leaders and admins use #Cinema free.
+    var isLeader: Bool { self != .agent }
+
+    var orgWord: String {
+        switch self {
+        case .teamLead: return "team"
+        case .marketCenter: return "office"
+        default: return "brokerage"
         }
     }
 }
@@ -39,6 +54,7 @@ enum Plan: String, CaseIterable, Identifiable, Codable {
     case creator
     case pro
     case brokerage
+    case leader
 
     var id: String { rawValue }
 
@@ -48,6 +64,7 @@ enum Plan: String, CaseIterable, Identifiable, Codable {
         case .creator: return "Creator"
         case .pro: return "Pro"
         case .brokerage: return "Brokerage"
+        case .leader: return "Leader"
         }
     }
 
@@ -57,6 +74,7 @@ enum Plan: String, CaseIterable, Identifiable, Codable {
         case .creator: return "$99/mo"
         case .pro: return "$249/mo"
         case .brokerage: return "$49/seat/mo"
+        case .leader: return "Free"
         }
     }
 
@@ -66,6 +84,7 @@ enum Plan: String, CaseIterable, Identifiable, Codable {
         case .creator: return 4
         case .pro: return 10
         case .brokerage: return 4
+        case .leader: return 2
         }
     }
 
@@ -79,6 +98,8 @@ enum Plan: String, CaseIterable, Identifiable, Codable {
             return ["10 edit credits a month", "24 hour turnaround", "10% off pro shoots", "Monthly live group coaching", "1 course included"]
         case .brokerage:
             return ["Creator features per seat", "Admin dashboard", "Brokerage brand kit", "Shared credit pool"]
+        case .leader:
+            return ["Free for team leads, MCAs and admins", "Promote your brokerage, office and team", "Spotlight your agents and recruit", "Team dashboard and reports", "2 edit credits a month for office content"]
         }
     }
 }
@@ -577,6 +598,9 @@ struct CommunityPost: Identifiable, Hashable, Codable {
     var isLiked: Bool = false
     var createdAt: Date
     var template: Idea?
+    /// Set when a leader posts on behalf of their brokerage, office or team.
+    var postedAs: String? = nil
+    var isFeatured: Bool = false
 }
 
 struct CommunityGroup: Identifiable, Hashable, Codable {
@@ -665,6 +689,7 @@ enum Route: Hashable {
     case challenges
     case brokerage
     case plans
+    case promote
     case courses
     case course(UUID)
     case lesson(course: UUID, lesson: UUID)

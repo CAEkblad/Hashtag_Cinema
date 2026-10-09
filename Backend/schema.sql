@@ -17,8 +17,8 @@ create table profiles (
   name text not null,
   email text not null,
   brokerage_id uuid references brokerages,
-  role text not null default 'agent' check (role in ('agent', 'teamLead', 'brokerageAdmin', 'staff')),
-  plan text not null default 'starter' check (plan in ('starter', 'creator', 'pro', 'brokerage')),
+  role text not null default 'agent' check (role in ('agent', 'teamLead', 'marketCenter', 'brokerageAdmin', 'staff')),
+  plan text not null default 'starter' check (plan in ('starter', 'creator', 'pro', 'brokerage', 'leader')),
   market text,
   niche text,
   credits int not null default 0,
@@ -169,6 +169,8 @@ create table community_posts (
   body text not null,
   stat text,
   template_idea_id uuid references ideas,
+  posted_as_brokerage_id uuid references brokerages, -- leader posting for the office or team
+  is_featured boolean not null default false,
   likes int not null default 0,
   replies int not null default 0,
   created_at timestamptz not null default now()

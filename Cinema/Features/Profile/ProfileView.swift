@@ -12,6 +12,19 @@ struct ProfileView: View {
                         .listRowInsets(EdgeInsets())
                 }
 
+                if store.isLeader {
+                    Section {
+                        NavigationLink(value: Route.promote) {
+                            IconRow(icon: "megaphone.fill", title: "Promote your \(store.profile.role.orgWord)", subtitle: "Showcase, agent spotlights, recruiting", badge: "Free")
+                        }
+                    } header: {
+                        Text("Leader tools")
+                    } footer: {
+                        Text("Free for team leads, MCAs and admins.")
+                    }
+                    .listRowBackground(Theme.surface)
+                }
+
                 Section("Grow") {
                     NavigationLink(value: Route.leads) {
                         IconRow(icon: "person.badge.plus", title: "Leads", subtitle: "From comment keywords", badge: store.newLeadCount > 0 ? "\(store.newLeadCount) new" : nil)
@@ -138,9 +151,16 @@ struct PlansView: View {
                     .font(.cinema(13))
                     .foregroundStyle(Theme.textTertiary)
 
-                ForEach([Plan.starter, .creator, .pro]) { plan in
-                    PlanCard(plan: plan, isSelected: store.profile.plan == plan) {
-                        store.changePlan(to: plan)
+                if store.isLeader {
+                    PlanCard(plan: .leader, isSelected: true) {}
+                    Text("Your leader account is free. Agents on your \(store.profile.role.orgWord) pick their own plans or use brokerage seats.")
+                        .font(.cinema(13))
+                        .foregroundStyle(Theme.textTertiary)
+                } else {
+                    ForEach([Plan.starter, .creator, .pro]) { plan in
+                        PlanCard(plan: plan, isSelected: store.profile.plan == plan) {
+                            store.changePlan(to: plan)
+                        }
                     }
                 }
 

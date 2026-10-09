@@ -162,13 +162,18 @@ struct OnboardingView: View {
     private var planStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                title("Pick your plan", "Change anytime in Me > Plan.")
-                ForEach([Plan.starter, .creator, .pro]) { option in
-                    PlanCard(plan: option, isSelected: plan == option) { plan = option }
+                if role.isLeader {
+                    title("You're free", "Leaders use #Cinema at no cost to promote their \(role.orgWord) and their agents.")
+                    PlanCard(plan: .leader, isSelected: true) {}
+                } else {
+                    title("Pick your plan", "Change anytime in Me > Plan.")
+                    ForEach([Plan.starter, .creator, .pro]) { option in
+                        PlanCard(plan: option, isSelected: plan == option) { plan = option }
+                    }
+                    Text("Brokerage seats are set up by your broker.")
+                        .font(.cinema(13))
+                        .foregroundStyle(Theme.textTertiary)
                 }
-                Text("Brokerage seats are set up by your broker.")
-                    .font(.cinema(13))
-                    .foregroundStyle(Theme.textTertiary)
             }
             .padding(24)
         }

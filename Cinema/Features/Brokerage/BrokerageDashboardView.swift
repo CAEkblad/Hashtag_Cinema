@@ -97,12 +97,17 @@ struct BrokerageDashboardView: View {
                 .cardStyle()
 
                 VStack(spacing: 10) {
+                    NavigationLink(value: Route.promote) {
+                        Label("Promote your office and agents", systemImage: "megaphone.fill")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+
                     Button {
                         store.showToast("Office challenge launched")
                     } label: {
                         Label("Launch an office challenge", systemImage: "flag.checkered")
                     }
-                    .buttonStyle(PrimaryButtonStyle())
+                    .buttonStyle(SecondaryButtonStyle())
 
                     Button {
                         store.showToast("Invite link copied")

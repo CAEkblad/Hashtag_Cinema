@@ -10,7 +10,7 @@ struct SignInView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Theme.redDeep.opacity(0.55), Theme.background, Theme.background], startPoint: .top, endPoint: .bottom)
+            LinearGradient(colors: [Theme.red.opacity(0.16), Theme.background, Theme.background], startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
 
             VStack(spacing: 28) {

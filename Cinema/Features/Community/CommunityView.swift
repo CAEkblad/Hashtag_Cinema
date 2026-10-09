@@ -190,7 +190,17 @@ struct CommunityPostCard: View {
                         .lineLimit(1)
                 }
                 Spacer()
-                Pill(text: post.kind.title, icon: post.kind.icon)
+                if post.isFeatured {
+                    Pill(text: "Featured", icon: "star.fill", color: Theme.red, textColor: .white)
+                } else {
+                    Pill(text: post.kind.title, icon: post.kind.icon)
+                }
+            }
+
+            if let org = post.postedAs {
+                Label("Posted for \(org)", systemImage: "building.2.fill")
+                    .font(.cinema(12, weight: .semibold))
+                    .foregroundStyle(Theme.red)
             }
 
             Text(post.body)

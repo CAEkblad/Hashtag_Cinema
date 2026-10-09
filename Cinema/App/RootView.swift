@@ -77,9 +77,8 @@ struct ToastView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(Theme.surfaceRaised, in: Capsule())
-            .overlay(Capsule().stroke(Theme.red.opacity(0.6), lineWidth: 1))
-            .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
+            .background(Theme.ink, in: Capsule())
+            .shadow(color: .black.opacity(0.18), radius: 12, y: 4)
             .padding(.horizontal, Theme.gutter)
     }
 }
@@ -121,6 +120,8 @@ struct RouteDestination: View {
             BrokerageDashboardView()
         case .plans:
             PlansView()
+        case .promote:
+            PromoteView()
         case .courses:
             CoursesView()
         case .course(let id):

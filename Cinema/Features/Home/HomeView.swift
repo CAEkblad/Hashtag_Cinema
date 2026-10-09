@@ -12,6 +12,30 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     greeting
+                    if store.isLeader {
+                        NavigationLink(value: Route.promote) {
+                            HStack(spacing: 14) {
+                                Image(systemName: "megaphone.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 44, height: 44)
+                                    .background(Theme.red, in: Circle())
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text("Promote your \(store.profile.role.orgWord)")
+                                        .font(.cinema(16, weight: .semibold))
+                                        .foregroundStyle(Theme.textPrimary)
+                                    Text("Spotlight agents, share wins, recruit. Free for leaders.")
+                                        .font(.cinema(13))
+                                        .foregroundStyle(Theme.textSecondary)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right")
+                                    .foregroundStyle(Theme.textTertiary)
+                            }
+                            .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
                     statsRow
                     if let idea = store.ideaOfTheDay {
                         ideaOfTheDayCard(idea)
@@ -110,10 +134,11 @@ struct HomeView: View {
         }
         .padding(18)
         .background(
-            LinearGradient(colors: [Theme.redDeep.opacity(0.5), Theme.surface], startPoint: .topLeading, endPoint: .bottomTrailing),
+            LinearGradient(colors: [Theme.red.opacity(0.12), Theme.surface], startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: Theme.corner + 4, style: .continuous)
         )
-        .overlay(RoundedRectangle(cornerRadius: Theme.corner + 4, style: .continuous).stroke(Theme.red.opacity(0.35), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: Theme.corner + 4, style: .continuous).stroke(Theme.red.opacity(0.25), lineWidth: 1))
+        .shadow(color: Theme.red.opacity(0.10), radius: 16, x: 0, y: 6)
     }
 
     private var quickActions: some View {

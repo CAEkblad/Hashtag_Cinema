@@ -33,6 +33,7 @@ struct CardModifier: ViewModifier {
                 RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
                     .stroke(Theme.stroke, lineWidth: 1)
             )
+            .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
 }
 
@@ -82,6 +83,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.horizontal, 20)
             .frame(maxWidth: fullWidth ? .infinity : nil)
             .background(Theme.red.opacity(configuration.isPressed ? 0.75 : 1), in: Capsule())
+            .shadow(color: Theme.red.opacity(0.25), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -95,8 +97,8 @@ struct SecondaryButtonStyle: ButtonStyle {
             .padding(.vertical, 14)
             .padding(.horizontal, 20)
             .frame(maxWidth: fullWidth ? .infinity : nil)
-            .background(Theme.surfaceRaised.opacity(configuration.isPressed ? 0.7 : 1), in: Capsule())
-            .overlay(Capsule().stroke(Theme.stroke, lineWidth: 1))
+            .background(Theme.surface.opacity(configuration.isPressed ? 0.7 : 1), in: Capsule())
+            .overlay(Capsule().stroke(Theme.red.opacity(0.35), lineWidth: 1.25))
     }
 }
 
@@ -163,8 +165,10 @@ struct StatTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(Theme.red)
+                .frame(width: 30, height: 30)
+                .background(Theme.redSoft, in: Circle())
             Text(value)
                 .font(.cinema(22, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
@@ -270,7 +274,7 @@ struct IconRow: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Theme.red)
                 .frame(width: 34, height: 34)
-                .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(Theme.redSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.cinema(16, weight: .semibold))

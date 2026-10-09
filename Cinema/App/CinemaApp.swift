@@ -7,14 +7,17 @@ struct CinemaApp: App {
     init() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Theme.background)
+        appearance.backgroundColor = UIColor(Theme.surface)
+        appearance.shadowColor = UIColor(Theme.stroke)
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
 
         let nav = UINavigationBarAppearance()
-        nav.configureWithTransparentBackground()
-        nav.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        nav.titleTextAttributes = [.foregroundColor: UIColor.white]
+        nav.configureWithDefaultBackground()
+        nav.backgroundColor = UIColor(Theme.background)
+        nav.shadowColor = .clear
+        nav.largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.ink)]
+        nav.titleTextAttributes = [.foregroundColor: UIColor(Theme.ink)]
         UINavigationBar.appearance().standardAppearance = nav
         UINavigationBar.appearance().scrollEdgeAppearance = nav
     }
@@ -24,7 +27,7 @@ struct CinemaApp: App {
             RootView()
                 .environment(store)
                 .tint(Theme.red)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
         }
     }
 }
