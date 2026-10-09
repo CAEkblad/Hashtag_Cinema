@@ -8,6 +8,13 @@ struct CinemaApp: App {
     /// Live services when the backend is configured in AppConfig, sample data otherwise.
     @MainActor
     static func makeStore() -> CinemaStore {
+        let store = buildStore()
+        CinemaStore.shared = store
+        return store
+    }
+
+    @MainActor
+    private static func buildStore() -> CinemaStore {
         guard let backend = SupabaseClient.shared else { return CinemaStore() }
         return CinemaStore(
             ideaEngine: LiveIdeaEngine(client: backend),

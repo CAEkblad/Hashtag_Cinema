@@ -26,6 +26,7 @@ struct WhatsNewView: View {
         Item(icon: "bubble.left.and.text.bubble.right.fill", title: "Auto DM keywords", detail: "Save your comment keywords and DMs once, use them on every post.", route: .keywords),
         Item(icon: "arrow.triangle.branch", title: "Agent referrals", detail: "Send clients to trusted agents across Florida and track the fee.", route: .referralNetwork),
         Item(icon: "target", title: "Business plan", detail: "Your income goal, worked back to videos a week.", route: .businessPlan),
+        Item(icon: "waveform", title: "Siri and Shortcuts", detail: "Say \"Log mileage in #Cinema\", \"What's my video idea in #Cinema\" or \"Check my leads in #Cinema\".", route: .expenses),
         Item(icon: "square.grid.2x2.fill", title: "All tools", detail: "Everything in one place, grouped by what you're doing.", route: .tools)
     ]
 

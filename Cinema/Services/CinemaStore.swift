@@ -1297,6 +1297,19 @@ final class CinemaStore {
 
     // MARK: Mileage and expenses
 
+    /// The running store, so Siri shortcuts can reach it.
+    static weak var shared: CinemaStore?
+
+    /// Used by Siri when the app isn't running: the store reads it on next launch.
+    nonisolated static func appendExpenseToStorage(_ expense: BusinessExpense) {
+        let key = "cinema.expenses.v1"
+        var saved = (try? JSONDecoder().decode([BusinessExpense].self, from: UserDefaults.standard.data(forKey: key) ?? Data())) ?? []
+        saved.append(expense)
+        if let data = try? JSONEncoder().encode(saved) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
     /// Manual entries plus every #Cinema shoot, which counts as marketing.
     var allExpenses: [BusinessExpense] {
         let shoots = bookings.filter { $0.status != .depositPending }.map { booking in
