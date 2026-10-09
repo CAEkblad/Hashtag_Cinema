@@ -772,4 +772,6 @@ enum Route: Hashable {
     case weekPlan
     case achievements
     case lead(UUID)
+    case hooks
+    case greetings
 }

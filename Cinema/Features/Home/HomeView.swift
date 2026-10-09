@@ -210,6 +210,10 @@ struct HomeView: View {
                 quickActionLabel("Testimonials", icon: "heart.text.square.fill")
             }
             .buttonStyle(.plain)
+            NavigationLink(value: Route.greetings) {
+                quickActionLabel("Holiday posts", icon: "gift.fill")
+            }
+            .buttonStyle(.plain)
             NavigationLink(value: Route.referrals) {
                 quickActionLabel("Invite agents", icon: "gift.fill")
             }

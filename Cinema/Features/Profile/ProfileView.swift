@@ -98,6 +98,12 @@ struct ProfileView: View {
                     NavigationLink(value: Route.testimonials) {
                         IconRow(icon: "heart.text.square.fill", title: "Testimonials", subtitle: "\(store.testimonials.count) saved. Ask, share, make videos")
                     }
+                    NavigationLink(value: Route.greetings) {
+                        IconRow(icon: "gift.fill", title: "Holiday posts", subtitle: "Branded greetings, coming up first")
+                    }
+                    NavigationLink(value: Route.hooks) {
+                        IconRow(icon: "bolt.fill", title: "Hook library", subtitle: "Proven first lines for your videos")
+                    }
                     NavigationLink(value: Route.marketUpdate) {
                         IconRow(icon: "chart.bar.xaxis", title: "Market update graphic", subtitle: "Your numbers, branded, with a script")
                     }

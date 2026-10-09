@@ -13,6 +13,7 @@ struct ListingDetailView: View {
     @State private var openHouseHours = 3
     @State private var kiosk: OpenHouse?
     @State private var showCalculator = false
+    @State private var showFlyer = false
 
     var body: some View {
         if let listing = store.listing(listingID) {
@@ -32,6 +33,13 @@ struct ListingDetailView: View {
                 descriptionCard(listing)
                 openHouses(listing)
                 Button {
+                    showFlyer = true
+                } label: {
+                    IconRow(icon: "printer.fill", title: "Printable flyer", subtitle: "Letter size PDF with photos, QR code and your brand")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+                Button {
                     showCalculator = true
                 } label: {
                     IconRow(icon: "function", title: "Payment calculator", subtitle: "What \(listing.priceLabel) costs per month")
@@ -49,6 +57,9 @@ struct ListingDetailView: View {
         }
         .navigationDestination(isPresented: $showCalculator) {
             PaymentCalculatorView(startingPrice: Double(listing.price))
+        }
+        .sheet(isPresented: $showFlyer) {
+            FlyerView(listing: listing)
         }
         .fullScreenCover(item: $kiosk) { openHouse in
             OpenHouseKioskView(listing: listing, openHouse: openHouse)

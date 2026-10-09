@@ -22,6 +22,7 @@ struct IdeaFeedView: View {
                         .tint(Theme.red)
                     createRow
                     scriptLink
+                    hookLink
                     posterLink
                     marketLink
                     categoryChips
@@ -82,6 +83,29 @@ struct IdeaFeedView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    private var hookLink: some View {
+        NavigationLink(value: Route.hooks) {
+            HStack(spacing: 10) {
+                Image(systemName: "bolt.fill")
+                    .foregroundStyle(Theme.red)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Hook library")
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("36 proven first lines for your city")
+                        .font(.cinema(12))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .cardStyle(padding: 14)
+        }
+        .buttonStyle(.plain)
     }
 
     private var scriptLink: some View {

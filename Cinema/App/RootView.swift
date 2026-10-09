@@ -174,6 +174,10 @@ struct RouteDestination: View {
             AchievementsView()
         case .lead(let id):
             LeadDetailView(leadID: id)
+        case .hooks:
+            HookLibraryView()
+        case .greetings:
+            GreetingsView()
         }
     }
 
