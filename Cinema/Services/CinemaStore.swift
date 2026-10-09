@@ -797,7 +797,57 @@ final class CinemaStore {
         guard let index = listings.firstIndex(where: { $0.id == listingID }) else { return }
         listings[index].status = status
         showToast("\(status.title). Your \(status.posterKind.shortTitle.lowercased()) poster is ready to make.")
+        if status == .sold {
+            notify(.system, "Sold! Ask for a testimonial", detail: "\(listings[index].address) closed. Happy clients write the best reviews in the first week.", route: .testimonials)
+        }
     }
+
+    // MARK: Office challenges
+
+    func launchOfficeChallenge(title: String, subtitle: String, days: Int, prize: String) {
+        let me = LeaderboardEntry(name: profile.name, market: homeCity.name, points: 0, isMe: true)
+        let others = brokerageMembers.prefix(5).map { LeaderboardEntry(name: $0.name, market: homeCity.name, points: 0) }
+        let challenge = Challenge(
+            title: "\(myMarketCenter?.name ?? profile.brokerage): \(title)",
+            subtitle: subtitle,
+            totalDays: days,
+            completedDays: 0,
+            prize: prize,
+            participants: brokerageMembers.count + 1,
+            isJoined: true,
+            scope: .brokerage,
+            leaderboard: [me] + others
+        )
+        challenges.insert(challenge, at: 0)
+        notify(.office, "Office challenge launched", detail: "\(title) is live for \(brokerageMembers.count) agents.", route: .challenge(challenge.id))
+        showToast("\(title) is live for your \(officeWord)")
+    }
+
+    // MARK: Insights
+
+    /// Sample analytics until social accounts are connected. Stable per agent so the charts don't jump around.
+    var insights: ContentInsights {
+        var rng = SeededGenerator(seed: profile.email.unicodeScalars.reduce(UInt64(7)) { $0 &* 31 &+ UInt64($1.value) })
+        let calendar = Calendar.current
+        let thisWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+        var weekly: [ContentInsights.WeekPoint] = []
+        var level = Double.random(in: 4_000...7_000, using: &rng)
+        for offset in (0..<8).reversed() {
+            level *= Double.random(in: 0.92...1.22, using: &rng)
+            let start = calendar.date(byAdding: .weekOfYear, value: -offset, to: thisWeek) ?? thisWeek
+            weekly.append(ContentInsights.WeekPoint(weekStart: start, views: Int(level)))
+        }
+        let days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        let weekdayBars = days.map { ContentInsights.Bar(label: $0, value: Int(Double.random(in: 900...4_200, using: &rng))) }
+        let categories: [IdeaCategory] = [.neighborhood, .listingTour, .marketUpdate, .mythBuster, .clientStory]
+        let categoryBars = categories.map { ContentInsights.Bar(label: $0.title, value: Int(Double.random(in: 1_200...9_500, using: &rng))) }
+            .sorted { $0.value > $1.value }
+        let raw = SocialPlatform.allCases.map { ($0.name, Double.random(in: 0.1...1, using: &rng)) }
+        let total = raw.reduce(0) { $0 + $1.1 }
+        let platforms = raw.map { ContentInsights.Share(label: $0.0, share: $0.1 / total) }.sorted { $0.share > $1.share }
+        return ContentInsights(weekly: weekly, byWeekday: weekdayBars, byCategory: categoryBars, byPlatform: platforms, totalLeads: leads.count + 14)
+    }
+
 
     func toggleTask(_ task: MarketingTask, for listingID: UUID) {
         guard let index = listings.firstIndex(where: { $0.id == listingID }) else { return }

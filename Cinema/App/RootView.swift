@@ -178,6 +178,8 @@ struct RouteDestination: View {
             HookLibraryView()
         case .greetings:
             GreetingsView()
+        case .insights:
+            InsightsView()
         }
     }
 

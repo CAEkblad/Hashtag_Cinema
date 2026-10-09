@@ -774,4 +774,5 @@ enum Route: Hashable {
     case lead(UUID)
     case hooks
     case greetings
+    case insights
 }

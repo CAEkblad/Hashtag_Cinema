@@ -4,6 +4,7 @@ struct BrokerageDashboardView: View {
     @Environment(CinemaStore.self) private var store
     @State private var creditPool = 40
     @State private var seats = 25
+    @State private var showChallenge = false
 
     private var activeAgents: Int { store.brokerageMembers.filter { $0.postsThisMonth > 0 }.count }
     private var totalPosts: Int { store.brokerageMembers.reduce(0) { $0 + $1.postsThisMonth } }
@@ -103,7 +104,7 @@ struct BrokerageDashboardView: View {
                     .buttonStyle(PrimaryButtonStyle())
 
                     Button {
-                        store.showToast("Office challenge launched")
+                        showChallenge = true
                     } label: {
                         Label("Launch an office challenge", systemImage: "flag.checkered")
                     }
@@ -122,5 +123,8 @@ struct BrokerageDashboardView: View {
         .cinemaScreen()
         .navigationTitle("Brokerage")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showChallenge) {
+            CreateChallengeView()
+        }
     }
 }

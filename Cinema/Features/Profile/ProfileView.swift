@@ -61,6 +61,9 @@ struct ProfileView: View {
                 }
 
                 Section("Grow") {
+                    NavigationLink(value: Route.insights) {
+                        IconRow(icon: "chart.xyaxis.line", title: "Insights", subtitle: "Views, best days to post and top topics")
+                    }
                     NavigationLink(value: Route.achievements) {
                         IconRow(icon: store.creatorLevel.icon, title: "Achievements", subtitle: "\(store.creatorLevel.title) · \(store.achievements.filter(\.isUnlocked).count) badges")
                     }
