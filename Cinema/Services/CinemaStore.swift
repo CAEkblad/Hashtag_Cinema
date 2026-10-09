@@ -649,6 +649,9 @@ final class CinemaStore {
     func setLeadStatus(_ status: LeadStatus, for leadID: UUID) {
         guard let index = leads.firstIndex(where: { $0.id == leadID }) else { return }
         leads[index].status = status
+        if status == .booked {
+            ReminderScheduler.cancel(ids: [1, 3, 7].map { "cinema.plan.\(leadID.uuidString).\($0)" })
+        }
     }
 
     func lead(_ id: UUID) -> Lead? { leads.first { $0.id == id } }
@@ -682,9 +685,6 @@ final class CinemaStore {
             (3, "Send \(first) a few homes", "Pick 3 that fit what they asked about and send them with a note."),
             (7, "Check in with \(first)", "Ask how the search is going and offer a time to talk.")
         ]
-        if let day1 = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) {
-            leads[index].followUpDate = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day1)
-        }
         Task {
             guard await ReminderScheduler.requestPermission() else {
                 self.showToast("Turn on notifications in Settings to get reminders")
@@ -1328,7 +1328,9 @@ final class CinemaStore {
     // MARK: Farm area
 
     func setFarm(cityID: String, neighborhood: String, homes: Int, goal: Int) {
-        var updated = farm?.neighborhood == neighborhood ? (farm ?? FarmArea(cityID: cityID, neighborhood: neighborhood)) : FarmArea(cityID: cityID, neighborhood: neighborhood)
+        // Keep the touch history when the farm is edited, so a renamed farm loses nothing.
+        var updated = farm ?? FarmArea(cityID: cityID, neighborhood: neighborhood)
+        updated.neighborhood = neighborhood
         updated.cityID = cityID
         updated.homes = homes
         updated.monthlyGoal = goal
