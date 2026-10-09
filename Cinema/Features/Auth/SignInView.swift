@@ -3,10 +3,17 @@ import SwiftUI
 struct SignInView: View {
     @Environment(CinemaStore.self) private var store
     @State private var email = ""
-    @State private var password = ""
+    @State private var code = ""
+    @State private var codeSent = false
+    @State private var isWorking = false
     @FocusState private var focused: Field?
 
-    private enum Field { case email, password }
+    private enum Field { case email, code }
+
+    private var emailIsValid: Bool {
+        let trimmed = email.trimmingCharacters(in: .whitespaces)
+        return trimmed.contains("@") && trimmed.contains(".")
+    }
 
     var body: some View {
         ZStack {
@@ -24,7 +31,7 @@ struct SignInView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-                    feature("lightbulb.fill", "Daily ideas made for your market")
+                    feature("mappin.and.ellipse", "Daily ideas for your Florida city")
                     feature("scissors", "Film on your phone, we edit")
                     feature("paperplane.fill", "Post everywhere, capture leads")
                     feature("person.3.fill", "Learn from agents nationwide")
@@ -34,43 +41,81 @@ struct SignInView: View {
                 Spacer()
 
                 VStack(spacing: 12) {
-                    TextField("Email", text: $email)
-                        .textContentType(.emailAddress)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .focused($focused, equals: .email)
-                        .submitLabel(.next)
-                        .onSubmit { focused = .password }
-                        .inputStyle()
-
-                    SecureField("Password", text: $password)
-                        .textContentType(.password)
-                        .focused($focused, equals: .password)
-                        .submitLabel(.go)
-                        .onSubmit { store.signIn(email: email) }
-                        .inputStyle()
-
-                    Button("Sign in") { store.signIn(email: email) }
+                    if codeSent {
+                        Text("We sent a 6 digit code to \(email)")
+                            .font(.cinema(14))
+                            .foregroundStyle(Theme.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        TextField("6 digit code", text: $code)
+                            .textContentType(.oneTimeCode)
+                            .keyboardType(.numberPad)
+                            .focused($focused, equals: .code)
+                            .inputStyle()
+                        Button {
+                            Task { await verify() }
+                        } label: {
+                            if isWorking { ProgressView().tint(.white) } else { Text("Sign in") }
+                        }
                         .buttonStyle(PrimaryButtonStyle())
+                        .disabled(code.count < 6 || isWorking)
+                        Button("Use a different email") {
+                            codeSent = false
+                            code = ""
+                        }
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.red)
+                    } else {
+                        TextField("Email", text: $email)
+                            .textContentType(.emailAddress)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .focused($focused, equals: .email)
+                            .submitLabel(.go)
+                            .onSubmit { Task { await start() } }
+                            .inputStyle()
 
-                    Button {
-                        // Wire to Sign in with Apple (AuthenticationServices) once the
-                        // capability is added under Signing & Capabilities.
-                        store.signIn(email: "")
-                    } label: {
-                        Label("Continue with Apple", systemImage: "apple.logo")
+                        Button {
+                            Task { await start() }
+                        } label: {
+                            if isWorking { ProgressView().tint(.white) } else { Text(store.usesRealSignIn ? "Email me a code" : "Get started") }
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(isWorking)
+
+                        Text(store.usesRealSignIn ? "No password needed. We email you a code." : "Demo mode: any email works.")
+                            .font(.cinema(12))
+                            .foregroundStyle(Theme.textTertiary)
                     }
-                    .buttonStyle(SecondaryButtonStyle())
-
-                    Text("Demo mode: any email works.")
-                        .font(.cinema(12))
-                        .foregroundStyle(Theme.textTertiary)
                 }
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 16)
         }
+    }
+
+    private func start() async {
+        guard store.usesRealSignIn else {
+            store.signIn(email: email.trimmingCharacters(in: .whitespaces))
+            return
+        }
+        guard emailIsValid else {
+            store.showToast("Enter your email address")
+            return
+        }
+        isWorking = true
+        let sent = await store.sendSignInCode(to: email.trimmingCharacters(in: .whitespaces))
+        isWorking = false
+        if sent {
+            codeSent = true
+            focused = .code
+        }
+    }
+
+    private func verify() async {
+        isWorking = true
+        _ = await store.verifySignInCode(code.trimmingCharacters(in: .whitespaces), email: email.trimmingCharacters(in: .whitespaces))
+        isWorking = false
     }
 
     private func feature(_ icon: String, _ text: String) -> some View {

@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 struct HomeView: View {
     @Environment(CinemaStore.self) private var store
@@ -12,6 +13,32 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     greeting
+                    if store.showGettingStarted {
+                        GettingStartedCard { stepID in
+                            switch stepID {
+                            case "market": path.append(Route.market)
+                            case "connect": selectedTab = .me
+                            case "film": showCamera = true
+                            case "challenge": path.append(Route.challenges)
+                            default: path.append(Route.reminders)
+                            }
+                        }
+                    }
+                    TodayPlanCard(
+                        onFilm: { showCamera = true },
+                        onReview: { selectedTab = .library },
+                        onPost: { selectedTab = .library },
+                        onLeads: { path.append(Route.leads) }
+                    )
+                    WeeklyGoalCard()
+                    VStack(spacing: 8) {
+                        TipView(MarketTip())
+                            .tint(Theme.red)
+                        NavigationLink(value: Route.market) {
+                            MarketTeaserCard()
+                        }
+                        .buttonStyle(.plain)
+                    }
                     if store.isLeader {
                         NavigationLink(value: Route.promote) {
                             HStack(spacing: 14) {
@@ -36,10 +63,10 @@ struct HomeView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    statsRow
                     if let idea = store.ideaOfTheDay {
                         ideaOfTheDayCard(idea)
                     }
+                    statsRow
                     quickActions
                     if !store.clipsNeedingReview.isEmpty {
                         reviewSection
@@ -67,6 +94,12 @@ struct HomeView: View {
                     CinemaLogo(size: 20)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: Route.help) {
+                        Image(systemName: "questionmark.circle")
+                    }
+                    .accessibilityLabel("How #Cinema works")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(value: Route.leads) {
                         Image(systemName: "bell.fill")
                             .overlay(alignment: .topTrailing) {
@@ -91,7 +124,7 @@ struct HomeView: View {
             Text("Hey \(store.profile.firstName)")
                 .font(.cinema(30, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
-            Text("Here's your content plan for today.")
+            Text("Here's your plan for today in \(store.homeCity.name).")
                 .font(.cinema(16))
                 .foregroundStyle(Theme.textSecondary)
         }
@@ -148,8 +181,8 @@ struct HomeView: View {
                 quickActionLabel("Book a shoot", icon: "calendar.badge.plus")
             }
             .buttonStyle(.plain)
-            NavigationLink(value: Route.calendar) {
-                quickActionLabel("Content calendar", icon: "calendar")
+            NavigationLink(value: Route.posterMaker) {
+                quickActionLabel("Make a poster", icon: "rectangle.portrait.on.rectangle.portrait.fill")
             }
             .buttonStyle(.plain)
             quickAction("My library", icon: "film.stack") { selectedTab = .library }

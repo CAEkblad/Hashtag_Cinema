@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import TipKit
 
 struct IdeaFeedView: View {
     @Environment(CinemaStore.self) private var store
@@ -17,7 +18,11 @@ struct IdeaFeedView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    TipView(NewIdeasTip())
+                        .tint(Theme.red)
                     createRow
+                    posterLink
+                    marketLink
                     categoryChips
                     HStack {
                         SectionHeader(title: "Shoot this today")
@@ -78,6 +83,53 @@ struct IdeaFeedView: View {
         }
     }
 
+    private var posterLink: some View {
+        NavigationLink(value: Route.posterMaker) {
+            HStack(spacing: 10) {
+                Image(systemName: "rectangle.portrait.on.rectangle.portrait.fill")
+                    .foregroundStyle(Theme.red)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Make a listing poster")
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Just listed, just sold, coming soon, open house")
+                        .font(.cinema(12))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .cardStyle(padding: 14)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var marketLink: some View {
+        NavigationLink(value: Route.market) {
+            HStack(spacing: 10) {
+                Image(systemName: "mappin.and.ellipse")
+                    .foregroundStyle(Theme.red)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Ideas for \(store.allMarkets.map(\.name).joined(separator: ", "))")
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                    Text("This month's local topics and neighborhood spotlights")
+                        .font(.cinema(12))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .cardStyle(padding: 14)
+        }
+        .buttonStyle(.plain)
+    }
+
     private func createTile(_ title: String, subtitle: String, icon: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Image(systemName: icon)
@@ -126,6 +178,9 @@ struct IdeaCard: View {
             HStack(spacing: 8) {
                 Pill(text: idea.category.title, icon: idea.category.icon)
                 Pill(text: "\(idea.targetSeconds)s", icon: "timer")
+                if let city = idea.cityName {
+                    Pill(text: city, icon: "mappin", color: Theme.redSoft, textColor: Theme.red)
+                }
                 if let author = idea.remixedFrom {
                     Pill(text: "Remix of \(author)", icon: "arrow.triangle.2.circlepath", color: Theme.red.opacity(0.25))
                 }

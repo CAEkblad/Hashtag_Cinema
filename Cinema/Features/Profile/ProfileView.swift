@@ -12,10 +12,45 @@ struct ProfileView: View {
                         .listRowInsets(EdgeInsets())
                 }
 
+                if let partner = store.partner {
+                    Section {
+                        NavigationLink(value: Route.marketCenter) {
+                            HStack(spacing: 14) {
+                                Text(partner.shortName)
+                                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 34, height: 34)
+                                    .background(Theme.red, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(store.profile.email)
+                                        .font(.cinema(15, weight: .semibold))
+                                        .foregroundStyle(Theme.textPrimary)
+                                    Text(store.myMarketCenter.map { "\($0.name) · \(store.profile.membership.title)" } ?? "Connect your \(partner.officeWord)")
+                                        .font(.cinema(12))
+                                        .foregroundStyle(store.profile.membership == .approved ? Theme.textSecondary : Theme.red)
+                                }
+                            }
+                        }
+                    } header: {
+                        Text(partner.name)
+                    } footer: {
+                        Text("\(partner.signupDiscountPercent)% off every plan and credit pack is applied.")
+                    }
+                    .listRowBackground(Theme.surface)
+                }
+
                 if store.isLeader {
                     Section {
                         NavigationLink(value: Route.promote) {
-                            IconRow(icon: "megaphone.fill", title: "Promote your \(store.profile.role.orgWord)", subtitle: "Showcase, agent spotlights, recruiting", badge: "Free")
+                            IconRow(icon: "megaphone.fill", title: "Promote your \(store.profile.role.orgWord)", subtitle: store.profile.alsoSells ? "Post as you, your team or your office" : "Showcase, agent spotlights, recruiting", badge: "Free")
+                        }
+                        NavigationLink(value: Route.officeContent) {
+                            IconRow(icon: "arrow.triangle.2.circlepath", title: "Office content pool", subtitle: "Remix your agents' listing content")
+                        }
+                        if store.partner == nil {
+                            NavigationLink(value: Route.marketCenter) {
+                                IconRow(icon: "building.2.crop.circle", title: "Join requests and revenue share", subtitle: "\(store.joinRequests.count) waiting")
+                            }
                         }
                     } header: {
                         Text("Leader tools")
@@ -26,6 +61,9 @@ struct ProfileView: View {
                 }
 
                 Section("Grow") {
+                    NavigationLink(value: Route.market) {
+                        IconRow(icon: "mappin.and.ellipse", title: "My market", subtitle: store.serviceAreas.isEmpty ? store.homeCity.displayName : "\(store.homeCity.name) plus \(store.serviceAreas.count) more")
+                    }
                     NavigationLink(value: Route.leads) {
                         IconRow(icon: "person.badge.plus", title: "Leads", subtitle: "From comment keywords", badge: store.newLeadCount > 0 ? "\(store.newLeadCount) new" : nil)
                     }
@@ -42,6 +80,9 @@ struct ProfileView: View {
                 .listRowBackground(Theme.surface)
 
                 Section("Content") {
+                    NavigationLink(value: Route.posterMaker) {
+                        IconRow(icon: "rectangle.portrait.on.rectangle.portrait.fill", title: "Poster maker", subtitle: "Just listed, just sold, open house and more")
+                    }
                     NavigationLink(value: Route.calendar) {
                         IconRow(icon: "calendar", title: "Content calendar", subtitle: "Scheduled and posted")
                     }
@@ -79,6 +120,12 @@ struct ProfileView: View {
                 .listRowBackground(Theme.surface)
 
                 Section("Account") {
+                    NavigationLink(value: Route.reminders) {
+                        IconRow(icon: "bell.badge.fill", title: "Reminders", subtitle: store.reminderEnabled ? "Daily idea at \(ReminderScheduler.label(hour: store.reminderHour, minute: store.reminderMinute))" : "Off")
+                    }
+                    NavigationLink(value: Route.help) {
+                        IconRow(icon: "questionmark.circle.fill", title: "How #Cinema works", subtitle: "Steps, credits and answers")
+                    }
                     NavigationLink(value: Route.plans) {
                         IconRow(icon: "crown.fill", title: "Plan and credits", subtitle: "\(store.profile.plan.name) · \(store.profile.credits) credits left")
                     }
@@ -142,7 +189,7 @@ struct PlansView: View {
                             .foregroundStyle(Theme.textSecondary)
                     }
                     Spacer()
-                    Button("+5 credits · $150") { store.buyCreditPack(5) }
+                    Button("+5 credits · \((150 * Double(100 - store.discountPercent) / 100).formatted(.currency(code: "USD").precision(.fractionLength(0))))") { store.buyCreditPack(5) }
                         .buttonStyle(PrimaryButtonStyle(fullWidth: false))
                 }
                 .cardStyle()
@@ -151,14 +198,32 @@ struct PlansView: View {
                     .font(.cinema(13))
                     .foregroundStyle(Theme.textTertiary)
 
+                if store.discountPercent > 0, let partner = store.partner {
+                    Label("\(partner.name): \(store.discountPercent)% off is applied", systemImage: "tag.fill")
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.red)
+                }
                 if store.isLeader {
-                    PlanCard(plan: .leader, isSelected: true) {}
+                    PlanCard(plan: .leader, isSelected: store.profile.plan == .leader) {
+                        store.changePlan(to: .leader)
+                    }
                     Text("Your leader account is free. Agents on your \(store.profile.role.orgWord) pick their own plans or use brokerage seats.")
                         .font(.cinema(13))
                         .foregroundStyle(Theme.textTertiary)
+                    if store.profile.alsoSells {
+                        SectionHeader(title: "For your own listings")
+                        Text("Selling too? Add a personal plan for more edit credits. Your leader tools stay free.")
+                            .font(.cinema(13))
+                            .foregroundStyle(Theme.textSecondary)
+                        ForEach([Plan.creator, .pro]) { plan in
+                            PlanCard(plan: plan, isSelected: store.profile.plan == plan, discountPercent: store.discountPercent) {
+                                store.changePlan(to: plan)
+                            }
+                        }
+                    }
                 } else {
                     ForEach([Plan.starter, .creator, .pro]) { plan in
-                        PlanCard(plan: plan, isSelected: store.profile.plan == plan) {
+                        PlanCard(plan: plan, isSelected: store.profile.plan == plan, discountPercent: store.discountPercent) {
                             store.changePlan(to: plan)
                         }
                     }

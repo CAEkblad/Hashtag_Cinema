@@ -1,7 +1,7 @@
--- #Cinema backend schema for Supabase (Postgres).
--- Paste into Supabase > SQL Editor and run once.
--- Business rules (credits, challenge scoring) live in the backend so the
--- iOS, web and Android apps all share them.
+-- #Cinema core schema: profiles, ideas, clips, bookings, posts, leads,
+-- challenges, coach, community and the #Cinema Crew tables.
+-- Applied with `supabase db push`.
+-- Business rules (credits, challenge scoring) live here so the iOS, web and Android apps all share them.
 
 create table brokerages (
   id uuid primary key default gen_random_uuid(),

@@ -24,7 +24,11 @@ enum MockData {
         plan: .creator,
         credits: 3,
         streakDays: 6,
-        points: 420
+        points: 420,
+        cityID: "tampa-hillsborough",
+        serviceAreaIDs: ["st-petersburg-pinellas", "brandon-hillsborough"],
+        goals: [.moreListings, .personalBrand],
+        weeklyGoal: 3
     )
 
     // MARK: Ideas
@@ -411,9 +415,33 @@ enum MockData {
     // MARK: Brokerage
 
     static let brokerageMembers: [BrokerageMember] = [
-        BrokerageMember(name: "Jordan Rivera", postsThisMonth: 14, challengeDays: 6, creditsUsed: 3, leads: 9),
-        BrokerageMember(name: "Taylor Brooks", postsThisMonth: 21, challengeDays: 12, creditsUsed: 4, leads: 15),
-        BrokerageMember(name: "Chris Nguyen", postsThisMonth: 6, challengeDays: 2, creditsUsed: 1, leads: 2),
+        BrokerageMember(name: "Jordan Rivera", postsThisMonth: 14, challengeDays: 6, creditsUsed: 3, leads: 9, monthlySpend: 89.10),
+        BrokerageMember(name: "Taylor Brooks", postsThisMonth: 21, challengeDays: 12, creditsUsed: 4, leads: 15, monthlySpend: 359.10),
+        BrokerageMember(name: "Chris Nguyen", postsThisMonth: 6, challengeDays: 2, creditsUsed: 1, leads: 2, monthlySpend: 89.10),
         BrokerageMember(name: "Morgan Lee", postsThisMonth: 0, challengeDays: 0, creditsUsed: 0, leads: 0)
+    ]
+
+    // MARK: Partners (sample data until the backend list loads)
+
+    static let marketCenters: [MarketCenter] = [
+        MarketCenter(id: "sample-kw-tampa", partnerID: "kw", name: "Sample KW Market Center, Tampa", cityID: "tampa-hillsborough", joinCode: "TAMPA1", group: "KW Impact", agentCount: 212, isSample: true),
+        MarketCenter(id: "sample-kw-stpete", partnerID: "kw", name: "Sample KW Market Center, St. Petersburg", cityID: "st-petersburg-pinellas", joinCode: "STPETE1", group: "KW Impact", agentCount: 168, isSample: true),
+        MarketCenter(id: "sample-kw-brandon", partnerID: "kw", name: "Sample KW Market Center, Brandon", cityID: "brandon-hillsborough", joinCode: "BRANDON1", group: "KW Impact", agentCount: 141, isSample: true),
+        MarketCenter(id: "sample-kw-wesley", partnerID: "kw", name: "Sample KW Market Center, Wesley Chapel", cityID: "wesley-chapel-pasco", joinCode: "WESLEY1", group: "KW Impact", agentCount: 97, isSample: true),
+        MarketCenter(id: "sample-kw-sarasota", partnerID: "kw", name: "Sample KW Market Center, Sarasota", cityID: "sarasota-sarasota", joinCode: "SRQ1", agentCount: 133, isSample: true),
+        MarketCenter(id: "sample-kw-orlando", partnerID: "kw", name: "Sample KW Market Center, Orlando", cityID: "orlando-orange", joinCode: "ORL1", agentCount: 254, isSample: true)
+    ]
+
+    static let joinRequests: [JoinRequest] = [
+        JoinRequest(agentName: "Avery Collins", email: "avery.collins@kw.com", team: "The Bay Group", requestedAt: day(0, hour: 8)),
+        JoinRequest(agentName: "Sam Patel", email: "sam.patel@kw.com", team: nil, requestedAt: day(-1, hour: 16))
+    ]
+
+    static let officeAssets: [OfficeAsset] = [
+        OfficeAsset(agentName: "Taylor Brooks", kind: .video, title: "Davis Islands waterfront tour", listingAddress: "48 Biscayne Ave", status: "Just listed", createdAt: day(-1, hour: 11), symbol: "house.fill", paletteIndex: 1),
+        OfficeAsset(agentName: "Jordan Rivera", kind: .photos, title: "Bayshore listing photos", listingAddress: "4821 W Bayshore Blvd", status: "Coming soon", createdAt: day(-2, hour: 14), symbol: "photo.fill", paletteIndex: 2),
+        OfficeAsset(agentName: "Chris Nguyen", kind: .poster, title: "Just sold in Westchase", listingAddress: "10230 Brentford Dr", status: "Just sold", createdAt: day(-3, hour: 9), symbol: "rectangle.portrait.fill", paletteIndex: 0),
+        OfficeAsset(agentName: "Taylor Brooks", kind: .video, title: "Seminole Heights coffee walk", listingAddress: nil, status: nil, createdAt: day(-4, hour: 10), symbol: "cup.and.saucer.fill", paletteIndex: 4),
+        OfficeAsset(agentName: "Jordan Rivera", kind: .poster, title: "Open house this Sunday", listingAddress: "211 Davis Blvd", status: "Open house", createdAt: day(-5, hour: 15), symbol: "door.left.hand.open", paletteIndex: 3)
     ]
 }

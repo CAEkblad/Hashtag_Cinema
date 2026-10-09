@@ -128,6 +128,20 @@ struct RouteDestination: View {
             CourseDetailView(courseID: id)
         case .lesson(let course, let lesson):
             LessonView(courseID: course, lessonID: lesson)
+        case .market:
+            MarketView()
+        case .city(let id):
+            MarketView(cityID: id)
+        case .reminders:
+            ReminderSettingsView()
+        case .help:
+            HowItWorksView()
+        case .marketCenter:
+            MarketCenterView()
+        case .officeContent:
+            OfficeContentView()
+        case .posterMaker:
+            PosterMakerView()
         }
     }
 

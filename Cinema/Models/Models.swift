@@ -78,6 +78,23 @@ enum Plan: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// Monthly price in dollars. Nil for per-seat plans billed to the broker.
+    var monthlyDollars: Double? {
+        switch self {
+        case .starter, .leader: return 0
+        case .creator: return 99
+        case .pro: return 249
+        case .brokerage: return nil
+        }
+    }
+
+    /// Price label with a partner discount applied, for example "$89.10/mo".
+    func price(discountPercent: Int) -> String {
+        guard discountPercent > 0, let dollars = monthlyDollars, dollars > 0 else { return price }
+        let discounted = dollars * Double(100 - discountPercent) / 100
+        return discounted.formatted(.currency(code: "USD")) + "/mo"
+    }
+
     var monthlyCredits: Int {
         switch self {
         case .starter: return 0
@@ -115,6 +132,27 @@ struct AgentProfile: Codable, Equatable {
     var credits: Int
     var streakDays: Int
     var points: Int
+    /// Home city id from `FloridaMarkets` (for example "tampa-hillsborough").
+    var cityID: String? = nil
+    /// Other cities the agent works in. Ideas rotate across all of them.
+    var serviceAreaIDs: [String] = []
+    var goals: [ContentGoal] = []
+    /// Videos to post each week.
+    var weeklyGoal: Int = 3
+    /// Team name for team leads and agents on a team.
+    var teamName: String = ""
+    /// Leaders who still sell their own listings get every agent tool too.
+    var alsoSells: Bool = true
+    /// Partner office (KW market center) and whether it is verified.
+    var marketCenterID: String? = nil
+    var membership: MembershipStatus = .none
+    /// Listing videos, photos and posters go to the office pool for remixing.
+    var sharesWithOffice: Bool = true
+
+    var partner: Partner? { Partner.forEmail(email) }
+
+    var homeCity: FloridaCity? { FloridaMarkets.city(cityID) }
+    var serviceAreas: [FloridaCity] { serviceAreaIDs.compactMap { FloridaMarkets.city($0) } }
 
     var firstName: String {
         name.split(separator: " ").first.map(String.init) ?? name
@@ -210,6 +248,8 @@ struct Idea: Identifiable, Hashable, Codable {
     var whyItWorks: String
     var isForYou: Bool = true
     var remixedFrom: String? = nil
+    /// The Florida city this idea was written for.
+    var cityName: String? = nil
 }
 
 // MARK: - Clips and editing
@@ -391,12 +431,14 @@ enum ServiceType: String, CaseIterable, Identifiable, Codable {
 }
 
 enum BookingStatus: String, Codable {
+    case depositPending
     case depositPaid
     case confirmed
     case completed
 
     var title: String {
         switch self {
+        case .depositPending: return "Deposit pending"
         case .depositPaid: return "Deposit paid"
         case .confirmed: return "Confirmed"
         case .completed: return "Delivered"
@@ -673,6 +715,8 @@ struct BrokerageMember: Identifiable, Hashable, Codable {
     var challengeDays: Int
     var creditsUsed: Int
     var leads: Int
+    /// What this agent spent with #Cinema this month, in dollars.
+    var monthlySpend: Double = 0
 }
 
 // MARK: - Navigation
@@ -693,4 +737,11 @@ enum Route: Hashable {
     case courses
     case course(UUID)
     case lesson(course: UUID, lesson: UUID)
+    case market
+    case city(String)
+    case reminders
+    case help
+    case marketCenter
+    case officeContent
+    case posterMaker
 }

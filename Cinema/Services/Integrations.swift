@@ -8,11 +8,18 @@ import Foundation
 
 enum AppConfig {
     /// Fill these in when the Supabase project exists (Project Settings > API).
+    /// The anon key is safe to ship in the app. Never put the service role key here.
     static let supabaseURL = URL(string: "https://YOUR-PROJECT.supabase.co")
     static let supabaseAnonKey = "YOUR-ANON-KEY"
 
-    /// Turn on once the real services are wired up.
-    static let useMockServices = true
+    /// True once real values are filled in. Until then the app runs on sample data.
+    static var isBackendConfigured: Bool {
+        guard let host = supabaseURL?.host else { return false }
+        return !host.lowercased().hasPrefix("your-project") && supabaseAnonKey != "YOUR-ANON-KEY"
+    }
+
+    /// Stripe Checkout sends people back here after paying.
+    static let appScheme = "hashtagcinema"
 }
 
 // MARK: - Requests
@@ -38,13 +45,15 @@ struct EditRequest: Codable, Hashable {
 struct PaymentResult: Hashable {
     var succeeded: Bool
     var receiptID: String
+    /// True when payment finishes in Stripe Checkout and the webhook confirms it later.
+    var isPending: Bool = false
 }
 
 // MARK: - Protocols
 
 protocol IdeaEngine {
-    /// Backend calls a language model (Claude or Llama) with the agent's market,
-    /// niche, listings and what is working in the community.
+    /// Backend calls Claude with the agent's Florida city, service areas, niche,
+    /// goals, the month and what is working in the community.
     func generateIdeas(for profile: AgentProfile) async throws -> [Idea]
 }
 

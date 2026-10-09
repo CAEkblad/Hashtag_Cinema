@@ -10,6 +10,7 @@ struct PromoteView: View {
     @State private var kind: PromoKind = .teamWin
     @State private var text = ""
     @State private var alsoToSocials = true
+    @State private var identity: PostingIdentity = .office
 
     enum PromoKind: String, CaseIterable, Identifiable {
         case teamWin = "Team win"
@@ -50,6 +51,11 @@ struct PromoteView: View {
             VStack(alignment: .leading, spacing: 22) {
                 header
                 showcase
+                NavigationLink(value: Route.officeContent) {
+                    IconRow(icon: "arrow.triangle.2.circlepath", title: "Remix agent content", subtitle: "\(store.officeAssets.count) listing videos, photos and posters shared by your agents")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
                 spotlightSection
                 composer
                 recentSection
@@ -59,6 +65,11 @@ struct PromoteView: View {
         .cinemaScreen()
         .navigationTitle("Promote")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            if !store.postingIdentities.contains(identity), let first = store.postingIdentities.last {
+                identity = first
+            }
+        }
     }
 
     // MARK: Header
@@ -72,7 +83,7 @@ struct PromoteView: View {
                 Spacer()
                 Pill(text: "Free for leaders", icon: "checkmark.seal.fill", color: Theme.red, textColor: .white)
             }
-            Text("Show off your agents, celebrate wins and recruit. Featured posts reach agents across the #Cinema community.")
+            Text("Show off your agents, celebrate wins and recruit. Featured posts reach agents across the #Cinema community. Still selling? Post as yourself too.")
                 .font(.cinema(15))
                 .foregroundStyle(Theme.textSecondary)
         }
@@ -168,6 +179,25 @@ struct PromoteView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Post for your \(org)")
 
+            if store.postingIdentities.count > 1 {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Post as")
+                        .font(.cinema(13, weight: .semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                    Picker("Post as", selection: $identity) {
+                        ForEach(store.postingIdentities) { option in
+                            Text(option == .me ? "Me" : store.identityName(option)).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    if identity == .me {
+                        Text("Posting as yourself goes to your own socials, so you still market your listings while you lead.")
+                            .font(.cinema(12))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
+            }
+
             Picker("Type", selection: $kind) {
                 ForEach(PromoKind.allCases) { option in
                     Text(option.rawValue).tag(option)
@@ -191,7 +221,7 @@ struct PromoteView: View {
             }
 
             Toggle(isOn: $alsoToSocials) {
-                Text("Also post to the \(org)'s connected socials")
+                Text(identity == .me ? "Also post to my connected socials" : "Also post to the \(org)'s connected socials")
                     .font(.cinema(14))
                     .foregroundStyle(Theme.textPrimary)
             }
@@ -200,7 +230,7 @@ struct PromoteView: View {
             Button {
                 let body = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !body.isEmpty else { return }
-                store.promote(kind: kind.postKind, body: body, alsoToSocials: alsoToSocials)
+                store.promote(kind: kind.postKind, body: body, alsoToSocials: alsoToSocials, as: identity)
                 text = ""
             } label: {
                 Label("Feature it", systemImage: "megaphone.fill")

@@ -1,0 +1,35 @@
+# Supabase CLI settings for #Cinema. `supabase link --project-ref <ref>` then
+# `supabase db push` and `supabase functions deploy`.
+project_id = "hashtag-cinema"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+
+[db]
+port = 54322
+major_version = 15
+
+[auth]
+enabled = true
+site_url = "hashtagcinema://"
+additional_redirect_urls = ["hashtagcinema://auth"]
+
+[auth.email]
+enable_signup = true
+otp_length = 6
+otp_expiry = 900
+
+# Webhooks and the checkout return page are called by Stripe, Meta and browsers, not by signed in users.
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.meta-webhook]
+verify_jwt = false
+
+[functions.checkout-done]
+verify_jwt = false
+
+[functions.crew-dispatch]
+verify_jwt = false
