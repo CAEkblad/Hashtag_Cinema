@@ -84,6 +84,13 @@ struct LeadDetailView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
+                    if lead.keyword.uppercased() == "VALUE" {
+                        NavigationLink(value: Route.homeValue) {
+                            IconRow(icon: "chart.line.uptrend.xyaxis", title: "Make their home value report", subtitle: "3 comps in, a branded PDF out")
+                                .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
                     SectionHeader(title: "Follow up messages")
                     ForEach(templates(for: lead)) { template in
                         let message = template.message(lead: lead, agentFirstName: store.profile.firstName, cityName: store.homeCity.name)

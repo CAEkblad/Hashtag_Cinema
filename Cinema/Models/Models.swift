@@ -798,6 +798,7 @@ enum Route: Hashable {
     case buyers
     case businessPlan
     case keywords
+    case homeValue
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

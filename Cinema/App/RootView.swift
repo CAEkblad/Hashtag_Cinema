@@ -226,6 +226,8 @@ struct RouteDestination: View {
             BusinessPlanView()
         case .keywords:
             KeywordsView()
+        case .homeValue:
+            HomeValueView()
         case .buyer(let id):
             BuyerDetailView(buyerID: id)
         case .deal(let id):

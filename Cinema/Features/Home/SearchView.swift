@@ -43,6 +43,7 @@ enum ToolCatalog {
         Tool(title: "Under contract", keywords: "deals pending deadlines inspection closing escrow timeline", icon: "doc.text.fill", route: .deals, group: .listings),
         Tool(title: "Listing presentation", keywords: "pitch seller marketing plan", icon: "doc.richtext.fill", route: .listingPitch, group: .listings),
         Tool(title: "Seller prep checklist", keywords: "prepare home shoot", icon: "checklist", route: .sellerPrep, group: .listings),
+        Tool(title: "Home value report", keywords: "cma comps value estimate worth bpo pdf", icon: "chart.line.uptrend.xyaxis", route: .homeValue, group: .listings),
         Tool(title: "Seller net sheet", keywords: "net proceeds closing costs doc stamps title commission", icon: "dollarsign.circle.fill", route: .netSheet, group: .listings),
         Tool(title: "Showing tours", keywords: "buyer showings schedule route recap", icon: "car.fill", route: .tours, group: .listings),
         Tool(title: "Buyer cash to close", keywords: "closing costs down payment intangible tax doc stamps", icon: "creditcard.fill", route: .buyerCosts, group: .listings),
