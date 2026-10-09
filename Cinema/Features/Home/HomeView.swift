@@ -7,6 +7,8 @@ struct HomeView: View {
     @State private var path = NavigationPath()
     @State private var showCamera = false
     @State private var showBooking = false
+    @State private var showWhatsNew = false
+    @State private var pendingRoute: Route?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -133,6 +135,20 @@ struct HomeView: View {
             .cinemaDestinations()
             .fullScreenCover(isPresented: $showCamera) {
                 CameraView(idea: store.ideaOfTheDay, practiceMode: false)
+            }
+            .sheet(isPresented: $showWhatsNew, onDismiss: {
+                if let route = pendingRoute {
+                    path.append(route)
+                    pendingRoute = nil
+                }
+            }) {
+                WhatsNewView { route in pendingRoute = route }
+            }
+            .task {
+                guard WhatsNewView.shouldShow else { return }
+                WhatsNewView.markSeen()
+                try? await Task.sleep(nanoseconds: 800_000_000)
+                showWhatsNew = true
             }
         }
     }
