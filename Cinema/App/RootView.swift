@@ -242,6 +242,8 @@ struct RouteDestination: View {
             if let listing = store.listing(id) { PhotoReelView(listing: listing) }
         case .listingNetSheet(let id):
             if let listing = store.listing(id) { NetSheetView(startingPrice: Double(listing.price), address: listing.address) }
+        case .objections:
+            ObjectionsView()
         case .listingCalculator(let id):
             if let listing = store.listing(id) { PaymentCalculatorView(startingPrice: Double(listing.price)) }
         case .buyer(let id):
