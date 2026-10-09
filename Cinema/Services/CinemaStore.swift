@@ -671,6 +671,33 @@ final class CinemaStore {
         }
     }
 
+    /// Three reminders that make sure a new lead hears from you in the first week.
+    func startFollowUpPlan(_ leadID: UUID) {
+        guard let index = leads.firstIndex(where: { $0.id == leadID }) else { return }
+        let lead = leads[index]
+        let first = lead.name.split(separator: " ").first.map(String.init) ?? lead.name
+        let calendar = Calendar.current
+        let steps: [(Int, String, String)] = [
+            (1, "Thank \(first) for reaching out", "A quick personal text today makes you the agent they remember."),
+            (3, "Send \(first) a few homes", "Pick 3 that fit what they asked about and send them with a note."),
+            (7, "Check in with \(first)", "Ask how the search is going and offer a time to talk.")
+        ]
+        if let day1 = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) {
+            leads[index].followUpDate = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day1)
+        }
+        Task {
+            guard await ReminderScheduler.requestPermission() else {
+                self.showToast("Turn on notifications in Settings to get reminders")
+                return
+            }
+            for step in steps {
+                let date = calendar.date(byAdding: .day, value: step.0, to: Date()) ?? Date()
+                await ReminderScheduler.scheduleOnce(id: "cinema.plan.\(leadID.uuidString).\(step.0)", title: step.1, body: step.2, on: date)
+            }
+            self.showToast("3 touch plan set for \(first)")
+        }
+    }
+
     func setFollowUp(_ leadID: UUID, on date: Date?) async {
         guard let index = leads.firstIndex(where: { $0.id == leadID }) else { return }
         leads[index].followUpDate = date
