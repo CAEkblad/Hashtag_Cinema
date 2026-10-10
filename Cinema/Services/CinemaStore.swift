@@ -77,6 +77,12 @@ final class CinemaStore {
     var splitPlan: SplitPlan = (try? JSONDecoder().decode(SplitPlan.self, from: UserDefaults.standard.data(forKey: "cinema.split.v1") ?? Data())) ?? SplitPlan()
     var taxPlan: TaxPlan = (try? JSONDecoder().decode(TaxPlan.self, from: UserDefaults.standard.data(forKey: "cinema.tax.v1") ?? Data())) ?? TaxPlan()
 
+    // Team page
+    var team: Team? = (try? JSONDecoder().decode(Team.self, from: UserDefaults.standard.data(forKey: "cinema.team.v1") ?? Data()))
+    var teamFeed: [TeamFeedItem] = (try? JSONDecoder().decode([TeamFeedItem].self, from: UserDefaults.standard.data(forKey: "cinema.teamfeed.v1") ?? Data())) ?? []
+    var sharesWithTeam: Bool = UserDefaults.standard.object(forKey: "cinema.sharesWithTeam") as? Bool ?? true
+    var leadAssignments: [String: String] = (UserDefaults.standard.dictionary(forKey: "cinema.leadAssignments") as? [String: String]) ?? [:]
+
     // Time blocks and weekly scorecard
     var timeBlocks: [TimeBlock] = (try? JSONDecoder().decode([TimeBlock].self, from: UserDefaults.standard.data(forKey: "cinema.blocks.v1") ?? Data())) ?? TimeBlock.defaults
     var weeklyTargets: WeeklyTargets = (try? JSONDecoder().decode(WeeklyTargets.self, from: UserDefaults.standard.data(forKey: "cinema.targets.v1") ?? Data())) ?? WeeklyTargets()
@@ -660,7 +666,10 @@ final class CinemaStore {
         )
         try? await posting.schedule(post)
         posts.append(post)
-        if postNow { checkInToActiveChallenges() }
+        if postNow {
+            checkInToActiveChallenges()
+            postToTeam(.video, "New video: \(clip.title)", detail: "Posted to \(platforms.map(\.name).joined(separator: ", "))")
+        }
         showToast(postNow ? "Posted to \(platforms.count) platforms" : "Scheduled for \(date.shortDay)")
         notify(.system, postNow ? "Posted" : "Post scheduled", detail: "\"\(clip.title)\" \(postNow ? "went out" : "goes out \(date.shortDay)") on \(platforms.map(\.name).joined(separator: ", ")).", route: .calendar)
     }
@@ -816,7 +825,10 @@ final class CinemaStore {
     var partner: Partner? { profile.partner }
     var discountPercent: Int { partner?.signupDiscountPercent ?? 0 }
     var myMarketCenter: MarketCenter? { marketCenters.first { $0.id == profile.marketCenterID } }
-    var officeWord: String { partner?.officeWord ?? profile.role.orgWord }
+    var officeWord: String { partner?.officeWord ?? profile.role.orgWord(lex) }
+
+    /// Generic brokerage words, or Keller Williams' own terms in KW mode.
+    var lex: Lexicon { Lexicon(isKW: partner?.id == Partner.kellerWilliams.id) }
 
     func marketCenters(near city: FloridaCity, partner: Partner) -> [MarketCenter] {
         marketCenters
@@ -829,7 +841,7 @@ final class CinemaStore {
     func joinMarketCenter(code: String) -> Bool {
         let cleaned = code.trimmingCharacters(in: .whitespaces).uppercased()
         guard let center = marketCenters.first(where: { $0.joinCode.uppercased() == cleaned }) else {
-            showToast("That code did not match a market center")
+            showToast("That code didn't match a \(officeWord)")
             return false
         }
         profile.marketCenterID = center.id
@@ -879,6 +891,10 @@ final class CinemaStore {
 
     /// Adds the agent's listing content to the office pool when sharing is on.
     func shareWithOffice(_ asset: OfficeAsset) {
+        // Videos post to the team when they go live, so only posters and photos post here.
+        if asset.kind != .video {
+            postToTeam(.poster, "\(asset.status.map { "\($0) poster" } ?? "New poster"): \(asset.listingAddress ?? asset.title)")
+        }
         guard profile.sharesWithOffice else { return }
         officeAssets.insert(asset, at: 0)
     }
@@ -922,6 +938,7 @@ final class CinemaStore {
         new.description = ListingCopywriter.description(for: new, tone: .warm)
         listings.insert(new, at: 0)
         showToast("Listing added with a marketing plan")
+        postToTeam(.listing, "\(new.status.title): \(new.address)", detail: "\(new.priceLabel) · \(new.specsLine)")
         let fans = buyers.filter { $0.matches(new) }
         if let first = fans.first {
             notify(.lead, fans.count == 1 ? "\(first.name) is a match" : "\(fans.count) buyers match", detail: "\(new.address) fits what \(fans.count == 1 ? "they're" : "they're each") looking for. Send it before it hits the portals.", route: .buyer(first.id))
@@ -1432,6 +1449,140 @@ final class CinemaStore {
         }
     }
 
+    // MARK: Team
+
+    var isTeamLeader: Bool { team?.members.contains { $0.isMe && $0.role == .leader } ?? false }
+
+    @discardableResult
+    func joinTeam(code: String) -> Bool {
+        let cleaned = code.trimmingCharacters(in: .whitespaces).uppercased()
+        guard cleaned == "BAYTEAM" || cleaned == team?.joinCode else {
+            showToast("That code didn't match a team")
+            return false
+        }
+        var joined = Self.sampleTeam(city: homeCity)
+        joined.members.append(TeamMember(name: profile.name, role: .agent, isMe: true))
+        team = joined
+        teamFeed = Self.sampleTeamFeed()
+        postToTeam(.join, "\(profile.firstName) joined the team", detail: "Say hi and send a welcome!", force: true)
+        saveTeam()
+        showToast("Welcome to \(joined.name)!")
+        return true
+    }
+
+    func createTeam(name: String, tagline: String) {
+        let letters = String(name.uppercased().filter(\.isLetter).prefix(5))
+        let code = (letters.isEmpty ? "TEAM" : letters) + String(Int.random(in: 100...999))
+        team = Team(name: name, leaderName: profile.name, cityID: homeCity.id, joinCode: code, tagline: tagline, members: [TeamMember(name: profile.name, role: .leader, isMe: true)])
+        teamFeed = []
+        postToTeam(.milestone, "\(name) is live", detail: "Invite your \(lex.agents) with code \(code).", force: true)
+        saveTeam()
+        showToast("\(name) created. Your code is \(code)")
+    }
+
+    func leaveTeam() {
+        team = nil
+        teamFeed = []
+        saveTeam()
+    }
+
+    func setSharesWithTeam(_ on: Bool) {
+        sharesWithTeam = on
+        UserDefaults.standard.set(on, forKey: "cinema.sharesWithTeam")
+    }
+
+    func setLeadRouting(_ on: Bool) {
+        team?.leadRoutingOn = on
+        saveTeam()
+        showToast(on ? "Team leads now rotate round robin" : "Round robin is off")
+    }
+
+    func addTeamMember(_ member: TeamMember) {
+        team?.members.append(member)
+        postToTeam(.join, "\(member.name) joined the team", detail: "Welcome aboard!", force: true)
+        saveTeam()
+    }
+
+    func removeTeamMember(_ id: UUID) {
+        team?.members.removeAll { $0.id == id && !$0.isMe }
+        saveTeam()
+    }
+
+    func setTeamPerks(_ perks: [String]) {
+        team?.perks = perks
+        saveTeam()
+    }
+
+    func cheer(_ itemID: UUID) {
+        guard let index = teamFeed.firstIndex(where: { $0.id == itemID }) else { return }
+        teamFeed[index].cheeredByMe.toggle()
+        teamFeed[index].cheers += teamFeed[index].cheeredByMe ? 1 : -1
+        saveTeam()
+    }
+
+    /// Posts to the team page when the agent is on a team and sharing is on.
+    func postToTeam(_ kind: TeamFeedItem.Kind, _ title: String, detail: String = "", force: Bool = false) {
+        guard team != nil, sharesWithTeam || force else { return }
+        teamFeed.insert(TeamFeedItem(authorName: profile.name, kind: kind, title: title, detail: detail, date: Date()), at: 0)
+        if let index = team?.members.firstIndex(where: \.isMe) {
+            if kind == .video { team?.members[index].videosThisMonth += 1 }
+            if kind == .sold { team?.members[index].closings += 1 }
+        }
+        saveTeam()
+    }
+
+    /// Who gets the next team lead when round robin is on.
+    var nextLeadAssignee: TeamMember? {
+        guard let team, team.leadRoutingOn else { return nil }
+        let pool = team.members.filter { $0.role == .agent || $0.role == .newAgent || $0.isMe }
+        guard !pool.isEmpty else { return nil }
+        return pool[team.nextRouteIndex % pool.count]
+    }
+
+    func assignLead(_ leadID: UUID, to name: String?) {
+        leadAssignments[leadID.uuidString] = name
+        UserDefaults.standard.set(leadAssignments, forKey: "cinema.leadAssignments")
+        if let name { showToast("Handed to \(name)") }
+    }
+
+    /// Hands a lead to the next agent in the round robin.
+    func routeLead(_ leadID: UUID) {
+        guard let next = nextLeadAssignee else { return }
+        assignLead(leadID, to: next.isMe ? nil : next.name)
+        team?.nextRouteIndex += 1
+        if let index = team?.members.firstIndex(where: { $0.id == next.id }) { team?.members[index].leads += 1 }
+        saveTeam()
+        if !next.isMe { showToast("Routed to \(next.name)") }
+    }
+
+    private func saveTeam() {
+        if let team, let data = try? JSONEncoder().encode(team) {
+            UserDefaults.standard.set(data, forKey: "cinema.team.v1")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "cinema.team.v1")
+        }
+        if let data = try? JSONEncoder().encode(teamFeed) { UserDefaults.standard.set(data, forKey: "cinema.teamfeed.v1") }
+    }
+
+    nonisolated static func sampleTeam(city: FloridaCity) -> Team {
+        Team(name: "Bay Area Home Team", leaderName: "Dana Brooks", cityID: city.id, joinCode: "BAYTEAM", tagline: "Video first. Clients for life.", members: [
+            TeamMember(name: "Dana Brooks", role: .leader, joinedAt: MockData.day(-900), videosThisMonth: 9, leads: 14, closings: 6),
+            TeamMember(name: "Marco Silva", role: .agent, joinedAt: MockData.day(-400), videosThisMonth: 6, leads: 9, closings: 3),
+            TeamMember(name: "Priya Shah", role: .agent, joinedAt: MockData.day(-220), videosThisMonth: 11, leads: 12, closings: 2),
+            TeamMember(name: "Jordan Lee", role: .newAgent, joinedAt: MockData.day(-40), videosThisMonth: 4, leads: 3, closings: 0),
+            TeamMember(name: "Tasha Green", role: .isa, joinedAt: MockData.day(-300), videosThisMonth: 0, leads: 0, closings: 0)
+        ])
+    }
+
+    nonisolated static func sampleTeamFeed() -> [TeamFeedItem] {
+        [
+            TeamFeedItem(authorName: "Priya Shah", kind: .video, title: "New video: 3 things to know before buying in Seminole Heights", detail: "Posted to 4 platforms", date: MockData.day(0, hour: 8), cheers: 6),
+            TeamFeedItem(authorName: "Marco Silva", kind: .sold, title: "Just sold: 2814 W Palmira Ave", detail: "Closed $40K over asking with 3 offers", date: MockData.day(-1, hour: 16), cheers: 11),
+            TeamFeedItem(authorName: "Dana Brooks", kind: .listing, title: "Coming soon: waterfront pool home in Davis Islands", detail: "Buyers on the team get a first look", date: MockData.day(-2, hour: 10), cheers: 4),
+            TeamFeedItem(authorName: "Jordan Lee", kind: .milestone, title: "First listing appointment booked!", detail: "Week 6 as a new agent", date: MockData.day(-3, hour: 12), cheers: 15)
+        ]
+    }
+
     // MARK: Time blocks
 
     func saveTimeBlock(_ block: TimeBlock) {
@@ -1902,6 +2053,7 @@ final class CinemaStore {
             notify(.system, "Closed! Ask for a testimonial", detail: "\(deal.clientName) just closed on \(deal.address). Happy clients write the best reviews in the first week.", route: .testimonials)
         }
         showToast("Congrats on closing \(deal.address)!")
+        postToTeam(.sold, "Closed: \(deal.address)", detail: "\(deal.clientName), \(deal.priceLabel)")
     }
 
     nonisolated static func sampleDeals() -> [Deal] {
@@ -2050,6 +2202,10 @@ final class CinemaStore {
         taxPlan = TaxPlan()
         licensePlan = LicensePlan()
         timeBlocks = TimeBlock.defaults
+        team = nil
+        teamFeed = []
+        leadAssignments = [:]
+        for key in ["cinema.team.v1", "cinema.teamfeed.v1", "cinema.sharesWithTeam", "cinema.leadAssignments"] { UserDefaults.standard.removeObject(forKey: key) }
         mileageRate = 0.70
         dismissedAnnouncementIDs = []
         weeklyTargets = WeeklyTargets()
@@ -2093,6 +2249,7 @@ final class CinemaStore {
 
     func addTestimonial(_ testimonial: Testimonial) {
         testimonials.insert(testimonial, at: 0)
+        postToTeam(.testimonial, "\(testimonial.stars) star review from \(testimonial.clientName)", detail: "\"\(testimonial.quote.prefix(120))\"")
         notify(.system, "New testimonial", detail: "\(testimonial.clientName): \"\(testimonial.quote.prefix(60))\"", route: .testimonials)
         showToast("Testimonial saved")
     }

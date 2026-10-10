@@ -44,7 +44,7 @@ struct PromoteView: View {
         }
     }
 
-    private var org: String { store.profile.role.orgWord }
+    private var org: String { store.profile.role.orgWord(store.lex) }
 
     var body: some View {
         ScrollView {

@@ -89,7 +89,7 @@ struct MarketCenterView: View {
 
             if store.profile.membership != .approved {
                 HStack(spacing: 10) {
-                    TextField("Join code from your MCA", text: $code)
+                    TextField("Join code from your \(store.lex.officeLeader)", text: $code)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .inputStyle()
@@ -107,7 +107,7 @@ struct MarketCenterView: View {
             .buttonStyle(SecondaryButtonStyle())
 
             if store.marketCenters.contains(where: \.isSample) {
-                Text("Demo: these are sample market centers. Try code TAMPA1. Your real list loads from the #Cinema admin.")
+                Text("Demo: these are sample \(store.lex.offices). Try code TAMPA1. Your real list loads from the #Cinema admin.")
                     .font(.cinema(11))
                     .foregroundStyle(Theme.textTertiary)
             }

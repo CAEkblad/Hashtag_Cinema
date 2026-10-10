@@ -50,6 +50,8 @@ enum ToolCatalog {
         Tool(title: "Showing tours", keywords: "buyer showings schedule route recap", icon: "car.fill", route: .tours, group: .listings),
         Tool(title: "Buyer cash to close", keywords: "closing costs down payment intangible tax doc stamps", icon: "creditcard.fill", route: .buyerCosts, group: .listings),
         Tool(title: "Payment calculator", keywords: "mortgage monthly payment", icon: "function", route: .paymentCalculator, group: .listings),
+        Tool(title: "My team", keywords: "team page roster leaderboard recruit join code round robin", icon: "person.3.fill", route: .team, group: .clients),
+        Tool(title: "Recruiting page", keywords: "recruit agents join team hiring", icon: "megaphone.fill", route: .recruit, group: .clients),
         Tool(title: "Leads", keywords: "contacts follow up", icon: "person.badge.plus", route: .leads, group: .clients),
         Tool(title: "Buyer wishlists", keywords: "buyer needs match criteria search alert", icon: "heart.text.square", route: .buyers, group: .clients),
         Tool(title: "Auto DM keywords", keywords: "comment to dm manychat keyword lead capture instagram", icon: "bubble.left.and.text.bubble.right.fill", route: .keywords, group: .clients),

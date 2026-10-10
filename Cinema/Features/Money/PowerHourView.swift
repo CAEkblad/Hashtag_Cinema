@@ -88,7 +88,7 @@ struct PowerHourView: View {
 
                 HStack(spacing: 10) {
                     NavigationLink(value: Route.scorecard) {
-                        Label("Weekly scorecard", systemImage: "checklist.checked")
+                        Label(store.lex.weeklyPlanTitle, systemImage: "checklist.checked")
                     }
                     .buttonStyle(SecondaryButtonStyle())
                     NavigationLink(value: Route.timeBlocks) {

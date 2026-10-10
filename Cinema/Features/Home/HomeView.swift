@@ -67,7 +67,7 @@ struct HomeView: View {
                                     .frame(width: 44, height: 44)
                                     .background(Theme.red, in: Circle())
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text("Promote your \(store.profile.role.orgWord)")
+                                    Text("Promote your \(store.profile.role.orgWord(store.lex))")
                                         .font(.cinema(16, weight: .semibold))
                                         .foregroundStyle(Theme.textPrimary)
                                     Text("Spotlight agents, share wins, recruit. Free for leaders.")

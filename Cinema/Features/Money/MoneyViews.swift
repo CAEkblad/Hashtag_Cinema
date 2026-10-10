@@ -54,7 +54,7 @@ struct MoneyView: View {
                 .buttonStyle(.plain)
 
                 NavigationLink(value: Route.scorecard) {
-                    IconRow(icon: "checklist.checked", title: "Weekly scorecard", subtitle: "Your 4-1-1 targets for the week, filled in for you")
+                    IconRow(icon: "checklist.checked", title: store.lex.weeklyPlanTitle, subtitle: "Your targets for the week, filled in for you")
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
@@ -128,7 +128,7 @@ struct SplitTrackerView: View {
                 .font(.cinema(14))
                 .cardStyle()
 
-                Text("Your closed deals in Under contract count automatically. Caps, splits and royalty vary by market center and brokerage, so set yours here.")
+                Text("Your closed deals in Under contract count automatically. Caps, \(store.lex.companySplit) and royalty vary by \(store.lex.office), so set yours here.")
                     .font(.cinema(11))
                     .foregroundStyle(Theme.textTertiary)
             }

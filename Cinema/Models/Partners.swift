@@ -24,7 +24,7 @@ struct Partner: Identifiable, Hashable, Codable {
         emailDomains: ["kw.com"],
         signupDiscountPercent: 10,
         revenueSharePercent: 10,
-        officeWord: "market center"
+        officeWord: "Market Center"
     )
 
     static let all: [Partner] = [.kellerWilliams]

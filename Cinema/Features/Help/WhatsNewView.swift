@@ -14,6 +14,7 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "person.3.fill", title: "Team pages", detail: "Join or start a team. Videos, posters, listings, closings and reviews post to the team page on their own. Roster, leaderboard, lead hand offs and a recruiting page.", route: .team),
         Item(icon: "checklist.checked", title: "Weekly scorecard", detail: "4-1-1 style weekly targets for videos, touches, appointments and leads, filled in for you. Share it with your accountability partner.", route: .scorecard),
         Item(icon: "clock.fill", title: "Time blocks", detail: "Set your daily focus blocks and get a reminder when each one starts.", route: .timeBlocks),
         Item(icon: "timer", title: "Power hour", detail: "A prospecting timer with one tap tallies for calls, texts, talks and appointments, plus a daily streak.", route: .powerHour),

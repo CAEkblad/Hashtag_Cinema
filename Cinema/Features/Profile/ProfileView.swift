@@ -43,7 +43,7 @@ struct ProfileView: View {
                 if store.isLeader {
                     Section {
                         NavigationLink(value: Route.promote) {
-                            IconRow(icon: "megaphone.fill", title: "Promote your \(store.profile.role.orgWord)", subtitle: store.profile.alsoSells ? "Post as you, your team or your office" : "Showcase, agent spotlights, recruiting", badge: "Free")
+                            IconRow(icon: "megaphone.fill", title: "Promote your \(store.profile.role.orgWord(store.lex))", subtitle: store.profile.alsoSells ? "Post as you, your team or your office" : "Showcase, agent spotlights, recruiting", badge: "Free")
                         }
                         NavigationLink(value: Route.officeContent) {
                             IconRow(icon: "arrow.triangle.2.circlepath", title: "Office content pool", subtitle: "Remix your agents' listing content")
@@ -56,7 +56,7 @@ struct ProfileView: View {
                     } header: {
                         Text("Leader tools")
                     } footer: {
-                        Text("Free for team leads, MCAs and admins.")
+                        Text("Free for \(store.lex.leadersList).")
                     }
                     .listRowBackground(Theme.surface)
                 }
@@ -64,6 +64,9 @@ struct ProfileView: View {
                 Section("Grow") {
                     NavigationLink(value: Route.whatsNew) {
                         IconRow(icon: "sparkles", title: "What's new", subtitle: "The latest tools, one tap to try each")
+                    }
+                    NavigationLink(value: Route.team) {
+                        IconRow(icon: "person.3.fill", title: store.team?.name ?? "My team", subtitle: store.team == nil ? "Join your team or start one" : "\(store.team?.members.count ?? 0) \(store.lex.agents) · your content posts here")
                     }
                     NavigationLink(value: Route.money) {
                         IconRow(icon: "banknote.fill", title: "My money", subtitle: "GCI, split and cap, taxes and write offs")
@@ -315,7 +318,7 @@ struct PlansView: View {
                     PlanCard(plan: .leader, isSelected: store.profile.plan == .leader) {
                         store.changePlan(to: .leader)
                     }
-                    Text("Your leader account is free. Agents on your \(store.profile.role.orgWord) pick their own plans or use brokerage seats.")
+                    Text("Your leader account is free. Agents on your \(store.profile.role.orgWord(store.lex)) pick their own plans or use brokerage seats.")
                         .font(.cinema(13))
                         .foregroundStyle(Theme.textTertiary)
                     if store.profile.alsoSells {

@@ -222,7 +222,7 @@ struct OnboardingView: View {
     private var roleStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                title("How do you work?", "Team leads, MCAs and admins use #Cinema free.")
+                title("How do you work?", "\(store.lex.leadersList.prefix(1).uppercased() + store.lex.leadersList.dropFirst()) use #Cinema free.")
                 ForEach(UserRole.allCases) { option in
                     Button {
                         role = option
@@ -234,10 +234,10 @@ struct OnboardingView: View {
                                 .frame(width: 40, height: 40)
                                 .background(Theme.surfaceRaised, in: Circle())
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(option.title)
+                                Text(option.title(store.lex))
                                     .font(.cinema(17, weight: .semibold))
                                     .foregroundStyle(Theme.textPrimary)
-                                Text(option.subtitle)
+                                Text(option.subtitle(store.lex))
                                     .font(.cinema(14))
                                     .foregroundStyle(Theme.textSecondary)
                             }
@@ -261,7 +261,7 @@ struct OnboardingView: View {
                             Text("I also sell real estate")
                                 .font(.cinema(16, weight: .semibold))
                                 .foregroundStyle(Theme.textPrimary)
-                            Text("Keep every agent tool and post as yourself, your team or your \(store.partner?.officeWord ?? role.orgWord).")
+                            Text("Keep every agent tool and post as yourself, your team or your \(store.partner?.officeWord ?? role.orgWord(store.lex)).")
                                 .font(.cinema(13))
                                 .foregroundStyle(Theme.textSecondary)
                         }
@@ -282,7 +282,7 @@ struct OnboardingView: View {
                 title("Connect your \(partner.officeWord)", "Your \(partner.officeWord) gets credit for your work, and you get office challenges and shared content.")
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Have a join code from your MCA?")
+                    Text(store.lex.joinCodePrompt)
                         .font(.cinema(15, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
                     HStack(spacing: 10) {
@@ -321,7 +321,7 @@ struct OnboardingView: View {
                         .foregroundStyle(store.profile.membership == .approved ? Theme.success : Theme.red)
                 }
                 if centers.contains(where: \.isSample) {
-                    Text("Demo: sample market centers. Try code TAMPA1.")
+                    Text("Demo: sample \(store.lex.offices). Try code TAMPA1.")
                         .font(.cinema(12))
                         .foregroundStyle(Theme.textTertiary)
                 }
@@ -488,7 +488,7 @@ struct OnboardingView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if role.isLeader {
-                    title("You're free", "Leaders use #Cinema at no cost to promote their \(role.orgWord) and their agents.")
+                    title("You're free", "Leaders use #Cinema at no cost to promote their \(role.orgWord(store.lex)) and their \(store.lex.agents).")
                     PlanCard(plan: .leader, isSelected: true) {}
                 } else {
                     title("Pick your plan", "Start on any plan and change anytime in Me > Plan and credits.")

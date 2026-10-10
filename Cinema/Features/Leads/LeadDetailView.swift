@@ -83,6 +83,29 @@ struct LeadDetailView: View {
                     }
                 }
 
+                if let team = store.team {
+                    HStack {
+                        Label(store.leadAssignments[lead.id.uuidString].map { "With \($0)" } ?? "With you", systemImage: "person.crop.circle.badge.checkmark")
+                            .font(.cinema(14, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Spacer()
+                        Menu {
+                            Button("Keep it myself") { store.assignLead(lead.id, to: nil) }
+                            if team.leadRoutingOn, let next = store.nextLeadAssignee {
+                                Button("Next in round robin (\(next.isMe ? "you" : next.name))") { store.routeLead(lead.id) }
+                            }
+                            ForEach(team.members.filter { !$0.isMe && $0.role != .admin }) { member in
+                                Button(member.name) { store.assignLead(lead.id, to: member.name) }
+                            }
+                        } label: {
+                            Label("Hand off", systemImage: "arrow.triangle.swap")
+                                .font(.cinema(13, weight: .semibold))
+                                .foregroundStyle(Theme.red)
+                        }
+                    }
+                    .cardStyle(padding: 14)
+                }
+
                 VStack(alignment: .leading, spacing: 10) {
                     if lead.keyword.uppercased() == "VALUE" {
                         NavigationLink(value: Route.homeValue) {
@@ -139,6 +162,17 @@ struct LeadDetailView: View {
                         DatePicker("When", selection: $remindAt, in: Date()...)
                             .font(.cinema(14))
                     }
+                    Divider()
+                    Button {
+                        store.startFollowUpPlan(leadID)
+                    } label: {
+                        Label("Start a 3 touch plan: day 1, 3 and 7", systemImage: "list.number")
+                            .font(.cinema(14, weight: .semibold))
+                            .foregroundStyle(Theme.red)
+                    }
+                    Text("Day 1: a thank you text. Day 3: send similar homes. Day 7: a friendly check in. We'll remind you each morning.")
+                        .font(.cinema(12))
+                        .foregroundStyle(Theme.textTertiary)
                 }
                 .cardStyle()
 

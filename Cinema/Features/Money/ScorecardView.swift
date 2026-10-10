@@ -85,7 +85,7 @@ struct ScorecardView: View {
                 .cardStyle()
 
                 ShareLink(item: shareText) {
-                    Label("Send to my accountability partner", systemImage: "paperplane.fill")
+                    Label(store.lex.isKW ? "Send my 4-1-1 to my Productivity Coach" : "Send to my accountability partner", systemImage: "paperplane.fill")
                 }
                 .buttonStyle(PrimaryButtonStyle())
 
@@ -96,7 +96,7 @@ struct ScorecardView: View {
             .padding(Theme.gutter)
         }
         .cinemaScreen()
-        .navigationTitle("Weekly scorecard")
+        .navigationTitle(store.lex.weeklyPlanTitle)
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
         .onAppear {

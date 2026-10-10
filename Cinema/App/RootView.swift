@@ -264,6 +264,10 @@ struct RouteDestination: View {
             TimeBlocksView()
         case .scorecard:
             ScorecardView()
+        case .team:
+            TeamView()
+        case .recruit:
+            RecruitView()
         case .listingCalculator(let id):
             if let listing = store.listing(id) { PaymentCalculatorView(startingPrice: Double(listing.price)) }
         case .buyer(let id):

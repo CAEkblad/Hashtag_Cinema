@@ -14,7 +14,7 @@ enum UserRole: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .agent: return "Agent"
         case .teamLead: return "Team lead"
-        case .marketCenter: return "Market center leader (MCA)"
+        case .marketCenter: return "Broker or office leader"
         case .brokerageAdmin: return "Brokerage admin"
         }
     }
@@ -116,7 +116,7 @@ enum Plan: String, CaseIterable, Identifiable, Codable {
         case .brokerage:
             return ["Creator features per seat", "Admin dashboard", "Brokerage brand kit", "Shared credit pool"]
         case .leader:
-            return ["Free for team leads, MCAs and admins", "Promote your brokerage, office and team", "Spotlight your agents and recruit", "Team dashboard and reports", "2 edit credits a month for office content"]
+            return ["Free for team leads, brokers and office staff", "Promote your brokerage, office and team", "Spotlight your agents and recruit", "Team dashboard and reports", "2 edit credits a month for office content"]
         }
     }
 }
@@ -818,6 +818,8 @@ enum Route: Hashable {
     case powerHour
     case timeBlocks
     case scorecard
+    case team
+    case recruit
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)
