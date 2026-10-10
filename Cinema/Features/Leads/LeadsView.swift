@@ -21,6 +21,12 @@ struct LeadsView: View {
                 NavigationLink(value: Route.buyers) {
                     IconRow(icon: "heart.text.square", title: "Buyer wishlists", subtitle: "Match buyers to your listings")
                 }
+                NavigationLink(value: Route.scanLeads) {
+                    IconRow(icon: "doc.viewfinder.fill", title: "Scan to leads", subtitle: "Business cards and paper sign in sheets")
+                }
+                NavigationLink(value: Route.replyHelper) {
+                    IconRow(icon: "arrowshape.turn.up.left.fill", title: "Reply helper", subtitle: "Paste a comment, get the reply and DM")
+                }
             }
             .listRowBackground(Theme.surface)
 

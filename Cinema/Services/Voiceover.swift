@@ -3,7 +3,7 @@ import UIKit
 
 /// Reads a script with the best voice on the phone and mixes it into a reel.
 /// Everything runs on the device.
-final class VoiceoverWriter: NSObject, AVSpeechSynthesizerDelegate {
+final class VoiceoverWriter: NSObject, AVSpeechSynthesizerDelegate, @unchecked Sendable {
     enum VoiceError: Error { case noAudio }
 
     private let synth = AVSpeechSynthesizer()

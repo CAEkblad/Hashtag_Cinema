@@ -1718,6 +1718,34 @@ final class CinemaStore {
         return lead.id
     }
 
+    /// Adds scanned contacts to Leads (skipping ones already there) and optionally starts their 8 week plan.
+    func saveScannedLeads(_ contacts: [CardScanner.Contact], source: String, startPlan: Bool) -> Int {
+        var added = 0
+        for contact in contacts {
+            let name = contact.name.trimmingCharacters(in: .whitespaces)
+            let phone = contact.phone.trimmingCharacters(in: .whitespaces)
+            let email = contact.email.trimmingCharacters(in: .whitespaces)
+            let handle = phone.isEmpty ? email : phone
+            if !handle.isEmpty, leads.contains(where: { $0.handle == handle }) { continue }
+            let details = [contact.company, email.isEmpty || handle == email ? "" : email].filter { !$0.isEmpty }.joined(separator: " · ")
+            leads.insert(Lead(
+                name: name.isEmpty ? (email.isEmpty ? "New contact" : email) : name,
+                handle: handle,
+                platform: .facebook,
+                keyword: "SCAN",
+                sourceClip: source,
+                message: details.isEmpty ? "Scanned from a \(source.lowercased())" : details,
+                date: Date(),
+                status: .new
+            ), at: 0)
+            if startPlan, !name.isEmpty { _ = startTouchPlan(name: name, phone: phone, plan: .eightWeek, quiet: true) }
+            added += 1
+        }
+        persist()
+        if added > 0 { showToast("\(added) added to Leads") }
+        return added
+    }
+
     // MARK: Pop bys
 
     func popBysDelivered(_ date: Date = Date()) -> Set<String> {

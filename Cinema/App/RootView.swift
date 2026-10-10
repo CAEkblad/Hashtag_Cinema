@@ -284,6 +284,8 @@ struct RouteDestination: View {
             FilmDayView()
         case .popBys:
             PopBysView()
+        case .scanLeads:
+            ScanLeadsView()
         case .replyHelper:
             ReplyHelperView()
         case .callScripts:

@@ -14,6 +14,7 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "doc.viewfinder.fill", title: "Scan to leads", detail: "Snap a business card or a filled in paper sign in sheet. CloseUp reads the names, phones and emails on your phone, lets you fix anything, and adds them to Leads and your 8 week plan.", route: .scanLeads),
         Item(icon: "arrowshape.turn.up.left.fill", title: "Reply helper", detail: "Paste any comment from your posts. CloseUp reads it (price question, wants a showing, thinking of selling, your keyword, a compliment or a troll) and writes the public reply and the DM. Buying and selling signals save to Leads in one tap.", route: .replyHelper),
         Item(icon: "text.bubble.fill", title: "Call scripts", detail: "8 prospecting scripts for power hour: sphere, past clients, new online leads, open house follow up, expireds, FSBOs, just sold neighbors and referral asks. Each has an opener, questions, what to say if they push back, a close, a voicemail and a text, with tally buttons while you talk.", route: .callScripts),
         Item(icon: "printer.fill", title: "Open house kit", detail: "On any open house: a printable sign in sheet with a QR backup, fold over feature cards for each room (\"Did you notice? Impact windows\"), and a what to bring checklist.", route: .listings),
