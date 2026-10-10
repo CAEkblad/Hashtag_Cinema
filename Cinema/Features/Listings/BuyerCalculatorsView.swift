@@ -25,9 +25,22 @@ struct AffordabilityView: View {
                     Text(maxPrice > 0 ? maxPrice.formatted(.currency(code: "USD").precision(.fractionLength(0))) : "Not enough room yet")
                         .font(.cinema(34, weight: .heavy))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("Estimated top price, \(b.total.formatted(.currency(code: "USD").precision(.fractionLength(0)))) a month")
-                        .font(.cinema(13, weight: .semibold))
-                        .foregroundStyle(Theme.textSecondary)
+                    if maxPrice > 0 {
+                        Text("Estimated top price, \(b.total.formatted(.currency(code: "USD").precision(.fractionLength(0)))) a month")
+                            .font(.cinema(13, weight: .semibold))
+                            .foregroundStyle(Theme.textSecondary)
+                    } else {
+                        Text(calc.loanType.minDownPercent > 0 && calc.downPayment <= 0 ? "\(calc.loanType.title) needs at least \(String(format: "%g", calc.loanType.minDownPercent))% down" : "Monthly debts leave no room for a house payment yet")
+                            .font(.cinema(13, weight: .semibold))
+                            .foregroundStyle(Theme.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    if maxPrice > 0 && calc.isLimitedByDownPayment {
+                        Text("Savings set this limit. Income could carry more with a bigger down payment or down payment help.")
+                            .font(.cinema(12))
+                            .foregroundStyle(Theme.red)
+                            .multilineTextAlignment(.center)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .cardStyle()
@@ -62,6 +75,7 @@ struct AffordabilityView: View {
                     Label("Send to my buyer", systemImage: "paperplane.fill")
                 }
                 .buttonStyle(PrimaryButtonStyle())
+                .disabled(maxPrice <= 0)
 
                 Text("Estimate only, not a loan approval. Uses \(Int(calc.loanType.ratios.front * 100))/\(Int(calc.loanType.ratios.back * 100)) debt ratios, \(String(format: "%.1f", calc.taxRatePercent))% property taxes and about 3% closing costs. A lender preapproval is the real answer.")
                     .font(.cinema(11))

@@ -73,8 +73,7 @@ struct Affordability {
     }
 
     func breakdown(price: Double) -> Breakdown {
-        let minDown = price * loanType.minDownPercent / 100
-        let down = min(max(downPayment, minDown), price)
+        let down = min(max(downPayment, 0), price)
         var loan = price - down
         var mi = 0.0
         switch loanType {
@@ -84,7 +83,8 @@ struct Affordability {
             loan += loan * 0.0175
             mi = loan * 0.0055 / 12
         case .va:
-            if down / max(price, 1) < 0.05 { loan += loan * 0.0215 }
+            let share = down / max(price, 1)
+            loan += loan * (share < 0.05 ? 0.0215 : share < 0.10 ? 0.015 : 0.0125)
         }
         let pi = Mortgage.payment(loan: loan, ratePercent: ratePercent)
         return Breakdown(
@@ -105,12 +105,25 @@ struct Affordability {
         return max(min(monthly * loanType.ratios.front, monthly * loanType.ratios.back - monthlyDebts), 0)
     }
 
-    /// Highest price whose full monthly payment fits the limit, to the nearest $1,000.
-    var maxPrice: Double {
+    /// The most the down payment covers at this loan type's minimum down.
+    var downPaymentCap: Double {
+        loanType.minDownPercent > 0 ? max(downPayment, 0) / (loanType.minDownPercent / 100) : 5_000_000
+    }
+
+    /// True when savings, not income, sets the top price.
+    var isLimitedByDownPayment: Bool { incomeLimitedPrice > downPaymentCap }
+
+    private var incomeLimitedPrice: Double { search(upTo: 5_000_000) }
+
+    /// Highest price whose full monthly payment fits the limit and whose
+    /// minimum down payment the buyer has, to the nearest $1,000.
+    var maxPrice: Double { search(upTo: min(5_000_000, downPaymentCap)) }
+
+    private func search(upTo cap: Double) -> Double {
         let limit = maxHousingPayment
-        guard limit > 0 else { return 0 }
+        guard limit > 0, cap > 0 else { return 0 }
         var low = 0.0
-        var high = 5_000_000.0
+        var high = cap
         for _ in 0..<40 {
             let mid = (low + high) / 2
             if breakdown(price: mid).total <= limit { low = mid } else { high = mid }
@@ -147,7 +160,7 @@ struct RentVsBuy {
         let down = price * downPercent / 100
         let loan = price - down
         let pi = Mortgage.payment(loan: loan, ratePercent: ratePercent)
-        let pmi = downPercent < 20 ? loan * 0.006 / 12 : 0
+        let pmi = loan * 0.006 / 12
         var rentPaid = 0.0
         var monthlyRent = rent
         var ownPaid = down + price * 0.03
@@ -156,7 +169,9 @@ struct RentVsBuy {
             rentPaid += monthlyRent * 12
             monthlyRent *= 1 + rentIncreasePercent / 100
             let value = price * pow(1 + appreciationPercent / 100, Double(year))
-            ownPaid += pi * 12 + pmi * 12 + value * taxRatePercent / 100 + annualInsurance + monthlyHOA * 12 + value * 0.01
+            // PMI drops off once the loan is paid down to 78% of the price.
+            let paysPMI = downPercent < 20 && Mortgage.balance(loan: loan, ratePercent: ratePercent, afterMonths: (year - 1) * 12) > price * 0.78
+            ownPaid += pi * 12 + (paysPMI ? pmi * 12 : 0) + value * taxRatePercent / 100 + annualInsurance + monthlyHOA * 12 + value * 0.01
             let balance = Mortgage.balance(loan: loan, ratePercent: ratePercent, afterMonths: year * 12)
             let equity = value - balance - value * 0.06
             let net = ownPaid - equity
@@ -225,4 +240,30 @@ struct OfferEntry: Identifiable, Codable, Hashable {
         if financing == .fha || financing == .va { notes.append("\(financing.title) appraisal and repair rules apply") }
         return notes
     }
+}
+
+extension OfferEntry {
+    /// New fields fall back to defaults so saved offers keep loading.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        buyerName = try c.decodeIfPresent(String.self, forKey: .buyerName) ?? "Offer"
+        price = try c.decodeIfPresent(Double.self, forKey: .price) ?? 0
+        financing = try c.decodeIfPresent(Financing.self, forKey: .financing) ?? .conventional
+        downPercent = try c.decodeIfPresent(Double.self, forKey: .downPercent) ?? 20
+        escrowDeposit = try c.decodeIfPresent(Double.self, forKey: .escrowDeposit) ?? 0
+        sellerCredit = try c.decodeIfPresent(Double.self, forKey: .sellerCredit) ?? 0
+        buyerAgentPercent = try c.decodeIfPresent(Double.self, forKey: .buyerAgentPercent) ?? 0
+        inspectionDays = try c.decodeIfPresent(Int.self, forKey: .inspectionDays) ?? 15
+        appraisalGap = try c.decodeIfPresent(Double.self, forKey: .appraisalGap) ?? 0
+        closingDays = try c.decodeIfPresent(Int.self, forKey: .closingDays) ?? 30
+        saleContingency = try c.decodeIfPresent(Bool.self, forKey: .saleContingency) ?? false
+        notes = try c.decodeIfPresent(String.self, forKey: .notes) ?? ""
+    }
+}
+
+/// The seller side numbers saved with a set of offers.
+struct OfferSettings: Codable, Equatable {
+    var payoff: Double = 0
+    var listingPercent: Double = 2.5
 }

@@ -26,6 +26,17 @@ struct TouchContact: Identifiable, Codable, Hashable {
         Calendar.current.date(byAdding: .day, value: step.dayOffset, to: Calendar.current.startOfDay(for: start)) ?? start
     }
 
+    /// "today", "tomorrow", "overdue since Oct 6" or "Tue, Oct 14".
+    func whenLabel(of step: TouchStep) -> String {
+        let cal = Calendar.current
+        let day = date(of: step)
+        let today = cal.startOfDay(for: Date())
+        if day < today { return "overdue since \(day.formatted(.dateTime.month(.abbreviated).day()))" }
+        if cal.isDateInToday(day) { return "today" }
+        if cal.isDateInTomorrow(day) { return "tomorrow" }
+        return day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+    }
+
     /// Steps whose date has come and that aren't done yet.
     var due: [TouchStep] {
         let today = Calendar.current.startOfDay(for: Date())
@@ -119,4 +130,17 @@ struct TouchStep: Identifiable, Hashable {
         add(360, .call, "Year end thank you call", "Hi {name}, it's {me}. Just calling to say thank you for a great year. Anything I can help with for the new one?")
         return steps.sorted { $0.dayOffset < $1.dayOffset }
     }()
+}
+
+extension TouchContact {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        name = try c.decode(String.self, forKey: .name)
+        phone = try c.decodeIfPresent(String.self, forKey: .phone) ?? ""
+        plan = try c.decodeIfPresent(Plan.self, forKey: .plan) ?? .eightWeek
+        start = try c.decodeIfPresent(Date.self, forKey: .start) ?? Date()
+        done = try c.decodeIfPresent([Int].self, forKey: .done) ?? []
+        leadID = try c.decodeIfPresent(UUID.self, forKey: .leadID)
+    }
 }

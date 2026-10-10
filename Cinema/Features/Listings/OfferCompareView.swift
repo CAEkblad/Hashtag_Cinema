@@ -6,8 +6,9 @@ struct OfferCompareView: View {
     @Environment(CinemaStore.self) private var store
     let listingID: UUID?
     @State private var offers: [OfferEntry] = []
-    @State private var payoff: Double = 0
-    @State private var listingPercent: Double = 2.5
+    @State private var settings = OfferSettings()
+    private var payoff: Double { settings.payoff }
+    private var listingPercent: Double { settings.listingPercent }
     @State private var editing: OfferEntry?
     @State private var didLoad = false
 
@@ -37,12 +38,12 @@ struct OfferCompareView: View {
                         Text("Mortgage payoff")
                             .font(.cinema(14, weight: .semibold))
                         Spacer()
-                        TextField("0", value: $payoff, format: .currency(code: "USD").precision(.fractionLength(0)))
+                        TextField("0", value: $settings.payoff, format: .currency(code: "USD").precision(.fractionLength(0)))
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 140)
                     }
-                    Stepper("Listing side \(SellerNetSheet.percent(listingPercent))", value: $listingPercent, in: 0...6, step: 0.25)
+                    Stepper("Listing side \(SellerNetSheet.percent(listingPercent))", value: $settings.listingPercent, in: 0...6, step: 0.25)
                         .font(.cinema(14, weight: .semibold))
                 }
                 .foregroundStyle(Theme.textPrimary)
@@ -86,8 +87,10 @@ struct OfferCompareView: View {
             guard !didLoad else { return }
             didLoad = true
             offers = store.offers(for: key)
+            settings = store.offerSettings(for: key)
         }
         .onChange(of: offers) { _, value in store.saveOffers(value, for: key) }
+        .onChange(of: settings) { _, value in store.saveOfferSettings(value, for: key) }
     }
 
     private func offerCard(_ offer: OfferEntry, isBestNet: Bool, isStrongest: Bool) -> some View {
@@ -145,7 +148,7 @@ struct OfferCompareView: View {
         for offer in offers.sorted(by: { net($0).net > net($1).net }) {
             let sheet = net(offer)
             lines.append("\(offer.buyerName): \(offer.price.compactMoney) \(offer.financing.title.lowercased()), you net about \(sheet.net.compactMoney)")
-            lines.append("  Closes in \(offer.closingDays) days, \(offer.inspectionDays) day inspection, \(offer.escrowDeposit.compactMoney) deposit\(offer.sellerCredit > 0 ? ", \(offer.sellerCredit.compactMoney) credit to buyer" : "")")
+            lines.append("  Closes in \(offer.closingDays) days, \(offer.inspectionDays == 0 ? "no inspection period" : "\(offer.inspectionDays) day inspection"), \(offer.escrowDeposit.compactMoney) deposit\(offer.sellerCredit > 0 ? ", \(offer.sellerCredit.compactMoney) credit to buyer" : "")")
             if !offer.strengthNotes.isEmpty { lines.append("  " + offer.strengthNotes.joined(separator: ", ")) }
             lines.append("")
         }

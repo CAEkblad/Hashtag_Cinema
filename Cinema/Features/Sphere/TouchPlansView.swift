@@ -15,13 +15,13 @@ struct TouchPlansView: View {
                     Text("Touch plans")
                         .font(.cinema(26, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("New people get your \(store.lex.newContactPlanLong). After that, your \(store.lex.yearPlanLong) keeps you top of mind so they call you, not the agent their cousin knows.")
+                    Text("New people get your \(store.lex.newContactPlanInline). After that, your \(store.lex.yearPlanInline) keeps you top of mind so they call you, not the agent their cousin knows.")
                         .font(.cinema(14))
                         .foregroundStyle(Theme.textSecondary)
                 }
 
                 HStack(spacing: 12) {
-                    StatTile(value: "\(due.count)", label: "Due today", icon: "bell.fill")
+                    StatTile(value: "\(store.touchesDueCount)", label: "Due today", icon: "bell.fill")
                     StatTile(value: "\(store.touchContacts.filter { $0.plan == .eightWeek }.count)", label: store.lex.newContactPlan, icon: "8.circle.fill")
                     StatTile(value: "\(store.touchContacts.filter { $0.plan == .yearRound }.count)", label: store.lex.yearPlanTitle, icon: "calendar")
                 }
@@ -86,7 +86,7 @@ struct TouchPlansView: View {
                 Text(contact.name)
                     .font(.cinema(15, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
-                Text(contact.nextStep.map { "Next: \($0.title), \(contact.date(of: $0).relativeDayLabel.lowercased())" } ?? "Plan complete")
+                Text(contact.nextStep.map { "Next: \($0.title), \(contact.whenLabel(of: $0))" } ?? "Plan complete")
                     .font(.cinema(12))
                     .foregroundStyle(Theme.textSecondary)
             }
@@ -170,6 +170,12 @@ struct TouchContactView: View {
                             }
                             .listRowBackground(Theme.surface)
                         }
+                        Section("Phone") {
+                            TextField("Add a phone number to call from here", text: Binding(get: { contact.phone }, set: { store.setTouchPhone(contact.id, phone: $0) }))
+                                .keyboardType(.phonePad)
+                                .textContentType(.telephoneNumber)
+                        }
+                        .listRowBackground(Theme.surface)
                         Section(contact.plan == .eightWeek ? store.lex.newContactPlanLong : store.lex.yearPlanLong) {
                             ForEach(contact.steps) { step in
                                 Button {
@@ -244,9 +250,9 @@ struct AddTouchContactView: View {
                     let notOnPlan = store.launchpad.contacts.filter { name in !store.touchContacts.contains { $0.name.caseInsensitiveCompare(name) == .orderedSame } }
                     if !notOnPlan.isEmpty {
                         Section {
-                            Button("Add all \(notOnPlan.count) from my first 100 contacts") {
+                            Button(notOnPlan.count == 1 ? "Add 1 from my first 100 contacts" : "Add all \(notOnPlan.count) from my first 100 contacts") {
                                 notOnPlan.forEach { store.startTouchPlan(name: $0, plan: plan, quiet: true) }
-                                store.showToast("\(notOnPlan.count) people added to your \(plan.title(store.lex))")
+                                store.showToast("\(notOnPlan.count) \(notOnPlan.count == 1 ? "person" : "people") added to your \(plan.title(store.lex))")
                                 dismiss()
                             }
                         }

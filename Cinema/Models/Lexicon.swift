@@ -41,6 +41,9 @@ struct Lexicon {
     var newContactPlanLong: String { isKW ? "8x8: 8 touches in 8 weeks" : "8 week plan: 8 touches in 8 weeks" }
     var yearPlan: String { isKW ? "33 Touch" : "year round plan" }
     var yearPlanTitle: String { isKW ? "33 Touch" : "Year round plan" }
+    /// For use inside a sentence.
+    var newContactPlanInline: String { isKW ? "8x8 (8 touches in 8 weeks)" : "8 week plan (8 touches in 8 weeks)" }
+    var yearPlanInline: String { isKW ? "33 Touch plan (33 touches a year)" : "year round plan (33 touches a year)" }
     var yearPlanLong: String { isKW ? "33 Touch: 33 touches a year" : "Year round plan: 33 touches a year" }
 
     var joinCodePrompt: String { isKW ? "Have a join code from your MCA?" : "Have a join code from your broker?" }

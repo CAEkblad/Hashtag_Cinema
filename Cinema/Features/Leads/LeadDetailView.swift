@@ -108,7 +108,7 @@ struct LeadDetailView: View {
 
                 if let plan = store.touchContact(for: lead.id) {
                     NavigationLink(value: Route.touchPlans) {
-                        IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "On your \(plan.plan.title(store.lex))", subtitle: plan.nextStep.map { "Next: \($0.title), \(plan.date(of: $0).relativeDayLabel.lowercased())" } ?? "Plan complete")
+                        IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "On your \(plan.plan.title(store.lex))", subtitle: plan.nextStep.map { "Next: \($0.title), \(plan.whenLabel(of: $0))" } ?? "Plan complete")
                             .cardStyle()
                     }
                     .buttonStyle(.plain)

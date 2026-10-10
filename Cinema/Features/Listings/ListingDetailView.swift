@@ -48,7 +48,7 @@ struct ListingDetailView: View {
                 }
                 .buttonStyle(.plain)
                 NavigationLink(value: Route.offers(listing.id)) {
-                    IconRow(icon: "rectangle.split.3x1.fill", title: "Compare offers", subtitle: store.offers(for: listing.id.uuidString).isEmpty ? "Net and strength of each offer, side by side" : "\(store.offers(for: listing.id.uuidString).count) offers in")
+                    IconRow(icon: "rectangle.split.3x1.fill", title: "Compare offers", subtitle: store.offers(for: listing.id.uuidString).isEmpty ? "Net and strength of each offer, side by side" : "\(store.offers(for: listing.id.uuidString).count) offer\(store.offers(for: listing.id.uuidString).count == 1 ? "" : "s") in")
                         .cardStyle()
                 }
                 .buttonStyle(.plain)

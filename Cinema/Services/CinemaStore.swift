@@ -83,6 +83,7 @@ final class CinemaStore {
 
     // Touch plans and offer comparisons
     var touchContacts: [TouchContact] = (try? JSONDecoder().decode([TouchContact].self, from: UserDefaults.standard.data(forKey: "cinema.touch.v1") ?? Data())) ?? []
+    var offerSettingsByKey: [String: OfferSettings] = (try? JSONDecoder().decode([String: OfferSettings].self, from: UserDefaults.standard.data(forKey: "cinema.offerSettings.v1") ?? Data())) ?? [:]
     var offerSets: [String: [OfferEntry]] = (try? JSONDecoder().decode([String: [OfferEntry]].self, from: UserDefaults.standard.data(forKey: "cinema.offers.v1") ?? Data())) ?? [:]
 
     // New agent launchpad
@@ -1599,6 +1600,9 @@ final class CinemaStore {
 
     // MARK: Touch plans
 
+    /// Every touch that's due, counting several per person when they're behind.
+    var touchesDueCount: Int { touchContacts.reduce(0) { $0 + $1.due.count } }
+
     var touchesDueToday: [(contact: TouchContact, step: TouchStep)] {
         touchContacts.compactMap { contact in contact.due.first.map { (contact, $0) } }
     }
@@ -1621,16 +1625,18 @@ final class CinemaStore {
 
     func toggleTouch(_ contactID: UUID, step: Int) {
         guard let index = touchContacts.firstIndex(where: { $0.id == contactID }) else { return }
+        let action: ProspectAction? = switch touchContacts[index].steps.first(where: { $0.id == step })?.kind {
+            case .call: .calls
+            case .text, .video: .texts
+            case .note, .mail: .notes
+            default: nil
+        }
         if let at = touchContacts[index].done.firstIndex(of: step) {
             touchContacts[index].done.remove(at: at)
+            if let action { tallyProspect(action, by: -1) }
         } else {
             touchContacts[index].done.append(step)
-            switch touchContacts[index].steps.first(where: { $0.id == step })?.kind {
-            case .call: tallyProspect(.calls)
-            case .text, .video: tallyProspect(.texts)
-            case .note, .mail: tallyProspect(.notes)
-            default: break
-            }
+            if let action { tallyProspect(action) }
             if touchContacts[index].isComplete {
                 showToast(touchContacts[index].plan == .eightWeek ? "\(lex.newContactPlan) done! Move \(touchContacts[index].firstName) to your \(lex.yearPlan)." : "A full year of touches. Nice work.")
             }
@@ -1647,6 +1653,12 @@ final class CinemaStore {
         showToast("\(touchContacts[index].firstName) is on your \(lex.yearPlan)")
     }
 
+    func setTouchPhone(_ contactID: UUID, phone: String) {
+        guard let index = touchContacts.firstIndex(where: { $0.id == contactID }) else { return }
+        touchContacts[index].phone = phone
+        saveTouches()
+    }
+
     func removeTouchContact(_ contactID: UUID) {
         touchContacts.removeAll { $0.id == contactID }
         saveTouches()
@@ -1659,6 +1671,13 @@ final class CinemaStore {
     // MARK: Offer comparison
 
     func offers(for key: String) -> [OfferEntry] { offerSets[key] ?? [] }
+
+    func offerSettings(for key: String) -> OfferSettings { offerSettingsByKey[key] ?? OfferSettings() }
+
+    func saveOfferSettings(_ settings: OfferSettings, for key: String) {
+        offerSettingsByKey[key] = settings
+        if let data = try? JSONEncoder().encode(offerSettingsByKey) { UserDefaults.standard.set(data, forKey: "cinema.offerSettings.v1") }
+    }
 
     func saveOffers(_ offers: [OfferEntry], for key: String) {
         offerSets[key] = offers.isEmpty ? nil : offers
@@ -2464,6 +2483,8 @@ final class CinemaStore {
         launchpad = LaunchpadState()
         touchContacts = []
         offerSets = [:]
+        offerSettingsByKey = [:]
+        UserDefaults.standard.removeObject(forKey: "cinema.offerSettings.v1")
         UserDefaults.standard.removeObject(forKey: "cinema.touch.v1")
         UserDefaults.standard.removeObject(forKey: "cinema.offers.v1")
         UserDefaults.standard.removeObject(forKey: "cinema.launchpad.v1")

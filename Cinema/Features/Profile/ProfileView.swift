@@ -96,7 +96,7 @@ struct ProfileView: View {
                         IconRow(icon: "house.and.flag.fill", title: "Past clients", subtitle: "Home anniversaries and value check-ins")
                     }
                     NavigationLink(value: Route.touchPlans) {
-                        IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "Touch plans", subtitle: "\(store.lex.newContactPlan) and \(store.lex.yearPlan) · \(store.touchesDueToday.count) due today")
+                        IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "Touch plans", subtitle: "\(store.lex.newContactPlan) and \(store.lex.yearPlan) · \(store.touchesDueCount) due today")
                     }
                     NavigationLink(value: Route.vendors) {
                         IconRow(icon: "person.2.badge.gearshape.fill", title: "Trusted pros", subtitle: "Your lenders, inspectors and more")

@@ -38,7 +38,7 @@ struct HomeView: View {
                     WeeklyGoalCard()
                     if !store.touchesDueToday.isEmpty {
                         NavigationLink(value: Route.touchPlans) {
-                            IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "\(store.touchesDueToday.count) touch\(store.touchesDueToday.count == 1 ? "" : "es") due today", subtitle: store.touchesDueToday.prefix(3).map(\.contact.firstName).joined(separator: ", "))
+                            IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "\(store.touchesDueCount) touch\(store.touchesDueCount == 1 ? "" : "es") due today", subtitle: store.touchesDueToday.prefix(3).map(\.contact.firstName).joined(separator: ", "))
                                 .cardStyle()
                         }
                         .buttonStyle(.plain)
