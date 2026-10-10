@@ -2,17 +2,63 @@ import SwiftUI
 
 // MARK: - Brand
 
+/// The CloseUp mark: viewfinder corners framing a house. Drawn as vectors so
+/// it stays sharp at any size. Matches the app icon (designed on a 602 grid).
+struct CloseUpMark: View {
+    var size: CGFloat = 28
+    var frameColor: Color = Theme.red
+    var houseColor: Color = Theme.ink
+
+    var body: some View {
+        Canvas { context, canvas in
+            let scale = canvas.width / 602
+            context.scaleBy(x: scale, y: scale)
+
+            var corners = Path()
+            corners.move(to: CGPoint(x: 29, y: 201)); corners.addLine(to: CGPoint(x: 29, y: 87))
+            corners.addArc(center: CGPoint(x: 79, y: 87), radius: 50, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+            corners.addLine(to: CGPoint(x: 197, y: 37))
+            corners.move(to: CGPoint(x: 573, y: 201)); corners.addLine(to: CGPoint(x: 573, y: 87))
+            corners.addArc(center: CGPoint(x: 523, y: 87), radius: 50, startAngle: .degrees(0), endAngle: .degrees(270), clockwise: true)
+            corners.addLine(to: CGPoint(x: 405, y: 37))
+            corners.move(to: CGPoint(x: 29, y: 405)); corners.addLine(to: CGPoint(x: 29, y: 515))
+            corners.addArc(center: CGPoint(x: 79, y: 515), radius: 50, startAngle: .degrees(180), endAngle: .degrees(90), clockwise: true)
+            corners.addLine(to: CGPoint(x: 197, y: 565))
+            corners.move(to: CGPoint(x: 573, y: 405)); corners.addLine(to: CGPoint(x: 573, y: 515))
+            corners.addArc(center: CGPoint(x: 523, y: 515), radius: 50, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+            corners.addLine(to: CGPoint(x: 405, y: 565))
+            context.stroke(corners, with: .color(frameColor), style: StrokeStyle(lineWidth: 58, lineCap: .butt, lineJoin: .round))
+
+            let fill = GraphicsContext.Shading.color(houseColor)
+            context.fill(Path(roundedRect: CGRect(x: 415, y: 171, width: 65, height: 110), cornerRadius: 7), with: fill)
+            for (x, y) in [(228.0, 318.0), (302.0, 318.0), (228.0, 392.0), (302.0, 392.0)] {
+                context.fill(Path(roundedRect: CGRect(x: x, y: y, width: 63, height: 63), cornerRadius: 7), with: fill)
+            }
+            var roof = Path()
+            roof.move(to: CGPoint(x: 56, y: 356))
+            roof.addQuadCurve(to: CGPoint(x: 301, y: 183), control: CGPoint(x: 178, y: 252))
+            roof.addQuadCurve(to: CGPoint(x: 546, y: 356), control: CGPoint(x: 424, y: 252))
+            context.stroke(roof, with: fill, style: StrokeStyle(lineWidth: 52, lineCap: .butt, lineJoin: .miter, miterLimit: 10))
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Mark plus the two tone wordmark: "Close" in ink, "Up" in red.
 struct CinemaLogo: View {
     var size: CGFloat = 28
 
     var body: some View {
-        HStack(spacing: size * 0.25) {
-            Image(systemName: "video.fill")
-                .font(.system(size: size * 0.8, weight: .bold))
-                .foregroundStyle(Theme.red)
-            Text("CloseUp")
-                .font(.system(size: size, weight: .heavy))
-                .foregroundStyle(Theme.textPrimary)
+        HStack(spacing: size * 0.28) {
+            CloseUpMark(size: size * 1.15)
+            HStack(spacing: 0) {
+                Text("Close").foregroundStyle(Theme.ink)
+                Text("Up").foregroundStyle(Theme.red)
+            }
+            .font(.system(size: size, weight: .black, design: .rounded))
+            .kerning(-0.5)
+            .fixedSize()
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("CloseUp")
