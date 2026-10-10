@@ -89,6 +89,7 @@ final class CinemaStore {
     var teamFeed: [TeamFeedItem] = (try? JSONDecoder().decode([TeamFeedItem].self, from: UserDefaults.standard.data(forKey: "cinema.teamfeed.v1") ?? Data())) ?? []
     var sharesWithTeam: Bool = UserDefaults.standard.object(forKey: "cinema.sharesWithTeam") as? Bool ?? true
     var leadAssignments: [String: String] = (UserDefaults.standard.dictionary(forKey: "cinema.leadAssignments") as? [String: String]) ?? [:]
+    var routedLeadIDs: Set<String> = Set(UserDefaults.standard.stringArray(forKey: "cinema.routedLeads") ?? [])
 
     // Time blocks and weekly scorecard
     var timeBlocks: [TimeBlock] = (try? JSONDecoder().decode([TimeBlock].self, from: UserDefaults.standard.data(forKey: "cinema.blocks.v1") ?? Data())) ?? TimeBlock.defaults
@@ -1346,7 +1347,8 @@ final class CinemaStore {
         let place = address.trimmingCharacters(in: .whitespaces)
         let who = client?.trimmingCharacters(in: .whitespaces) ?? ""
         let forWho = who.isEmpty ? "" : " for \(who)"
-        notify(.booking, "Request sent to \(partner.company)", detail: "\(partner.category.title)\(forWho) at \(place), around \(when).")
+        let need = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        notify(.booking, "Request sent to \(partner.company)", detail: "\(partner.category.title)\(forWho) at \(place), around \(when).\(need.isEmpty ? "" : " \(need)")")
         showToast("Request sent. \(partner.company) usually replies fast.")
         let name = partner.name
         let company = partner.company
@@ -1494,11 +1496,11 @@ final class CinemaStore {
 
     func shareToNetwork(_ listingID: UUID, status: NetworkListing.Status, remarks: String) {
         guard let listing = listing(listingID) else { return }
-        let shared = NetworkListing(address: listing.address, cityName: listing.city?.name ?? homeCity.name, price: listing.price, beds: listing.beds, baths: listing.baths, sqft: listing.squareFeet ?? 0, yearBuilt: 0, daysOnMarket: listing.daysOnMarket, originalPrice: listing.price, priceCuts: 0, status: status, remarks: remarks.isEmpty ? listing.description : remarks, features: listing.features, agentName: profile.name, brokerage: myOfficeName, isKW: lex.isKW, areaPPSF: 0, isMine: true)
+        let shared = NetworkListing(id: listing.id, address: listing.address, cityName: listing.city?.name ?? homeCity.name, price: listing.price, beds: listing.beds, baths: listing.baths, sqft: listing.squareFeet ?? 0, yearBuilt: 0, daysOnMarket: listing.daysOnMarket, originalPrice: listing.price, priceCuts: 0, status: status, remarks: remarks.isEmpty ? listing.description : remarks, features: listing.features, agentName: profile.name, brokerage: myOfficeName, isKW: lex.isKW, areaPPSF: 0, isMine: true)
         networkShared.removeAll { $0.address == shared.address && $0.isMine }
         networkShared.insert(shared, at: 0)
         saveNetwork()
-        let fits = buyerNeeds.filter { $0.maxPrice >= listing.price && $0.minBeds <= listing.beds && $0.mustHaves.allSatisfy { listing.features.contains($0) } }
+        let fits = NetworkSamples.buyerNeeds.filter { $0.maxPrice >= listing.price && $0.minBeds <= listing.beds && $0.mustHaves.allSatisfy { listing.features.contains($0) } }
         showToast(fits.isEmpty ? "Shared with agents on #Cinema" : "Shared. \(fits.count) agent\(fits.count == 1 ? " has a buyer" : "s have buyers") that fit")
     }
 
@@ -1512,7 +1514,7 @@ final class CinemaStore {
     /// Every home in reach, ranked for this buyer.
     func gemMatches(for buyer: BuyerWish) -> [(listing: NetworkListing, gem: GemScore)] {
         let mine = listings.filter { $0.status == .active || $0.status == .comingSoon }.map { listing in
-            NetworkListing(address: listing.address, cityName: listing.city?.name ?? homeCity.name, price: listing.price, beds: listing.beds, baths: listing.baths, sqft: listing.squareFeet ?? 0, yearBuilt: 0, daysOnMarket: listing.daysOnMarket, originalPrice: listing.price, priceCuts: 0, status: listing.status == .comingSoon ? .comingSoon : .active, remarks: listing.description, features: listing.features, agentName: profile.name, brokerage: myOfficeName, isKW: lex.isKW, areaPPSF: 0, isMine: true)
+            NetworkListing(id: listing.id, address: listing.address, cityName: listing.city?.name ?? homeCity.name, price: listing.price, beds: listing.beds, baths: listing.baths, sqft: listing.squareFeet ?? 0, yearBuilt: 0, daysOnMarket: listing.daysOnMarket, originalPrice: listing.price, priceCuts: 0, status: listing.status == .comingSoon ? .comingSoon : .active, remarks: listing.description, features: listing.features, agentName: profile.name, brokerage: myOfficeName, isKW: lex.isKW, areaPPSF: 0, isMine: true)
         }
         let all = mine + networkListings.filter { shared in !mine.contains { $0.address == shared.address } }
         return all.map { ($0, GemScore.score($0, for: buyer, myOffice: myOfficeName, kwMode: lex.isKW)) }
@@ -1540,6 +1542,9 @@ final class CinemaStore {
         joined.members.append(TeamMember(name: profile.name, role: .agent, isMe: true))
         team = joined
         teamFeed = Self.sampleTeamFeed()
+        resetLeadRouting()
+        profile.teamName = joined.name
+        persist()
         postToTeam(.join, "\(profile.firstName) joined the team", detail: "Say hi and send a welcome!", force: true)
         saveTeam()
         showToast("Welcome to \(joined.name)!")
@@ -1551,14 +1556,40 @@ final class CinemaStore {
         let code = (letters.isEmpty ? "TEAM" : letters) + String(Int.random(in: 100...999))
         team = Team(name: name, leaderName: profile.name, cityID: homeCity.id, joinCode: code, tagline: tagline, members: [TeamMember(name: profile.name, role: .leader, isMe: true)])
         teamFeed = []
+        resetLeadRouting()
+        profile.teamName = name
+        persist()
         postToTeam(.milestone, "\(name) is live", detail: "Invite your \(lex.agents) with code \(code).", force: true)
         saveTeam()
         showToast("\(name) created. Your code is \(code)")
     }
 
     func leaveTeam() {
+        let name = team?.name ?? "the team"
         team = nil
         teamFeed = []
+        resetLeadRouting()
+        profile.teamName = ""
+        persist()
+        saveTeam()
+        showToast("You left \(name)")
+    }
+
+    private func resetLeadRouting() {
+        leadAssignments = [:]
+        routedLeadIDs = []
+        UserDefaults.standard.removeObject(forKey: "cinema.leadAssignments")
+        UserDefaults.standard.removeObject(forKey: "cinema.routedLeads")
+    }
+
+    /// Resets my "videos this month" count when a new month starts.
+    func refreshTeamMonth() {
+        let month = Date().formatted(.dateTime.year().month(.twoDigits))
+        guard let current = team, current.statsMonth != month else { return }
+        if current.statsMonth != nil, let index = current.members.firstIndex(where: \.isMe) {
+            team?.members[index].videosThisMonth = 0
+        }
+        team?.statsMonth = month
         saveTeam()
     }
 
@@ -1584,7 +1615,8 @@ final class CinemaStore {
             launchpad.done.remove(at: index)
         } else {
             launchpad.done.append(id)
-            if launchpad.done.count == LaunchPlan90.stepCount {
+            if launchpad.done.count == LaunchPlan90.stepCount && launchpad.celebrated != true {
+                launchpad.celebrated = true
                 showToast("Launch plan complete. You did it!")
                 postToTeam(.milestone, "Finished the 90 day launch plan", detail: "Every step done")
             }
@@ -1613,12 +1645,13 @@ final class CinemaStore {
         let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty, !launchpad.contacts.contains(where: { $0.caseInsensitiveCompare(clean) == .orderedSame }) else { return }
         launchpad.contacts.insert(clean, at: 0)
-        if launchpad.contacts.count == 100 {
-            if !launchpad.done.contains("contacts") { launchpad.done.append("contacts") }
-            showToast("100 contacts. That's a real business.")
-            postToTeam(.milestone, "Built my first 100 contacts list")
-        }
         saveLaunchpad()
+        if launchpad.contacts.count == 100 && launchpad.hit100 != true {
+            launchpad.hit100 = true
+            postToTeam(.milestone, "Built my first 100 contacts list")
+            markLaunchStepDone("contacts")
+            showToast("100 contacts. That's a real business.")
+        }
     }
 
     func removeLaunchContact(_ name: String) {
@@ -1640,7 +1673,7 @@ final class CinemaStore {
     func setLeadRouting(_ on: Bool) {
         team?.leadRoutingOn = on
         saveTeam()
-        showToast(on ? "Team leads now rotate round robin" : "Round robin is off")
+        showToast(on ? "New leads from team marketing now rotate round robin" : "Round robin is off")
     }
 
     func addTeamMember(_ member: TeamMember) {
@@ -1669,6 +1702,7 @@ final class CinemaStore {
     /// Posts to the team page when the agent is on a team and sharing is on.
     func postToTeam(_ kind: TeamFeedItem.Kind, _ title: String, detail: String = "", force: Bool = false) {
         guard team != nil, sharesWithTeam || force else { return }
+        refreshTeamMonth()
         teamFeed.insert(TeamFeedItem(authorName: profile.name, kind: kind, title: title, detail: detail, date: Date()), at: 0)
         if let index = team?.members.firstIndex(where: \.isMe) {
             if kind == .video { team?.members[index].videosThisMonth += 1 }
@@ -1693,7 +1727,9 @@ final class CinemaStore {
 
     /// Hands a lead to the next agent in the round robin.
     func routeLead(_ leadID: UUID) {
-        guard let next = nextLeadAssignee else { return }
+        guard let next = nextLeadAssignee, !routedLeadIDs.contains(leadID.uuidString) else { return }
+        routedLeadIDs.insert(leadID.uuidString)
+        UserDefaults.standard.set(Array(routedLeadIDs), forKey: "cinema.routedLeads")
         assignLead(leadID, to: next.isMe ? nil : next.name)
         team?.nextRouteIndex += 1
         if let index = team?.members.firstIndex(where: { $0.id == next.id }) { team?.members[index].leads += 1 }
@@ -2356,7 +2392,9 @@ final class CinemaStore {
         launchpad = LaunchpadState()
         UserDefaults.standard.removeObject(forKey: "cinema.launchpad.v1")
         for key in ["cinema.network.v1", "cinema.needs.v1"] { UserDefaults.standard.removeObject(forKey: key) }
-        for key in ["cinema.team.v1", "cinema.teamfeed.v1", "cinema.sharesWithTeam", "cinema.leadAssignments"] { UserDefaults.standard.removeObject(forKey: key) }
+        sharesWithTeam = true
+        routedLeadIDs = []
+        for key in ["cinema.team.v1", "cinema.teamfeed.v1", "cinema.sharesWithTeam", "cinema.leadAssignments", "cinema.routedLeads"] { UserDefaults.standard.removeObject(forKey: key) }
         mileageRate = 0.70
         dismissedAnnouncementIDs = []
         weeklyTargets = WeeklyTargets()

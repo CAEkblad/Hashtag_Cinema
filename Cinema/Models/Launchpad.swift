@@ -7,6 +7,8 @@ struct LaunchpadState: Codable, Equatable {
     var done: [String] = []
     var milestones: [String: Date] = [:]
     var contacts: [String] = []
+    var celebrated: Bool?
+    var hit100: Bool?
 
     /// Week 1 to 13 of the first 90 days.
     var currentWeek: Int {

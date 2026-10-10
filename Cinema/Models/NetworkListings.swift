@@ -40,7 +40,7 @@ struct NetworkListing: Identifiable, Codable, Hashable {
     var ppsf: Int { sqft > 0 ? price / sqft : 0 }
     var priceLabel: String { price.formatted(.currency(code: "USD").precision(.fractionLength(0))) }
     var place: String { "\(cityName), \(state)" }
-    var specs: String { "\(beds) bd · \(baths.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(baths))" : String(format: "%.1f", baths)) ba · \(sqft.formatted()) sq ft" }
+    var specs: String { "\(beds) bd · \(baths.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(baths))" : String(format: "%.1f", baths)) ba\(sqft > 0 ? " · \(sqft.formatted()) sq ft" : "")" }
 }
 
 /// Another agent's buyer, posted so listing agents can say "I have one for you."
@@ -89,7 +89,7 @@ struct GemScore {
                 if has == buyer.mustHaves.count { reasons.append("Has every must have: \(buyer.mustHaves.map(\.title).joined(separator: ", "))") }
             }
             let room = buyer.maxPrice - listing.price
-            if room >= 25_000 { reasons.append("\((Double(room)).compactMoney) under their budget, room to negotiate or update") }
+            if room >= 25_000 { reasons.append("\((Double(room)).compactMoney) under budget, room to negotiate or update") }
         }
 
         if listing.areaPPSF > 0 && listing.ppsf > 0 {

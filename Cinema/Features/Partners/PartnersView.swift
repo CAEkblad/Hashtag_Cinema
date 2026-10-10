@@ -71,7 +71,7 @@ struct ServicePartner: Identifiable, Codable, Hashable {
         }
     }
 
-    var id = UUID()
+    var id: String { company }
     var name: String
     var company: String
     var category: Category

@@ -26,7 +26,7 @@ struct HiddenGemsView: View {
                     Text("Hidden gems for \(buyer.firstName)")
                         .font(.cinema(26, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("We checked every home on the agent network and your own listings for value, motivated sellers, price cuts and homes that aren't on the portals yet. Then we ranked them for \(buyer.summary.lowercased()).")
+                    Text("We checked every home on the agent network and your own listings for value, motivated sellers, price cuts and homes that aren't on the portals yet. Then we ranked them for \(buyer.firstName): \(buyer.summary).")
                         .font(.cinema(14))
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -50,7 +50,7 @@ struct HiddenGemsView: View {
                     }
                 }
 
-                if ranked.count > shown.count {
+                if showAll || ranked.count > shown.count {
                     Button(showAll ? "Show the best only" : "Show all \(ranked.count) homes") { showAll.toggle() }
                         .font(.cinema(14, weight: .semibold))
                         .foregroundStyle(Theme.red)

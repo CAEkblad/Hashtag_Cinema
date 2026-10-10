@@ -12,6 +12,7 @@ struct Team: Identifiable, Codable, Equatable {
     var perks: [String] = Team.defaultPerks
     var leadRoutingOn = false
     var nextRouteIndex = 0
+    var statsMonth: String?
 
     var city: FloridaCity? { FloridaMarkets.city(cityID) }
     var joinLink: String { "https://hashtagcinema.com/join?team=\(joinCode)" }

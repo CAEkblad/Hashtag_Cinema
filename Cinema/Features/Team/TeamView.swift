@@ -6,6 +6,7 @@ struct TeamView: View {
     @State private var tab: Tab = .feed
     @State private var code = ""
     @State private var showCreate = false
+    @State private var confirmLeave = false
     @State private var showAddMember = false
 
     enum Tab: String, CaseIterable, Identifiable {
@@ -44,6 +45,11 @@ struct TeamView: View {
                     case .roster: roster(team)
                     case .board: leaderboard(team)
                     }
+
+                    Button(store.isTeamLeader ? "Close this team" : "Leave team", role: .destructive) { confirmLeave = true }
+                        .font(.cinema(13, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
                 } else {
                     noTeam
                 }
@@ -55,6 +61,12 @@ struct TeamView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showCreate) { CreateTeamView() }
         .sheet(isPresented: $showAddMember) { AddTeamMemberView() }
+        .confirmationDialog(store.isTeamLeader ? "Close \(store.team?.name ?? "the team")?" : "Leave \(store.team?.name ?? "the team")?", isPresented: $confirmLeave, titleVisibility: .visible) {
+            Button(store.isTeamLeader ? "Close team" : "Leave team", role: .destructive) { store.leaveTeam() }
+        } message: {
+            Text("Your content stops posting to the team page and lead hand offs are cleared. You can join again with a code.")
+        }
+        .onAppear { store.refreshTeamMonth() }
     }
 
     private func header(_ team: Team) -> some View {
@@ -101,7 +113,7 @@ struct TeamView: View {
             }
             Toggle(isOn: Binding(get: { team.leadRoutingOn }, set: { store.setLeadRouting($0) })) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Share team leads round robin")
+                    Text("Share team marketing leads round robin")
                         .font(.cinema(14, weight: .semibold))
                     Text("New leads from team marketing go to the next \(store.lex.agents.dropLast()) in line.")
                         .font(.cinema(12))

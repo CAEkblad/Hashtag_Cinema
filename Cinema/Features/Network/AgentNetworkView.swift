@@ -107,7 +107,8 @@ struct AgentNetworkView: View {
     }
 
     private func buyerNeedCard(_ need: BuyerNeedPost) -> some View {
-        let fits = store.listings.filter { listing in
+        let isMine = store.myBuyerNeeds.contains { $0.id == need.id }
+        let fits = isMine ? [] : store.listings.filter { listing in
             listing.status != .sold && listing.price <= need.maxPrice && listing.beds >= need.minBeds && need.mustHaves.allSatisfy { listing.features.contains($0) }
         }
         return VStack(alignment: .leading, spacing: 8) {
@@ -131,7 +132,11 @@ struct AgentNetworkView: View {
             Text("\(need.agentName) · \(need.brokerage)")
                 .font(.cinema(12))
                 .foregroundStyle(Theme.textTertiary)
-            if need.brokerage == store.myOfficeName {
+            if isMine {
+                Label("Your post", systemImage: "person.crop.circle.fill")
+                    .font(.cinema(12, weight: .semibold))
+                    .foregroundStyle(Theme.red)
+            } else if need.brokerage == store.myOfficeName {
                 Label(store.lex.inHouse.prefix(1).uppercased() + store.lex.inHouse.dropFirst(), systemImage: "building.2.fill")
                     .font(.cinema(12, weight: .semibold))
                     .foregroundStyle(Theme.success)
