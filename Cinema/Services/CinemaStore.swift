@@ -1698,6 +1698,26 @@ final class CinemaStore {
         if let data = try? JSONEncoder().encode(offerSets) { UserDefaults.standard.set(data, forKey: "cinema.offers.v1") }
     }
 
+    // MARK: Reply helper
+
+    /// Saves a social comment as a new lead and returns its id.
+    func saveCommentLead(name: String, platform: SocialPlatform, keyword: String, comment: String) -> UUID {
+        let lead = Lead(
+            name: name.isEmpty ? "\(platform.name) commenter" : name,
+            handle: name,
+            platform: platform,
+            keyword: keyword,
+            sourceClip: "Comment on a post",
+            message: comment,
+            date: Date(),
+            status: .new
+        )
+        leads.insert(lead, at: 0)
+        persist()
+        showToast("Saved to Leads")
+        return lead.id
+    }
+
     // MARK: Pop bys
 
     func popBysDelivered(_ date: Date = Date()) -> Set<String> {

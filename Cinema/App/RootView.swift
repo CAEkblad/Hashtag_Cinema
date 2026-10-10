@@ -284,6 +284,8 @@ struct RouteDestination: View {
             FilmDayView()
         case .popBys:
             PopBysView()
+        case .replyHelper:
+            ReplyHelperView()
         case .callScripts:
             CallScriptsView()
         case .callScript(let id):

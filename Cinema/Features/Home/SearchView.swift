@@ -59,6 +59,7 @@ enum ToolCatalog {
         Tool(title: "My team", keywords: "team page roster leaderboard recruit join code round robin", icon: "person.3.fill", route: .team, group: .clients),
         Tool(title: "Team huddle", keywords: "team meeting agenda weekly huddle role play wins leaderboard shout out", icon: "person.3.sequence.fill", route: .teamHuddle, group: .clients),
         Tool(title: "Recruiting page", keywords: "recruit agents join team hiring", icon: "megaphone.fill", route: .recruit, group: .clients),
+        Tool(title: "Reply helper", keywords: "comment reply dm respond comments instagram tiktok facebook lead capture troll", icon: "arrowshape.turn.up.left.fill", route: .replyHelper, group: .clients),
         Tool(title: "Leads", keywords: "contacts follow up", icon: "person.badge.plus", route: .leads, group: .clients),
         Tool(title: "Buyer wishlists", keywords: "buyer needs match criteria search alert", icon: "heart.text.square", route: .buyers, group: .clients),
         Tool(title: "Auto DM keywords", keywords: "comment to dm manychat keyword lead capture instagram", icon: "bubble.left.and.text.bubble.right.fill", route: .keywords, group: .clients),
