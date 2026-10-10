@@ -278,6 +278,8 @@ struct RouteDestination: View {
             LaunchpadView()
         case .touchPlans:
             TouchPlansView()
+        case .listingPhotos(let id):
+            ListingPhotosView(listingID: id)
         case .offers(let id):
             OfferCompareView(listingID: id)
         case .affordability:

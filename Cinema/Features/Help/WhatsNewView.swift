@@ -14,6 +14,7 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "square.and.arrow.down.on.square.fill", title: "Import listings and photos", detail: "Type an MLS number to pull a listing's details and every photo into #Cinema, or add photos from Photos or Files. Reels, posters and flyers use them right away. This build uses a sample MLS feed for testing.", route: .listingPhotos(nil)),
         Item(icon: "point.3.filled.connected.trianglepath.dotted", title: "Touch plans", detail: "Put new people on an 8 touch, 8 week plan and your sphere on 33 touches a year. Each touch has what to say, and Home shows who's due.", route: .touchPlans),
         Item(icon: "rectangle.split.3x1.fill", title: "Compare offers", detail: "Line up every offer on a listing with what the seller nets and how likely each one is to close, then send the comparison to your seller.", route: .offers(nil)),
         Item(icon: "dollarsign.circle.fill", title: "How much home and rent or buy", detail: "Two buyer calculators with Florida taxes and insurance built in. Send the results, or turn rent vs buy into a video script.", route: .affordability),

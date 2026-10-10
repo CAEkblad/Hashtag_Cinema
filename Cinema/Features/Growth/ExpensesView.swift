@@ -42,8 +42,7 @@ struct BusinessExpense: Identifiable, Hashable, Codable {
 struct ExpensesView: View {
     @Environment(CinemaStore.self) private var store
     @State private var showAdd = false
-    @State private var exportURL: URL?
-    @State private var showExport = false
+    @State private var exportFile: ShareFile?
 
     private var year: Int { Calendar.current.component(.year, from: Date()) }
     private var thisYear: [BusinessExpense] {
@@ -194,11 +193,9 @@ struct ExpensesView: View {
         .sheet(isPresented: $showAdd) {
             AddExpenseView()
         }
-        .sheet(isPresented: $showExport) {
-            if let exportURL {
-                ActivityView(items: [exportURL])
-                    .presentationDetents([.medium, .large])
-            }
+        .sheet(item: $exportFile) { file in
+            ActivityView(items: [file.url])
+                .presentationDetents([.medium, .large])
         }
     }
 
@@ -212,8 +209,7 @@ struct ExpensesView: View {
         }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Cinema-Expenses-\(String(year)).csv")
         try? rows.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
-        exportURL = url
-        showExport = true
+        exportFile = ShareFile(url: url)
     }
 }
 

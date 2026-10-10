@@ -32,6 +32,12 @@ struct ListingsView: View {
                     .buttonStyle(.plain)
                 }
 
+                NavigationLink(value: Route.listingPhotos(nil)) {
+                    IconRow(icon: "square.and.arrow.down.on.square.fill", title: "Import a listing from the MLS", subtitle: "Type the MLS number to pull in the details and photos")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 NavigationLink(value: Route.agentNetwork) {
                     IconRow(icon: "point.3.connected.trianglepath.dotted", title: "Agent network", subtitle: "\(store.networkListings.filter { $0.status != .active }.count) homes not on the portals · \(store.buyerNeeds.count) buyers looking")
                         .cardStyle()
@@ -121,9 +127,17 @@ struct ListingCard: View {
         HStack(spacing: 14) {
             ZStack {
                 Theme.gradient(listing.paletteIndex)
-                Image(systemName: listing.symbol)
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.9))
+                if let cover = ListingPhotoStore.cover(listing.id) {
+                    Image(uiImage: cover)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 78, height: 78)
+                        .clipped()
+                } else {
+                    Image(systemName: listing.symbol)
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.9))
+                }
             }
             .frame(width: 78, height: 78)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))

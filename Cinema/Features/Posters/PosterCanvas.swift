@@ -93,6 +93,7 @@ struct PosterCanvas: View {
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(Theme.ink)
                     .lineLimit(2)
+                    .minimumScaleFactor(0.85)
                 if !details.cityLine.isEmpty {
                     Text(details.cityLine)
                         .font(.system(size: 13, design: .rounded))
@@ -122,7 +123,9 @@ struct PosterCanvas: View {
             photo(0)
                 .frame(width: width, height: height)
                 .clipped()
-            LinearGradient(colors: [.clear, .black.opacity(0.35), .black.opacity(0.85)], startPoint: .center, endPoint: .bottom)
+            // Starts high enough that the headline always sits on shade,
+            // even over a bright white house or sky.
+            LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black.opacity(0.2), location: 0.3), .init(color: .black.opacity(0.62), location: 0.55), .init(color: .black.opacity(0.9), location: 1)], startPoint: .top, endPoint: .bottom)
             VStack(alignment: .leading, spacing: 8) {
                 Rectangle()
                     .fill(accent)
@@ -132,9 +135,12 @@ struct PosterCanvas: View {
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .minimumScaleFactor(0.6)
+                    .shadow(color: .black.opacity(0.5), radius: 10, y: 2)
                 Text(addressText)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .shadow(color: .black.opacity(0.4), radius: 4)
                 HStack(spacing: 10) {
                     if let price = details.priceLabel, details.kind != .underContract {
                         Text(price)
@@ -171,7 +177,7 @@ struct PosterCanvas: View {
                     .foregroundStyle(.white)
                     .padding(.top, 26)
                 photo(0)
-                    .frame(width: width - 48, height: height * (size == .story ? 0.5 : 0.48))
+                    .frame(width: width - 48, height: height * (size == .story ? 0.6 : 0.48))
                     .clipped()
                     .overlay(Rectangle().stroke(.white.opacity(0.8), lineWidth: 1).padding(-6))
                 VStack(spacing: 6) {

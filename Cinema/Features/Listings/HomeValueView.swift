@@ -25,8 +25,7 @@ struct HomeValueView: View {
     @State private var beds = 3
     @State private var baths: Double = 2
     @State private var comps: [ValueComp] = [ValueComp(), ValueComp(), ValueComp()]
-    @State private var shareURL: URL?
-    @State private var showShare = false
+    @State private var shareFile: ShareFile?
 
     private var subjectSqft: Double { Double(sqftText.filter(\.isNumber)) ?? 0 }
     private var usable: [ValueComp] { comps.filter(\.isComplete) }
@@ -125,11 +124,9 @@ struct HomeValueView: View {
         .navigationTitle("Home value report")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
-        .sheet(isPresented: $showShare) {
-            if let shareURL {
-                ActivityView(items: [shareURL])
-                    .presentationDetents([.medium, .large])
-            }
+        .sheet(item: $shareFile) { file in
+            ActivityView(items: [file.url])
+                .presentationDetents([.medium, .large])
         }
     }
 
@@ -149,8 +146,7 @@ struct HomeValueView: View {
             context.endPDFPage()
             context.closePDF()
         }
-        shareURL = url
-        showShare = true
+        shareFile = ShareFile(url: url)
     }
 }
 
@@ -243,6 +239,34 @@ struct HomeValueCanvas: View {
                 .padding(.horizontal, 30)
                 .padding(.top, 18)
 
+            VStack(alignment: .leading, spacing: 10) {
+                Text("WHAT COULD MOVE YOUR NUMBER")
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .kerning(1.5)
+                    .foregroundStyle(Theme.textSecondary)
+                HStack(alignment: .top, spacing: 12) {
+                    valueFactor("arrow.up.circle.fill", "Could add value", "Updated kitchen or baths, newer roof, impact windows, a pool, water or golf views", up: true)
+                    valueFactor("arrow.down.circle.fill", "Could take away", "Original systems, deferred repairs, a busy road, or a smaller lot than nearby sales", up: false)
+                }
+            }
+            .padding(.horizontal, 30)
+            .padding(.top, 22)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Your next step")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.ink)
+                Text("A 20 minute walkthrough lets me price in what the numbers can't see. Reply to this message and we'll pick a time.")
+                    .font(.system(size: 12, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 30)
+            .padding(.top, 18)
+
             Spacer(minLength: 0)
 
             HStack(spacing: 12) {
@@ -277,5 +301,20 @@ struct HomeValueCanvas: View {
         }
         .frame(width: FlyerCanvas.size.width, height: FlyerCanvas.size.height)
         .background(Color.white)
+    }
+}
+
+extension HomeValueCanvas {
+    fileprivate func valueFactor(_ icon: String, _ title: String, _ detail: String, up: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(up ? Theme.success : kit.accent)
+            Text(detail)
+                .font(.system(size: 11, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

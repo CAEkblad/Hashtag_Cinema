@@ -852,6 +852,7 @@ enum Route: Hashable {
     case partners
     case launchpad
     case touchPlans
+    case listingPhotos(UUID?)
     case offers(UUID?)
     case affordability
     case rentVsBuy

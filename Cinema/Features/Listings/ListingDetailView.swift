@@ -26,6 +26,12 @@ struct ListingDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header(listing)
+                NavigationLink(value: Route.listingPhotos(listing.id)) {
+                    let count = ListingPhotoStore.count(listing.id)
+                    IconRow(icon: "photo.stack.fill", title: count == 0 ? "Add listing photos" : "\(count) listing photo\(count == 1 ? "" : "s")", subtitle: count == 0 ? "Pull them from the MLS, Photos or Files" : listing.mlsNumber.map { "From MLS \($0) · used in reels, posters and flyers" } ?? "Used in reels, posters and flyers")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
                 statusPicker(listing)
                 if listing.status == .comingSoon || listing.status == .active {
                     NavigationLink(value: Route.launchPlan(listing.id)) {
@@ -114,10 +120,18 @@ struct ListingDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack(alignment: .bottomLeading) {
                 Theme.gradient(listing.paletteIndex)
-                Image(systemName: listing.symbol)
-                    .font(.system(size: 54, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.85))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if let hero = ListingPhotoStore.cover(listing.id) {
+                    Image(uiImage: hero)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                        .clipped()
+                } else {
+                    Image(systemName: listing.symbol)
+                        .font(.system(size: 54, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
                 Pill(text: listing.status.title, icon: listing.status.icon, color: .white, textColor: Theme.ink)
                     .padding(12)
             }

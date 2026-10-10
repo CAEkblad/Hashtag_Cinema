@@ -10,8 +10,7 @@ struct FlyerView: View {
 
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var photos: [UIImage] = []
-    @State private var shareURL: URL?
-    @State private var showShare = false
+    @State private var shareFile: ShareFile?
 
     private var canvas: FlyerCanvas {
         FlyerCanvas(
@@ -61,6 +60,9 @@ struct FlyerView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .onAppear {
+                if photos.isEmpty { photos = ListingPhotoStore.load(listing.id, limit: 3) }
+            }
             .onChange(of: pickerItems) { _, items in
                 Task {
                     var loaded: [UIImage] = []
@@ -72,11 +74,9 @@ struct FlyerView: View {
                     photos = loaded
                 }
             }
-            .sheet(isPresented: $showShare) {
-                if let shareURL {
-                    ActivityView(items: [shareURL])
-                        .presentationDetents([.medium, .large])
-                }
+            .sheet(item: $shareFile) { file in
+                ActivityView(items: [file.url])
+                    .presentationDetents([.medium, .large])
             }
         }
     }
@@ -94,8 +94,7 @@ struct FlyerView: View {
             context.endPDFPage()
             context.closePDF()
         }
-        shareURL = url
-        showShare = true
+        shareFile = ShareFile(url: url)
     }
 }
 
@@ -133,7 +132,9 @@ struct FlyerCanvas: View {
             if photos.count > 1 {
                 HStack(spacing: 4) {
                     photo(1).frame(height: 120).frame(maxWidth: .infinity).clipped()
-                    photo(2).frame(height: 120).frame(maxWidth: .infinity).clipped()
+                    if photos.count > 2 {
+                        photo(2).frame(height: 120).frame(maxWidth: .infinity).clipped()
+                    }
                 }
                 .padding(.top, 4)
             }

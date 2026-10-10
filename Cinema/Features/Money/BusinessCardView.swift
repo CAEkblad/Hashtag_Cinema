@@ -4,8 +4,7 @@ import UIKit
 /// A digital business card: show the QR at an open house, or send the contact file.
 struct BusinessCardView: View {
     @Environment(CinemaStore.self) private var store
-    @State private var shareURL: URL?
-    @State private var showShare = false
+    @State private var shareFile: ShareFile?
     @State private var showBigQR = false
 
     private var kit: BrandKit { store.brandKit }
@@ -76,11 +75,9 @@ struct BusinessCardView: View {
         .cinemaScreen()
         .navigationTitle("Business card")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showShare) {
-            if let shareURL {
-                ActivityView(items: [shareURL])
-                    .presentationDetents([.medium, .large])
-            }
+        .sheet(item: $shareFile) { file in
+            ActivityView(items: [file.url])
+                .presentationDetents([.medium, .large])
         }
         .fullScreenCover(isPresented: $showBigQR) {
             VStack(spacing: 24) {
@@ -164,7 +161,6 @@ struct BusinessCardView: View {
         let fileName = store.profile.name.replacingOccurrences(of: " ", with: "-")
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(fileName.isEmpty ? "Contact" : fileName).vcf")
         try? vCard.write(to: url, atomically: true, encoding: .utf8)
-        shareURL = url
-        showShare = true
+        shareFile = ShareFile(url: url)
     }
 }

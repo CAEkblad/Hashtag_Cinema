@@ -230,6 +230,7 @@ struct PosterMakerView: View {
         details.agentPhone = store.brandKit.phone
         details.cityLine = store.homeCity.displayName
         if let listing {
+            if photos.isEmpty { photos = ListingPhotoStore.load(listing.id, limit: 4) }
             details.address = listing.address
             details.cityLine = listing.cityLine
             details.price = String(listing.price)
@@ -294,6 +295,13 @@ struct PosterMakerView: View {
 }
 
 /// System share sheet: Instagram, Messages, AirDrop, Save Image and more.
+/// A file to hand to the share sheet. Presenting with `.sheet(item:)` means
+/// the sheet can never open before the file exists, which left it blank.
+struct ShareFile: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
 struct ActivityView: UIViewControllerRepresentable {
     let items: [Any]
 

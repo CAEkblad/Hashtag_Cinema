@@ -7,8 +7,7 @@ struct RelocationGuideView: View {
     @State private var cityID: String?
     @State private var buyerName = ""
     @State private var showCityPicker = false
-    @State private var shareURL: URL?
-    @State private var showShare = false
+    @State private var shareFile: ShareFile?
 
     private var city: FloridaCity { FloridaMarkets.city(cityID) ?? store.homeCity }
 
@@ -80,11 +79,9 @@ struct RelocationGuideView: View {
                 cityID = picked.id
             }
         }
-        .sheet(isPresented: $showShare) {
-            if let shareURL {
-                ActivityView(items: [shareURL])
-                    .presentationDetents([.medium, .large])
-            }
+        .sheet(item: $shareFile) { file in
+            ActivityView(items: [file.url])
+                .presentationDetents([.medium, .large])
         }
     }
 
@@ -100,8 +97,7 @@ struct RelocationGuideView: View {
             context.endPDFPage()
             context.closePDF()
         }
-        shareURL = url
-        showShare = true
+        shareFile = ShareFile(url: url)
     }
 }
 

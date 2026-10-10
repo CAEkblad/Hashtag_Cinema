@@ -58,6 +58,7 @@ enum ToolCatalog {
         Tool(title: "Auto DM keywords", keywords: "comment to dm manychat keyword lead capture instagram", icon: "bubble.left.and.text.bubble.right.fill", route: .keywords, group: .clients),
         Tool(title: "Past clients", keywords: "home anniversary sphere repeat value check in", icon: "house.and.flag.fill", route: .pastClients, group: .clients),
         Tool(title: "Trusted pros", keywords: "vendors lender inspector title insurance pool movers", icon: "person.2.badge.gearshape.fill", route: .vendors, group: .clients),
+        Tool(title: "Import listing from MLS", keywords: "mls number stellar photos sync pull import listing pictures", icon: "square.and.arrow.down.on.square.fill", route: .listingPhotos(nil), group: .listings),
         Tool(title: "Touch plans", keywords: "8x8 33 touch sphere follow up database nurture stay in touch", icon: "point.3.filled.connected.trianglepath.dotted", route: .touchPlans, group: .clients),
         Tool(title: "How much home", keywords: "affordability afford budget buyer income dti preapproval", icon: "dollarsign.circle.fill", route: .affordability, group: .listings),
         Tool(title: "Rent or buy", keywords: "rent vs buy renting owning breakeven buyer", icon: "scale.3d", route: .rentVsBuy, group: .listings),
@@ -103,8 +104,16 @@ struct SearchView: View {
     typealias Tool = ToolCatalog.Tool
     private let tools = ToolCatalog.all
 
+    /// Every word of the search has to appear, and plurals match singulars,
+    /// so "greetings" finds "greeting" and "open houses" finds "open house".
     private func matches(_ text: String) -> Bool {
-        text.localizedCaseInsensitiveContains(query.trimmingCharacters(in: .whitespaces))
+        let words = query.lowercased().split(whereSeparator: { $0 == " " }).map(String.init)
+        guard !words.isEmpty else { return false }
+        let haystack = text.lowercased()
+        return words.allSatisfy { word in
+            let stem = word.count > 3 && word.hasSuffix("s") ? String(word.dropLast()) : word
+            return haystack.contains(stem)
+        }
     }
 
     var body: some View {
@@ -117,7 +126,7 @@ struct SearchView: View {
                     .listRowBackground(Theme.surface)
                 }
             } else {
-                let toolHits = tools.filter { matches($0.title) || matches($0.keywords) }
+                let toolHits = tools.filter { matches($0.title + " " + $0.keywords) }
                 let ideaHits = store.ideas.filter { matches($0.title) || matches($0.hook) }.prefix(8)
                 let listingHits = store.listings.filter { matches($0.address) }
                 let leadHits = store.leads.filter { matches($0.name) || matches($0.message) }

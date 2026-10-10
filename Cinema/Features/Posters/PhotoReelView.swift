@@ -18,7 +18,7 @@ struct PhotoReelView: View {
     @State private var isRendering = false
     @State private var videoURL: URL?
     @State private var player: AVPlayer?
-    @State private var showShare = false
+    @State private var shareFile: ShareFile?
     @State private var errorText: String?
     @State private var didLoad = false
 
@@ -44,7 +44,7 @@ struct PhotoReelView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     HStack(spacing: 10) {
                         Button {
-                            showShare = true
+                            shareFile = videoURL.map { ShareFile(url: $0) }
                         } label: {
                             Label("Share or save", systemImage: "square.and.arrow.up")
                         }
@@ -151,13 +151,12 @@ struct PhotoReelView: View {
                 case .underContract: tag = "Under contract"
                 case .sold: tag = "Just sold"
                 }
+                if photos.isEmpty { photos = ListingPhotoStore.load(listing.id, limit: 10) }
             }
         }
-        .sheet(isPresented: $showShare) {
-            if let videoURL {
-                ActivityView(items: [videoURL])
-                    .presentationDetents([.medium, .large])
-            }
+        .sheet(item: $shareFile) { file in
+            ActivityView(items: [file.url])
+                .presentationDetents([.medium, .large])
         }
     }
 

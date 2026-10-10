@@ -224,11 +224,15 @@ struct Listing: Identifiable, Hashable, Codable {
     var openHouses: [OpenHouse] = []
     var description: String = ""
     var feedback: [ShowingFeedback] = []
+    /// Set when the listing or its photos came in from the MLS.
+    var mlsNumber: String?
+    /// City and state from the MLS when it isn't one of our Florida cities.
+    var placeName: String?
 
     var daysOnMarket: Int { max(0, Calendar.current.dateComponents([.day], from: listedAt, to: Date()).day ?? 0) }
 
     var city: FloridaCity? { FloridaMarkets.city(cityID) }
-    var cityLine: String { city?.displayName ?? "" }
+    var cityLine: String { placeName ?? city?.displayName ?? "" }
 
     var priceLabel: String { price.formatted(.currency(code: "USD").precision(.fractionLength(0))) }
 

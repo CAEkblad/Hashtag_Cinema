@@ -116,7 +116,7 @@ final class CinemaStore {
 
     // Office announcements
     var announcements: [OfficeAnnouncement] = (try? JSONDecoder().decode([OfficeAnnouncement].self, from: UserDefaults.standard.data(forKey: "cinema.announcements.v1") ?? Data())) ?? [
-        OfficeAnnouncement(id: UUID(uuidString: "0C1E2A3B-4C5D-4E6F-8A9B-0C1D2E3F4A5B") ?? UUID(), title: "Listing video challenge starts Monday", body: "Post 3 listing or neighborhood videos this week. Top 3 agents get a free pro shoot from #Cinema.", author: "Your team leader", office: "Your office", date: MockData.day(0, hour: 8))
+        OfficeAnnouncement(id: UUID(uuidString: "0C1E2A3B-4C5D-4E6F-8A9B-0C1D2E3F4A5B") ?? UUID(), title: "Listing video challenge starts Monday", body: "Post 3 listing or neighborhood videos this week. Top 3 agents get a free pro shoot from #Cinema.", author: "your office leader", office: "Your office", date: MockData.day(0, hour: 8))
     ]
     var dismissedAnnouncementIDs: Set<UUID> = Set((UserDefaults.standard.stringArray(forKey: "cinema.announcements.dismissed") ?? []).compactMap(UUID.init(uuidString:)))
 
@@ -2483,6 +2483,7 @@ final class CinemaStore {
         launchpad = LaunchpadState()
         touchContacts = []
         offerSets = [:]
+        ListingPhotoStore.deleteAll()
         offerSettingsByKey = [:]
         UserDefaults.standard.removeObject(forKey: "cinema.offerSettings.v1")
         UserDefaults.standard.removeObject(forKey: "cinema.touch.v1")

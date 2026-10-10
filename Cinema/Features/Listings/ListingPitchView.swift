@@ -7,8 +7,8 @@ struct ListingPitchView: View {
     @State private var sellerName = ""
     @State private var address = ""
     @State private var items: Set<PitchItem> = Set(PitchItem.allCases)
-    @State private var shareURL: URL?
-    @State private var showShare = false
+    @State private var shareFile: ShareFile?
+    @State private var showStats = true
 
     enum PitchItem: String, CaseIterable, Identifiable {
         case photos, video, reels, posters, openHouse, leadCapture, report
@@ -61,12 +61,20 @@ struct ListingPitchView: View {
             agentName: store.profile.name,
             brokerage: store.myMarketCenter?.name ?? store.profile.brokerage,
             kit: store.brandKit,
-            stats: [
-                ("\(store.insights.totalViews.compact)", "video views in 8 weeks"),
-                ("\(store.posts.filter { $0.status == .posted }.count + store.clips.count)", "videos made"),
-                ("\(store.testimonials.filter { $0.stars == 5 }.count)", "five star reviews")
-            ]
+            stats: showStats ? myStats : []
         )
+    }
+
+    /// Only real, non zero numbers go on a page a seller will read.
+    private var myStats: [(String, String)] {
+        let views = store.insights.totalViews
+        let videos = store.posts.filter { $0.status == .posted }.count + store.clips.count
+        let reviews = store.testimonials.filter { $0.stars == 5 }.count
+        var stats: [(String, String)] = []
+        if views > 0 { stats.append((views.compact, "video views in 8 weeks")) }
+        if videos > 0 { stats.append(("\(videos)", videos == 1 ? "video made" : "videos made")) }
+        if reviews > 0 { stats.append(("\(reviews)", reviews == 1 ? "five star review" : "five star reviews")) }
+        return stats
     }
 
     var body: some View {
@@ -109,6 +117,12 @@ struct ListingPitchView: View {
                         }
                         .tint(Theme.red)
                     }
+                    Divider()
+                    Toggle(isOn: $showStats) {
+                        Label("Show my views, videos and reviews", systemImage: "chart.bar.fill")
+                            .font(.cinema(14))
+                    }
+                    .tint(Theme.red)
                 }
                 .cardStyle()
 
@@ -125,11 +139,9 @@ struct ListingPitchView: View {
         .navigationTitle("Listing presentation")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
-        .sheet(isPresented: $showShare) {
-            if let shareURL {
-                ActivityView(items: [shareURL])
-                    .presentationDetents([.medium, .large])
-            }
+        .sheet(item: $shareFile) { file in
+            ActivityView(items: [file.url])
+                .presentationDetents([.medium, .large])
         }
     }
 
@@ -145,8 +157,7 @@ struct ListingPitchView: View {
             context.endPDFPage()
             context.closePDF()
         }
-        shareURL = url
-        showShare = true
+        shareFile = ShareFile(url: url)
     }
 }
 
@@ -182,6 +193,7 @@ struct PitchCanvas: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(kit.accent)
 
+            if !stats.isEmpty {
             HStack(spacing: 12) {
                 ForEach(Array(stats.enumerated()), id: \.offset) { _, stat in
                     VStack(alignment: .leading, spacing: 2) {
@@ -199,6 +211,7 @@ struct PitchCanvas: View {
             }
             .padding(.horizontal, 32)
             .padding(.top, 22)
+            }
 
             VStack(alignment: .leading, spacing: 14) {
                 ForEach(items) { item in
