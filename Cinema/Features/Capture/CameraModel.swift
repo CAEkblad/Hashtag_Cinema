@@ -6,7 +6,7 @@ import UIKit
 /// On the Simulator there is no camera, so `isAvailable` becomes false
 /// and the screen falls back to a demo preview.
 @Observable
-final class CameraModel: NSObject, AVCaptureFileOutputRecordingDelegate {
+final class CameraModel: NSObject, AVCaptureFileOutputRecordingDelegate, @unchecked Sendable {
     var isAuthorized = false
     var isAvailable = true
     var isRecording = false

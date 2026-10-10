@@ -165,6 +165,33 @@ struct AgentProfile: Codable, Equatable {
     }
 }
 
+extension AgentProfile {
+    /// Fields added after the first builds fall back to their defaults, so an
+    /// older saved session still loads instead of signing the agent out.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        email = try c.decode(String.self, forKey: .email)
+        brokerage = try c.decodeIfPresent(String.self, forKey: .brokerage) ?? ""
+        market = try c.decodeIfPresent(String.self, forKey: .market) ?? ""
+        niche = try c.decodeIfPresent(String.self, forKey: .niche) ?? ""
+        role = try c.decode(UserRole.self, forKey: .role)
+        plan = try c.decode(Plan.self, forKey: .plan)
+        credits = try c.decodeIfPresent(Int.self, forKey: .credits) ?? 0
+        streakDays = try c.decodeIfPresent(Int.self, forKey: .streakDays) ?? 0
+        points = try c.decodeIfPresent(Int.self, forKey: .points) ?? 0
+        cityID = try c.decodeIfPresent(String.self, forKey: .cityID)
+        serviceAreaIDs = try c.decodeIfPresent([String].self, forKey: .serviceAreaIDs) ?? []
+        goals = try c.decodeIfPresent([ContentGoal].self, forKey: .goals) ?? []
+        weeklyGoal = try c.decodeIfPresent(Int.self, forKey: .weeklyGoal) ?? 3
+        teamName = try c.decodeIfPresent(String.self, forKey: .teamName) ?? ""
+        alsoSells = try c.decodeIfPresent(Bool.self, forKey: .alsoSells) ?? true
+        marketCenterID = try c.decodeIfPresent(String.self, forKey: .marketCenterID)
+        membership = try c.decodeIfPresent(MembershipStatus.self, forKey: .membership) ?? MembershipStatus.none
+        sharesWithOffice = try c.decodeIfPresent(Bool.self, forKey: .sharesWithOffice) ?? true
+    }
+}
+
 // MARK: - Social
 
 enum SocialPlatform: String, CaseIterable, Identifiable, Codable, Hashable {
