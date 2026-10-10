@@ -282,6 +282,8 @@ struct RouteDestination: View {
             TrendDetailView(trendID: id)
         case .filmDay:
             FilmDayView()
+        case .neighborBlast(let id):
+            NeighborBlastView(listingID: id)
         case .repurpose(let id):
             if let idea = store.idea(id) {
                 RepurposeView(idea: idea)

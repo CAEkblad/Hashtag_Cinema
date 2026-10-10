@@ -75,6 +75,11 @@ struct ListingDetailView: View {
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
+                NavigationLink(value: Route.neighborBlast(listing.id)) {
+                    IconRow(icon: "mail.stack.fill", title: "Neighbor blast", subtitle: "Postcard, door knock and call scripts for the streets around it")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
                 NavigationLink(value: Route.listingCalculator(listing.id)) {
                     IconRow(icon: "function", title: "Payment calculator", subtitle: "What \(listing.priceLabel) costs per month")
                         .cardStyle()

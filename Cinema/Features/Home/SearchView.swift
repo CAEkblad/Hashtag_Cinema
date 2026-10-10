@@ -40,6 +40,7 @@ enum ToolCatalog {
         Tool(title: "Poster maker", keywords: "just listed just sold coming soon open house graphic", icon: "rectangle.portrait.on.rectangle.portrait.fill", route: .posterMaker, group: .create),
         Tool(title: "Holiday posts", keywords: "greeting thanksgiving christmas", icon: "gift.fill", route: .greetings, group: .create),
         Tool(title: "Market update graphic", keywords: "stats numbers median price", icon: "chart.bar.xaxis", route: .marketUpdate, group: .create),
+        Tool(title: "Neighbor blast", keywords: "just listed just sold postcard door knock circle prospecting neighbors farm mailer eddm", icon: "mail.stack.fill", route: .listings, group: .listings),
         Tool(title: "My listings", keywords: "listing open house description", icon: "house.and.flag.fill", route: .listings, group: .listings),
         Tool(title: "Book a pro shoot", keywords: "booking deposit listing package", icon: "camera.fill", route: .bookings, group: .listings),
         Tool(title: "Find a photographer", keywords: "shooter crew book drone video photos map", icon: "person.crop.rectangle.stack.fill", route: .findShooter, group: .listings),
