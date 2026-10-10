@@ -77,6 +77,13 @@ final class CinemaStore {
     var splitPlan: SplitPlan = (try? JSONDecoder().decode(SplitPlan.self, from: UserDefaults.standard.data(forKey: "cinema.split.v1") ?? Data())) ?? SplitPlan()
     var taxPlan: TaxPlan = (try? JSONDecoder().decode(TaxPlan.self, from: UserDefaults.standard.data(forKey: "cinema.tax.v1") ?? Data())) ?? TaxPlan()
 
+    // Agent network
+    var networkShared: [NetworkListing] = (try? JSONDecoder().decode([NetworkListing].self, from: UserDefaults.standard.data(forKey: "cinema.network.v1") ?? Data())) ?? []
+    var myBuyerNeeds: [BuyerNeedPost] = (try? JSONDecoder().decode([BuyerNeedPost].self, from: UserDefaults.standard.data(forKey: "cinema.needs.v1") ?? Data())) ?? []
+
+    // New agent launchpad
+    var launchpad: LaunchpadState = (try? JSONDecoder().decode(LaunchpadState.self, from: UserDefaults.standard.data(forKey: "cinema.launchpad.v1") ?? Data())) ?? LaunchpadState()
+
     // Team page
     var team: Team? = (try? JSONDecoder().decode(Team.self, from: UserDefaults.standard.data(forKey: "cinema.team.v1") ?? Data()))
     var teamFeed: [TeamFeedItem] = (try? JSONDecoder().decode([TeamFeedItem].self, from: UserDefaults.standard.data(forKey: "cinema.teamfeed.v1") ?? Data())) ?? []
@@ -1319,6 +1326,36 @@ final class CinemaStore {
         }
     }
 
+    // MARK: Service partners
+
+    func hasPartnerInPros(_ partner: ServicePartner) -> Bool {
+        vendors.contains { $0.company == partner.company }
+    }
+
+    func addPartnerToPros(_ partner: ServicePartner) {
+        guard let category = partner.category.vendorCategory else { return }
+        guard !hasPartnerInPros(partner) else {
+            showToast("\(partner.company) is already in your pros")
+            return
+        }
+        addVendor(Vendor(name: partner.name, company: partner.company, category: category, note: "#Cinema partner. \(partner.agentPerk)"))
+    }
+
+    func requestPartner(_ partner: ServicePartner, client: String?, address: String, date: Date, notes: String) {
+        let when = date.formatted(date: .abbreviated, time: .omitted)
+        let place = address.trimmingCharacters(in: .whitespaces)
+        let who = client?.trimmingCharacters(in: .whitespaces) ?? ""
+        let forWho = who.isEmpty ? "" : " for \(who)"
+        notify(.booking, "Request sent to \(partner.company)", detail: "\(partner.category.title)\(forWho) at \(place), around \(when).")
+        showToast("Request sent. \(partner.company) usually replies fast.")
+        let name = partner.name
+        let company = partner.company
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(6))
+            self?.notify(.booking, "\(company) replied", detail: "\(name): \"Got it! We can do \(when). I'll text to confirm the details.\"")
+        }
+    }
+
     func vendorMessage(_ vendor: Vendor) -> String {
         var lines = ["Here's my go-to for \(vendor.category.title.lowercased()): \(vendor.name), \(vendor.company)."]
         if !vendor.contactLine.isEmpty { lines.append(vendor.contactLine) }
@@ -1449,6 +1486,45 @@ final class CinemaStore {
         }
     }
 
+    // MARK: Agent network
+
+    var myOfficeName: String { myMarketCenter?.name ?? profile.brokerage }
+    var networkListings: [NetworkListing] { networkShared + NetworkSamples.listings }
+    var buyerNeeds: [BuyerNeedPost] { myBuyerNeeds + NetworkSamples.buyerNeeds }
+
+    func shareToNetwork(_ listingID: UUID, status: NetworkListing.Status, remarks: String) {
+        guard let listing = listing(listingID) else { return }
+        let shared = NetworkListing(address: listing.address, cityName: listing.city?.name ?? homeCity.name, price: listing.price, beds: listing.beds, baths: listing.baths, sqft: listing.squareFeet ?? 0, yearBuilt: 0, daysOnMarket: listing.daysOnMarket, originalPrice: listing.price, priceCuts: 0, status: status, remarks: remarks.isEmpty ? listing.description : remarks, features: listing.features, agentName: profile.name, brokerage: myOfficeName, isKW: lex.isKW, areaPPSF: 0, isMine: true)
+        networkShared.removeAll { $0.address == shared.address && $0.isMine }
+        networkShared.insert(shared, at: 0)
+        saveNetwork()
+        let fits = buyerNeeds.filter { $0.maxPrice >= listing.price && $0.minBeds <= listing.beds && $0.mustHaves.allSatisfy { listing.features.contains($0) } }
+        showToast(fits.isEmpty ? "Shared with agents on #Cinema" : "Shared. \(fits.count) agent\(fits.count == 1 ? " has a buyer" : "s have buyers") that fit")
+    }
+
+    func postBuyerNeed(_ buyerID: UUID, note: String) {
+        guard let buyer = buyers.first(where: { $0.id == buyerID }) else { return }
+        myBuyerNeeds.insert(BuyerNeedPost(agentName: profile.name, brokerage: myOfficeName, isKW: lex.isKW, cityName: buyer.cityNames.first ?? homeCity.name, maxPrice: buyer.maxPrice, minBeds: buyer.minBeds, mustHaves: buyer.mustHaves, note: note.isEmpty ? "Ready to tour this week." : note), at: 0)
+        saveNetwork()
+        showToast("Posted. Listing agents can reach you if they have a fit.")
+    }
+
+    /// Every home in reach, ranked for this buyer.
+    func gemMatches(for buyer: BuyerWish) -> [(listing: NetworkListing, gem: GemScore)] {
+        let mine = listings.filter { $0.status == .active || $0.status == .comingSoon }.map { listing in
+            NetworkListing(address: listing.address, cityName: listing.city?.name ?? homeCity.name, price: listing.price, beds: listing.beds, baths: listing.baths, sqft: listing.squareFeet ?? 0, yearBuilt: 0, daysOnMarket: listing.daysOnMarket, originalPrice: listing.price, priceCuts: 0, status: listing.status == .comingSoon ? .comingSoon : .active, remarks: listing.description, features: listing.features, agentName: profile.name, brokerage: myOfficeName, isKW: lex.isKW, areaPPSF: 0, isMine: true)
+        }
+        let all = mine + networkListings.filter { shared in !mine.contains { $0.address == shared.address } }
+        return all.map { ($0, GemScore.score($0, for: buyer, myOffice: myOfficeName, kwMode: lex.isKW)) }
+            .filter { $0.listing.price <= Int(Double(buyer.maxPrice) * 1.05) && $0.listing.beds >= buyer.minBeds }
+            .sorted { $0.gem.score > $1.gem.score }
+    }
+
+    private func saveNetwork() {
+        if let data = try? JSONEncoder().encode(networkShared) { UserDefaults.standard.set(data, forKey: "cinema.network.v1") }
+        if let data = try? JSONEncoder().encode(myBuyerNeeds) { UserDefaults.standard.set(data, forKey: "cinema.needs.v1") }
+    }
+
     // MARK: Team
 
     var isTeamLeader: Bool { team?.members.contains { $0.isMe && $0.role == .leader } ?? false }
@@ -1484,6 +1560,76 @@ final class CinemaStore {
         team = nil
         teamFeed = []
         saveTeam()
+    }
+
+    // MARK: New agent launchpad
+
+    var isNewAgent: Bool { launchpad.isOn }
+
+    func setNewAgent(_ on: Bool) {
+        if on && !launchpad.isOn && launchpad.done.isEmpty { launchpad.start = Calendar.current.startOfDay(for: Date()) }
+        launchpad.isOn = on
+        saveLaunchpad()
+        if on { showToast("Launchpad on. Your first 90 days start now.") }
+    }
+
+    func isLaunchStepDone(_ id: String) -> Bool { launchpad.done.contains(id) }
+
+    var nextLaunchStepTitle: String? {
+        LaunchPlan90.phases(lex).flatMap(\.steps).first { !launchpad.done.contains($0.id) }?.title
+    }
+
+    func toggleLaunchStep(_ id: String) {
+        if let index = launchpad.done.firstIndex(of: id) {
+            launchpad.done.remove(at: index)
+        } else {
+            launchpad.done.append(id)
+            if launchpad.done.count == LaunchPlan90.stepCount {
+                showToast("Launch plan complete. You did it!")
+                postToTeam(.milestone, "Finished the 90 day launch plan", detail: "Every step done")
+            }
+        }
+        saveLaunchpad()
+    }
+
+    func markLaunchStepDone(_ id: String) {
+        guard !launchpad.done.contains(id) else { return }
+        toggleLaunchStep(id)
+    }
+
+    func toggleMilestone(_ milestone: LaunchMilestone) {
+        if launchpad.milestones[milestone.rawValue] != nil {
+            launchpad.milestones[milestone.rawValue] = nil
+        } else {
+            launchpad.milestones[milestone.rawValue] = Date()
+            postToTeam(.milestone, milestone.cheer, detail: "Day \(launchpad.dayNumber) as an agent")
+            notify(.coach, milestone.cheer, detail: "Huge. Day \(launchpad.dayNumber) and you're already moving.")
+            showToast(team != nil && sharesWithTeam ? "\(milestone.title)! Shared with your team." : "\(milestone.title)! Huge.")
+        }
+        saveLaunchpad()
+    }
+
+    func addLaunchContact(_ name: String) {
+        let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty, !launchpad.contacts.contains(where: { $0.caseInsensitiveCompare(clean) == .orderedSame }) else { return }
+        launchpad.contacts.insert(clean, at: 0)
+        if launchpad.contacts.count == 100 {
+            if !launchpad.done.contains("contacts") { launchpad.done.append("contacts") }
+            showToast("100 contacts. That's a real business.")
+            postToTeam(.milestone, "Built my first 100 contacts list")
+        }
+        saveLaunchpad()
+    }
+
+    func removeLaunchContact(_ name: String) {
+        launchpad.contacts.removeAll { $0 == name }
+        saveLaunchpad()
+    }
+
+    private func saveLaunchpad() {
+        if let data = try? JSONEncoder().encode(launchpad) {
+            UserDefaults.standard.set(data, forKey: "cinema.launchpad.v1")
+        }
     }
 
     func setSharesWithTeam(_ on: Bool) {
@@ -2205,6 +2351,11 @@ final class CinemaStore {
         team = nil
         teamFeed = []
         leadAssignments = [:]
+        networkShared = []
+        myBuyerNeeds = []
+        launchpad = LaunchpadState()
+        UserDefaults.standard.removeObject(forKey: "cinema.launchpad.v1")
+        for key in ["cinema.network.v1", "cinema.needs.v1"] { UserDefaults.standard.removeObject(forKey: key) }
         for key in ["cinema.team.v1", "cinema.teamfeed.v1", "cinema.sharesWithTeam", "cinema.leadAssignments"] { UserDefaults.standard.removeObject(forKey: key) }
         mileageRate = 0.70
         dismissedAnnouncementIDs = []

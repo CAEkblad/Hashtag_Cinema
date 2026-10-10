@@ -33,6 +33,12 @@ struct VendorsView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink(value: Route.partners) {
+                    IconRow(icon: "hammer.fill", title: "Find more pros", subtitle: "Stagers, cleaners, movers, TCs and more from #Cinema partners")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 ForEach(categories) { category in
                     VStack(alignment: .leading, spacing: 10) {
                         Label(category.title, systemImage: category.icon)

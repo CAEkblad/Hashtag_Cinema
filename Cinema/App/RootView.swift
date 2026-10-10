@@ -268,6 +268,14 @@ struct RouteDestination: View {
             TeamView()
         case .recruit:
             RecruitView()
+        case .agentNetwork:
+            AgentNetworkView()
+        case .gems(let id):
+            HiddenGemsView(buyerID: id)
+        case .partners:
+            PartnersView()
+        case .launchpad:
+            LaunchpadView()
         case .listingCalculator(let id):
             if let listing = store.listing(id) { PaymentCalculatorView(startingPrice: Double(listing.price)) }
         case .buyer(let id):

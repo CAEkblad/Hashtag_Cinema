@@ -65,6 +65,9 @@ struct ProfileView: View {
                     NavigationLink(value: Route.whatsNew) {
                         IconRow(icon: "sparkles", title: "What's new", subtitle: "The latest tools, one tap to try each")
                     }
+                    NavigationLink(value: Route.launchpad) {
+                        IconRow(icon: "airplane.departure", title: store.isNewAgent ? "Launchpad" : "I'm a brand new agent", subtitle: store.isNewAgent ? "Day \(store.launchpad.dayNumber) of 90 · \(store.launchpad.done.count) steps done" : "A 90 day plan to your first closing")
+                    }
                     NavigationLink(value: Route.team) {
                         IconRow(icon: "person.3.fill", title: store.team?.name ?? "My team", subtitle: store.team == nil ? "Join your team or start one" : "\(store.team?.members.count ?? 0) \(store.lex.agents) · your content posts here")
                     }
@@ -164,6 +167,9 @@ struct ProfileView: View {
                     }
                     NavigationLink(value: Route.findShooter) {
                         IconRow(icon: "person.crop.rectangle.stack.fill", title: "Find a photographer", subtitle: "Vetted #Cinema Crew near \(store.homeCity.name)")
+                    }
+                    NavigationLink(value: Route.partners) {
+                        IconRow(icon: "hammer.fill", title: "Partners", subtitle: "Stagers, cleaners, movers, TCs and more")
                     }
                     NavigationLink(value: Route.bookings) {
                         IconRow(icon: "camera.fill", title: "Pro shoots", subtitle: "\(store.upcomingBookings.count) upcoming")

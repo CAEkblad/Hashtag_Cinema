@@ -118,7 +118,29 @@ struct BuyerDetailView: View {
                     }
                 }
 
-                SectionHeader(title: matches.isEmpty ? "No matches yet" : "Matches")
+                NavigationLink(value: Route.gems(buyer.id)) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            .background(Theme.red, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Find hidden gems for \(buyer.firstName)")
+                                .font(.cinema(16, weight: .semibold))
+                                .foregroundStyle(Theme.textPrimary)
+                            Text("Value, motivated sellers and homes not on the portals yet")
+                                .font(.cinema(12))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right").foregroundStyle(Theme.textTertiary)
+                    }
+                    .cardStyle()
+                }
+                .buttonStyle(.plain)
+
+                SectionHeader(title: matches.isEmpty ? "No matches on my listings yet" : "Matches on my listings")
                 if matches.isEmpty {
                     Text("None of your active or coming soon listings fit yet. We'll show matches here as soon as you add one.")
                         .font(.cinema(14))

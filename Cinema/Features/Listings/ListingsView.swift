@@ -32,6 +32,12 @@ struct ListingsView: View {
                     .buttonStyle(.plain)
                 }
 
+                NavigationLink(value: Route.agentNetwork) {
+                    IconRow(icon: "point.3.connected.trianglepath.dotted", title: "Agent network", subtitle: "\(store.networkListings.filter { $0.status != .active }.count) homes not on the portals · \(store.buyerNeeds.count) buyers looking")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         chip("All \(store.listings.count)", isOn: filter == nil) { filter = nil }

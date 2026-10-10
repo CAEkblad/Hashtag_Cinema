@@ -820,6 +820,10 @@ enum Route: Hashable {
     case scorecard
     case team
     case recruit
+    case agentNetwork
+    case gems(UUID)
+    case partners
+    case launchpad
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

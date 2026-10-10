@@ -14,6 +14,10 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "airplane.departure", title: "New agent launchpad", detail: "Brand new? Turn it on for a week by week plan through your first 90 days, a license announcement, a first 100 contacts tracker and milestones your team can cheer.", route: .launchpad),
+        Item(icon: "hammer.fill", title: "Partners", detail: "Stagers, cleaners, movers, junk removal, handymen, transaction coordinators and more. Request a pro for yourself or your client, or save them to your trusted pros.", route: .partners),
+        Item(icon: "sparkles", title: "Hidden gems", detail: "Open any buyer for homes ranked by value, price cuts, motivated sellers and listings not on the portals yet. Pick the best and send them in one text.", route: .buyers),
+        Item(icon: "point.3.connected.trianglepath.dotted", title: "Agent network", detail: "Coming soon and off market homes from agents across the country, and buyers other agents are working with.", route: .agentNetwork),
         Item(icon: "person.3.fill", title: "Team pages", detail: "Join or start a team. Videos, posters, listings, closings and reviews post to the team page on their own. Roster, leaderboard, lead hand offs and a recruiting page.", route: .team),
         Item(icon: "checklist.checked", title: "Weekly scorecard", detail: "4-1-1 style weekly targets for videos, touches, appointments and leads, filled in for you. Share it with your accountability partner.", route: .scorecard),
         Item(icon: "clock.fill", title: "Time blocks", detail: "Set your daily focus blocks and get a reminder when each one starts.", route: .timeBlocks),

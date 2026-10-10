@@ -36,6 +36,13 @@ struct HomeView: View {
                         onLeads: { path.append(Route.leads) }
                     )
                     WeeklyGoalCard()
+                    if store.isNewAgent {
+                        NavigationLink(value: Route.launchpad) {
+                            IconRow(icon: "airplane.departure", title: "Launchpad · day \(store.launchpad.dayNumber) of 90", subtitle: store.nextLaunchStepTitle.map { "Next: \($0)" } ?? "Every step done. Go get that closing.")
+                                .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
                     if let client = store.anniversariesThisMonth.first(where: { $0.daysUntilAnniversary() <= 7 }) {
                         NavigationLink(value: Route.pastClients) {
                             IconRow(icon: "house.and.flag.fill", title: "\(client.firstName)'s \(client.anniversaryLine.lowercased())", subtitle: "Tap to send a home anniversary text")
