@@ -260,6 +260,7 @@ struct ProfileView: View {
             }
             .cinemaScreen()
             .navigationTitle("Me")
+            .navigationBarTitleDisplayMode(.inline)
             .confirmationDialog("Delete your CloseUp account?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete account", role: .destructive) {
                     Task { await store.deleteAccount() }

@@ -36,6 +36,7 @@ struct HomeView: View {
                         onLeads: { path.append(Route.leads) }
                     )
                     WeeklyGoalCard()
+                    NewToolsStrip()
                     if let session = store.filmDay, !session.isComplete {
                         NavigationLink(value: Route.filmDay) {
                             IconRow(icon: "video.badge.checkmark", title: "Film day: \(session.filmed.count) of \(session.ideaIDs.count) filmed", subtitle: "Pick up where you left off")

@@ -14,6 +14,7 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "gauge.with.dots.needle.67percent", title: "Hook grader", detail: "Type the first line of your video and get a 0 to 100 score: length, a strong start, talking to the viewer, a number, your area and curiosity. Get 5 stronger versions and turn any of them into an idea.", route: .hookGrader),
         Item(icon: "person.text.rectangle.fill", title: "Profile bios", detail: "Bios for Instagram, TikTok, Facebook, YouTube and your website or Zillow profile, each sized to the platform's limit, with your city, who you help, your brokerage and a DM keyword. Tap Try another for a new version.", route: .bioWriter),
         Item(icon: "arrow.down.circle.fill", title: "Price improvement", detail: "Open an active listing and tap Price improvement. Enter the new price and CloseUp updates the listing, then writes texts for the agents who showed it and open house visitors, the post, and a seller update.", route: .listings),
         Item(icon: "storefront.fill", title: "Local spotlight", detail: "Feature a neighborhood business every week. Pick the type and CloseUp writes the ask to the owner, 5 interview questions, a shot list and the caption, then saves it as an idea to film with the teleprompter.", route: .localSpotlight),
@@ -157,5 +158,53 @@ struct WhatsNewList: View {
         .cinemaScreen()
         .navigationTitle("What's new")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// A swipeable row of the newest tools on Home.
+struct NewToolsStrip: View {
+    private var items: [WhatsNewView.Item] { Array(WhatsNewView.items.prefix(8)) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("New in CloseUp")
+                    .font(.cinema(17, weight: .bold))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+                NavigationLink(value: Route.whatsNew) {
+                    Text("See all")
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.red)
+                }
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(items) { item in
+                        NavigationLink(value: item.route) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Image(systemName: item.icon)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(Theme.red)
+                                    .frame(width: 34, height: 34)
+                                    .background(Theme.redSoft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                Text(item.title)
+                                    .font(.cinema(13, weight: .bold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                    .lineLimit(2)
+                                    .multilineTextAlignment(.leading)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .frame(width: 112, height: 92, alignment: .topLeading)
+                            .padding(12)
+                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Theme.stroke))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
     }
 }

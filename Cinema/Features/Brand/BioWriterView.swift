@@ -71,32 +71,7 @@ struct BioWriterView: View {
                 }
 
                 ForEach(BioPlatform.allCases) { platform in
-                    let bio = BioWriter.bio(for: platform, input)
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Label(platform.title, systemImage: platform.icon)
-                                .font(.cinema(14, weight: .bold))
-                            Spacer()
-                            Text("\(bio.count)/\(platform.limit)")
-                                .font(.cinema(12, weight: .semibold))
-                                .foregroundStyle(bio.count > platform.limit ? Theme.red : Theme.textTertiary)
-                        }
-                        Text(bio)
-                            .font(.cinema(14))
-                            .foregroundStyle(Theme.textPrimary)
-                            .textSelection(.enabled)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Button {
-                            UIPasteboard.general.string = bio
-                            copied = platform.rawValue
-                            store.showToast("Copied for \(platform.title)")
-                        } label: {
-                            Label(copied == platform.rawValue ? "Copied" : "Copy", systemImage: copied == platform.rawValue ? "checkmark" : "doc.on.doc")
-                                .font(.cinema(13, weight: .semibold))
-                        }
-                        .tint(Theme.red)
-                    }
-                    .cardStyle()
+                    bioCard(platform)
                 }
 
                 NavigationLink(value: Route.linkInBio) {
@@ -125,6 +100,36 @@ struct BioWriterView: View {
             else if niche.contains("invest") { specialty = .investors }
             else if niche.contains("water") { specialty = .waterfront }
         }
+    }
+
+    private func bioCard(_ platform: BioPlatform) -> some View {
+        let bio = BioWriter.bio(for: platform, input)
+        let isCopied = copied == platform.rawValue
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label(platform.title, systemImage: platform.icon)
+                    .font(.cinema(14, weight: .bold))
+                Spacer()
+                Text("\(bio.count)/\(platform.limit)")
+                    .font(.cinema(12, weight: .semibold))
+                    .foregroundStyle(bio.count > platform.limit ? Theme.red : Theme.textTertiary)
+            }
+            Text(bio)
+                .font(.cinema(14))
+                .foregroundStyle(Theme.textPrimary)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                UIPasteboard.general.string = bio
+                copied = platform.rawValue
+                store.showToast("Copied for \(platform.title)")
+            } label: {
+                Label(isCopied ? "Copied" : "Copy", systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                    .font(.cinema(13, weight: .semibold))
+            }
+            .tint(Theme.red)
+        }
+        .cardStyle()
     }
 }
 

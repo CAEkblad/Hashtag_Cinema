@@ -37,6 +37,7 @@ struct CommunityView: View {
             }
             .cinemaScreen()
             .navigationTitle("Community")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {

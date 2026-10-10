@@ -882,5 +882,6 @@ enum Route: Hashable {
     case localSpotlight
     case priceImprovement(UUID)
     case bioWriter
+    case hookGrader
     case bookingChat(UUID)
 }

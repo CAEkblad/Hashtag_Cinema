@@ -306,6 +306,8 @@ struct RouteDestination: View {
             PriceImprovementView(listingID: id)
         case .bioWriter:
             BioWriterView()
+        case .hookGrader:
+            HookGraderView()
         case .replyHelper:
             ReplyHelperView()
         case .callScripts:

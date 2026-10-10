@@ -67,6 +67,7 @@ struct IdeaFeedView: View {
             }
             .cinemaScreen()
             .navigationTitle("Create")
+            .navigationBarTitleDisplayMode(.inline)
             .cinemaDestinations()
             .onChange(of: pickerItem) { _, newValue in
                 if newValue != nil { showUploadRequest = true }

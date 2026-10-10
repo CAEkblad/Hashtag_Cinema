@@ -76,6 +76,7 @@ struct LibraryView: View {
             }
             .cinemaScreen()
             .navigationTitle("Library")
+            .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $search, prompt: "Search clips or addresses")
             .cinemaDestinations()
         }

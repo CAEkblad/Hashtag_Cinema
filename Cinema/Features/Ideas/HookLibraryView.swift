@@ -120,6 +120,12 @@ struct HookLibraryView: View {
                         .foregroundStyle(Theme.textSecondary)
                 }
 
+                NavigationLink(value: Route.hookGrader) {
+                    IconRow(icon: "gauge.with.dots.needle.67percent", title: "Grade your own hook", subtitle: "Get a score and stronger versions")
+                        .cardStyle(padding: 14)
+                }
+                .buttonStyle(.plain)
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(HookStyle.allCases) { option in
