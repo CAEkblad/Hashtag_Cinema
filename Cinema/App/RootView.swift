@@ -282,6 +282,12 @@ struct RouteDestination: View {
             TrendDetailView(trendID: id)
         case .filmDay:
             FilmDayView()
+        case .popBys:
+            PopBysView()
+        case .clientGuides:
+            ClientGuidesView()
+        case .listingHealth(let id):
+            ListingHealthView(listingID: id)
         case .neighborBlast(let id):
             NeighborBlastView(listingID: id)
         case .repurpose(let id):

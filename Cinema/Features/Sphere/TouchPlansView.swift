@@ -33,6 +33,12 @@ struct TouchPlansView: View {
                 }
                 .buttonStyle(PrimaryButtonStyle())
 
+                NavigationLink(value: Route.popBys) {
+                    IconRow(icon: "gift.fill", title: "Pop by ideas for this month", subtitle: "Gift, tag line and printable tags for your pop by touches")
+                        .cardStyle(padding: 14)
+                }
+                .buttonStyle(.plain)
+
                 if !due.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Due today")

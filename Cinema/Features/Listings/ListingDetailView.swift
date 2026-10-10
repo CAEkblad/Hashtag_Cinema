@@ -40,6 +40,14 @@ struct ListingDetailView: View {
                     }
                     .buttonStyle(.plain)
                 }
+                if listing.status == .active {
+                    let health = ListingHealth(listing: listing, openHouseVisitors: listing.openHouses.reduce(0) { $0 + $1.visitors.count })
+                    NavigationLink(value: Route.listingHealth(listing.id)) {
+                        IconRow(icon: health.verdict.icon, title: "Check up: \(health.verdict.title.lowercased())", subtitle: "\(health.days) days, \(health.showings) showing\(health.showings == 1 ? "" : "s"). What to do next and what to tell your seller")
+                            .cardStyle()
+                    }
+                    .buttonStyle(.plain)
+                }
                 checklist(listing)
                 descriptionCard(listing)
                 openHouses(listing)
@@ -322,6 +330,21 @@ struct ListingDetailView: View {
 
                     ForEach(openHouse.visitors) { visitor in
                         VisitorRow(visitor: visitor, listing: listing, agentName: store.profile.name)
+                    }
+                    let toFollow = openHouse.visitors.filter { visitor in
+                        !visitor.workingWithAgent && !store.touchContacts.contains { $0.name.caseInsensitiveCompare(visitor.name) == .orderedSame }
+                    }
+                    if !toFollow.isEmpty {
+                        Button {
+                            let added = toFollow.filter { store.startTouchPlan(name: $0.name, phone: $0.phone, plan: .eightWeek, quiet: true) }.count
+                            store.showToast("\(added) visitor\(added == 1 ? "" : "s") on your \(TouchContact.Plan.eightWeek.title(store.lex))")
+                        } label: {
+                            Label("Put \(toFollow.count) on your \(TouchContact.Plan.eightWeek.title(store.lex))", systemImage: "point.3.filled.connected.trianglepath.dotted")
+                        }
+                        .buttonStyle(SecondaryButtonStyle())
+                        Text("Visitors who said they already have an agent are left off.")
+                            .font(.cinema(11))
+                            .foregroundStyle(Theme.textTertiary)
                     }
                 }
                 .cardStyle()

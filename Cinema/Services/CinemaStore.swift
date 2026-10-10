@@ -86,6 +86,9 @@ final class CinemaStore {
     var offerSettingsByKey: [String: OfferSettings] = (try? JSONDecoder().decode([String: OfferSettings].self, from: UserDefaults.standard.data(forKey: "cinema.offerSettings.v1") ?? Data())) ?? [:]
     var offerSets: [String: [OfferEntry]] = (try? JSONDecoder().decode([String: [OfferEntry]].self, from: UserDefaults.standard.data(forKey: "cinema.offers.v1") ?? Data())) ?? [:]
 
+    // Pop bys: who got this month's gift, by month key
+    var popByLog: [String: [String]] = (try? JSONDecoder().decode([String: [String]].self, from: UserDefaults.standard.data(forKey: "cinema.popbys.v1") ?? Data())) ?? [:]
+
     // Film day
     var filmDay: FilmDaySession? = (try? JSONDecoder().decode(FilmDaySession.self, from: UserDefaults.standard.data(forKey: "cinema.filmday.v1") ?? Data()))
 
@@ -1695,6 +1698,26 @@ final class CinemaStore {
         if let data = try? JSONEncoder().encode(offerSets) { UserDefaults.standard.set(data, forKey: "cinema.offers.v1") }
     }
 
+    // MARK: Pop bys
+
+    func popBysDelivered(_ date: Date = Date()) -> Set<String> {
+        Set(popByLog[PopByLibrary.monthKey(date)] ?? [])
+    }
+
+    func togglePopBy(_ name: String) {
+        let key = PopByLibrary.monthKey()
+        var names = popByLog[key] ?? []
+        if let index = names.firstIndex(of: name) {
+            names.remove(at: index)
+            tallyProspect(.notes, by: -1)
+        } else {
+            names.append(name)
+            tallyProspect(.notes)
+        }
+        popByLog[key] = names
+        if let data = try? JSONEncoder().encode(popByLog) { UserDefaults.standard.set(data, forKey: "cinema.popbys.v1") }
+    }
+
     // MARK: Film day
 
     func startFilmDay(_ ideas: [Idea]) {
@@ -1717,6 +1740,8 @@ final class CinemaStore {
 
     func endFilmDay() {
         filmDay = nil
+        popByLog = [:]
+        UserDefaults.standard.removeObject(forKey: "cinema.popbys.v1")
         saveFilmDay()
     }
 
@@ -1734,6 +1759,15 @@ final class CinemaStore {
     var trendsAreLive: Bool { trendsService.isLive }
 
     func trend(_ id: String) -> Trend? { trends.first { $0.id == id } }
+
+    /// One hot format a week for the Home screen, rotating so it stays fresh.
+    var trendOfTheWeek: Trend? {
+        let hot = trends.filter { $0.heat == .hot }
+        let pool = hot.isEmpty ? trends : hot
+        guard !pool.isEmpty else { return nil }
+        let week = Calendar.current.component(.weekOfYear, from: Date())
+        return pool[week % pool.count]
+    }
 
     /// Pulls fresh formats and example videos at most every 30 minutes unless forced.
     func refreshTrends(force: Bool = false) async {

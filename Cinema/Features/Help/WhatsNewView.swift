@@ -14,6 +14,9 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "book.pages.fill", title: "Buyer and seller guides", detail: "3 page PDF guides in your brand: every step with a timeline, Florida costs, and a do and don't list. Send one when someone comments GUIDE.", route: .clientGuides),
+        Item(icon: "stethoscope", title: "Listing check up", detail: "Every active listing gets a read on how it's doing from days on market, showings and feedback: too early, needs more eyes, buyers are close, or time for a price conversation. With next steps and what to tell your seller. Open houses can now put every visitor on your 8 week plan in one tap.", route: .listings),
+        Item(icon: "gift.fill", title: "Pop bys", detail: "Two gift ideas for every month with a fun tag line, a sheet of 10 printable tags in your brand, and a checklist of past clients and sphere to drop them off to.", route: .popBys),
         Item(icon: "mail.stack.fill", title: "Neighbor blast", detail: "Open any listing for a 6 by 4 just listed or just sold postcard (front and back, ready to print or mail), door knock and call scripts, a text, a neighborhood group post and a door counter.", route: .listings),
         Item(icon: "video.badge.checkmark", title: "Film day", detail: "Pick 3 to 7 ideas and film your whole week in one sitting. We order them so you move as little as possible, tell you when to change your top, and track what you got.", route: .filmDay),
         Item(icon: "square.stack.3d.up.fill", title: "Post it everywhere", detail: "Open any idea and tap Post it everywhere for an Instagram caption, TikTok, Facebook, YouTube, LinkedIn, Google Business Profile, an email to your sphere, a text and a blog outline from the same script.", route: .trends),

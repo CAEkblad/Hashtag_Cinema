@@ -863,5 +863,8 @@ enum Route: Hashable {
     case filmDay
     case repurpose(UUID)
     case neighborBlast(UUID)
+    case popBys
+    case listingHealth(UUID)
+    case clientGuides
     case bookingChat(UUID)
 }

@@ -53,6 +53,12 @@ struct PastClientsView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink(value: Route.popBys) {
+                    IconRow(icon: "gift.fill", title: "Pop bys", subtitle: "This month's gift ideas and printable tags")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 if !upcoming.isEmpty {
                     SectionHeader(title: "Coming up")
                     ForEach(upcoming) { client in

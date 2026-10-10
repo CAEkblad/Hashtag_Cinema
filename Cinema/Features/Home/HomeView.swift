@@ -36,6 +36,20 @@ struct HomeView: View {
                         onLeads: { path.append(Route.leads) }
                     )
                     WeeklyGoalCard()
+                    if let session = store.filmDay, !session.isComplete {
+                        NavigationLink(value: Route.filmDay) {
+                            IconRow(icon: "video.badge.checkmark", title: "Film day: \(session.filmed.count) of \(session.ideaIDs.count) filmed", subtitle: "Pick up where you left off")
+                                .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    if let trend = store.trendOfTheWeek {
+                        NavigationLink(value: Route.trend(trend.id)) {
+                            IconRow(icon: "flame.fill", title: "Trending: \(trend.title)", subtitle: trend.format)
+                                .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
                     if !store.touchesDueToday.isEmpty {
                         NavigationLink(value: Route.touchPlans) {
                             IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "\(store.touchesDueCount) touch\(store.touchesDueCount == 1 ? "" : "es") due today", subtitle: store.touchesDueToday.prefix(3).map(\.contact.firstName).joined(separator: ", "))
