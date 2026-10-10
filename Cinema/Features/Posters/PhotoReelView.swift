@@ -21,6 +21,9 @@ struct PhotoReelView: View {
     @State private var shareFile: ShareFile?
     @State private var errorText: String?
     @State private var didLoad = false
+    @State private var voiceOn = false
+    @State private var voiceScript = ""
+    @State private var previewSynth = AVSpeechSynthesizer()
 
     private let tags = ["Just listed", "Coming soon", "Open house", "Price improved", "Under contract", "Just sold"]
 
@@ -56,6 +59,11 @@ struct PhotoReelView: View {
                             Label("Edit", systemImage: "slider.horizontal.3")
                         }
                         .buttonStyle(SecondaryButtonStyle())
+                    }
+                    if let errorText {
+                        Text(errorText)
+                            .font(.cinema(13))
+                            .foregroundStyle(Theme.red)
                     }
                     Text("Add a trending sound when you post on Instagram or TikTok. Their music is licensed for posts.")
                         .font(.cinema(11))
@@ -100,6 +108,50 @@ struct PhotoReelView: View {
                         Stepper("\(String(format: "%.1f", seconds)) seconds per photo", value: $seconds, in: 1.5...4, step: 0.5)
                     }
                     .font(.cinema(14))
+                    .cardStyle()
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Toggle(isOn: $voiceOn) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Add a voiceover")
+                                    .font(.cinema(15, weight: .semibold))
+                                Text("A natural AI voice reads your script over the video.")
+                                    .font(.cinema(12))
+                                    .foregroundStyle(Theme.textSecondary)
+                            }
+                        }
+                        .tint(Theme.red)
+                        if voiceOn {
+                            TextField("What should it say?", text: $voiceScript, axis: .vertical)
+                                .lineLimit(3...7)
+                                .font(.cinema(14))
+                                .padding(10)
+                                .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            let talk = VoiceoverWriter.estimatedSeconds(voiceScript)
+                            let length = Double(photos.count) * seconds + 2
+                            HStack {
+                                Text(talk > length - 0.5 && !photos.isEmpty ? "About \(Int(talk.rounded())) seconds of talking, but the reel is \(Int(length)). Shorten it or add time per photo." : "About \(Int(talk.rounded())) seconds of talking.")
+                                    .font(.cinema(12))
+                                    .foregroundStyle(talk > length - 0.5 && !photos.isEmpty ? Theme.red : Theme.textTertiary)
+                                Spacer()
+                                Button {
+                                    if previewSynth.isSpeaking {
+                                        previewSynth.stopSpeaking(at: .immediate)
+                                    } else {
+                                        let utterance = AVSpeechUtterance(string: voiceScript)
+                                        utterance.voice = VoiceoverWriter.bestVoice()
+                                        utterance.rate = 0.5
+                                        previewSynth.speak(utterance)
+                                    }
+                                } label: {
+                                    Label("Hear it", systemImage: "speaker.wave.2.fill")
+                                        .font(.cinema(13, weight: .semibold))
+                                }
+                                .tint(Theme.red)
+                                .disabled(voiceScript.trimmingCharacters(in: .whitespaces).isEmpty)
+                            }
+                        }
+                    }
                     .cardStyle()
 
                     if isRendering {
@@ -152,6 +204,7 @@ struct PhotoReelView: View {
                 case .sold: tag = "Just sold"
                 }
                 if photos.isEmpty { photos = ListingPhotoStore.load(listing.id, limit: 10) }
+                voiceScript = ReelMixer.listingScript(listing, agentName: store.profile.name, seconds: Double(max(photos.count, 4)) * seconds + 2)
             }
         }
         .sheet(item: $shareFile) { file in
@@ -192,10 +245,24 @@ struct PhotoReelView: View {
                     Task { @MainActor in progress = value }
                 }
             }.value
-            videoURL = url
-            player = AVPlayer(url: url)
+            var finalURL = url
+            var usedVoice = false
+            let script = voiceScript.trimmingCharacters(in: .whitespacesAndNewlines)
+            if voiceOn && !script.isEmpty {
+                previewSynth.stopSpeaking(at: .immediate)
+                do {
+                    let audioURL = FileManager.default.temporaryDirectory.appendingPathComponent("closeup-vo-\(UUID().uuidString.prefix(6)).caf")
+                    try await VoiceoverWriter().write(script, to: audioURL)
+                    finalURL = try await ReelMixer.addVoiceover(video: url, audio: audioURL)
+                    usedVoice = true
+                } catch {
+                    errorText = "The reel is ready, but the voiceover didn't work on this phone. Try again or post it without one."
+                }
+            }
+            videoURL = finalURL
+            player = AVPlayer(url: finalURL)
             player?.play()
-            store.showToast("Your reel is ready")
+            store.showToast(usedVoice ? "Your reel is ready, voiceover included" : "Your reel is ready")
         } catch {
             errorText = "Couldn't make the reel. Try fewer photos."
         }
