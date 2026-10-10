@@ -53,6 +53,12 @@ struct MoneyView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink(value: Route.scorecard) {
+                    IconRow(icon: "checklist.checked", title: "Weekly scorecard", subtitle: "Your 4-1-1 targets for the week, filled in for you")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 NavigationLink(value: Route.license) {
                     IconRow(icon: "checkmark.seal.fill", title: "License and CE", subtitle: "\(store.licensePlan.daysLeft) days to renew · \(String(format: "%g", store.licensePlan.totalDone)) of \(String(format: "%g", store.licensePlan.totalNeeded)) hours")
                         .cardStyle()

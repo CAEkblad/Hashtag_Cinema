@@ -77,6 +77,10 @@ final class CinemaStore {
     var splitPlan: SplitPlan = (try? JSONDecoder().decode(SplitPlan.self, from: UserDefaults.standard.data(forKey: "cinema.split.v1") ?? Data())) ?? SplitPlan()
     var taxPlan: TaxPlan = (try? JSONDecoder().decode(TaxPlan.self, from: UserDefaults.standard.data(forKey: "cinema.tax.v1") ?? Data())) ?? TaxPlan()
 
+    // Time blocks and weekly scorecard
+    var timeBlocks: [TimeBlock] = (try? JSONDecoder().decode([TimeBlock].self, from: UserDefaults.standard.data(forKey: "cinema.blocks.v1") ?? Data())) ?? TimeBlock.defaults
+    var weeklyTargets: WeeklyTargets = (try? JSONDecoder().decode(WeeklyTargets.self, from: UserDefaults.standard.data(forKey: "cinema.targets.v1") ?? Data())) ?? WeeklyTargets()
+
     // License, prospecting
     var licensePlan: LicensePlan = (try? JSONDecoder().decode(LicensePlan.self, from: UserDefaults.standard.data(forKey: "cinema.license.v1") ?? Data())) ?? LicensePlan()
     var prospectLog: [String: [String: Int]] = (try? JSONDecoder().decode([String: [String: Int]].self, from: UserDefaults.standard.data(forKey: "cinema.prospect.v1") ?? Data())) ?? [:]
@@ -1424,6 +1428,74 @@ final class CinemaStore {
         }
     }
 
+    // MARK: Time blocks
+
+    func saveTimeBlock(_ block: TimeBlock) {
+        if let index = timeBlocks.firstIndex(where: { $0.id == block.id }) {
+            timeBlocks[index] = block
+        } else {
+            timeBlocks.append(block)
+        }
+        saveTimeBlocks()
+        let ids = (1...7).map { "cinema.block.\(block.id.uuidString).\($0)" }
+        ReminderScheduler.cancel(ids: ids)
+        guard block.isOn else { return }
+        Task {
+            guard await ReminderScheduler.requestPermission() else {
+                self.showToast("Turn on notifications in Settings to get reminders")
+                return
+            }
+            for day in block.weekdays.sorted() {
+                await ReminderScheduler.scheduleWeekly(id: "cinema.block.\(block.id.uuidString).\(day)", title: "Time for: \(block.title)", body: "\(block.minutes) minutes. Phone on do not disturb.", weekday: day, hour: block.hour, minute: block.minute)
+            }
+        }
+    }
+
+    func deleteTimeBlock(_ id: UUID) {
+        ReminderScheduler.cancel(ids: (1...7).map { "cinema.block.\(id.uuidString).\($0)" })
+        timeBlocks.removeAll { $0.id == id }
+        saveTimeBlocks()
+    }
+
+    private func saveTimeBlocks() {
+        if let data = try? JSONEncoder().encode(timeBlocks) { UserDefaults.standard.set(data, forKey: "cinema.blocks.v1") }
+    }
+
+    // MARK: Weekly scorecard
+
+    struct WeekNumbers {
+        var start: Date
+        var videos: Int
+        var touches: Int
+        var appointments: Int
+        var newLeads: Int
+    }
+
+    var thisWeek: WeekNumbers {
+        let calendar = Calendar.current
+        let start = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? calendar.startOfDay(for: Date())
+        let days = max(1, (calendar.dateComponents([.day], from: start, to: Date()).day ?? 0) + 1)
+        var touches = 0
+        var appointments = 0
+        for back in 0..<days {
+            let date = calendar.date(byAdding: .day, value: -back, to: Date()) ?? Date()
+            let counts = prospecting(on: date)
+            touches += counts.values.reduce(0, +)
+            appointments += counts[.appointments] ?? 0
+        }
+        return WeekNumbers(start: start, videos: postsThisWeek, touches: touches, appointments: appointments, newLeads: leads.filter { $0.date >= start }.count)
+    }
+
+    var milesThisWeek: Double {
+        let start = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+        return expenses.filter { $0.category == .mileage && $0.date >= start }.reduce(0) { $0 + $1.amount }
+    }
+
+    func saveWeeklyTargets(_ targets: WeeklyTargets) {
+        weeklyTargets = targets
+        if let data = try? JSONEncoder().encode(targets) { UserDefaults.standard.set(data, forKey: "cinema.targets.v1") }
+    }
+
     // MARK: Power hour
 
     private static let dayKeyFormatter: DateFormatter = {
@@ -1973,6 +2045,9 @@ final class CinemaStore {
         splitPlan = SplitPlan()
         taxPlan = TaxPlan()
         licensePlan = LicensePlan()
+        timeBlocks = TimeBlock.defaults
+        weeklyTargets = WeeklyTargets()
+        for key in ["cinema.blocks.v1", "cinema.targets.v1"] { UserDefaults.standard.removeObject(forKey: key) }
         prospectLog = [:]
         powerHourEnds = nil
         for key in ["cinema.split.v1", "cinema.tax.v1", "cinema.license.v1", "cinema.prospect.v1", "cinema.powerHourEnds"] { UserDefaults.standard.removeObject(forKey: key) }

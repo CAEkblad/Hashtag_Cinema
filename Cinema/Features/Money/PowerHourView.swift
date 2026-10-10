@@ -86,6 +86,17 @@ struct PowerHourView: View {
                     StatTile(value: "\(store.prospectTotal(days: 30, only: .appointments))", label: "Appts, 30 days", icon: "calendar.badge.checkmark")
                 }
 
+                HStack(spacing: 10) {
+                    NavigationLink(value: Route.scorecard) {
+                        Label("Weekly scorecard", systemImage: "checklist.checked")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    NavigationLink(value: Route.timeBlocks) {
+                        Label("Time blocks", systemImage: "clock.fill")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                }
+
                 SectionHeader(title: "Last 7 days")
                 Chart(lastWeek(), id: \.label) { bar in
                     BarMark(x: .value("Day", bar.label), y: .value("Touches", bar.count))

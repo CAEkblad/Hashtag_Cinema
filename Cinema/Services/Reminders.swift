@@ -92,6 +92,20 @@ enum ReminderScheduler {
         try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
     }
 
+    /// A reminder every week on a weekday (1 is Sunday) at a set time.
+    static func scheduleWeekly(id: String, title: String, body: String, weekday: Int, hour: Int, minute: Int) async {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        var parts = DateComponents()
+        parts.weekday = weekday
+        parts.hour = hour
+        parts.minute = minute
+        let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: true)
+        try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
     /// A reminder a set number of seconds from now, like the end of a power hour.
     static func scheduleIn(seconds: TimeInterval, id: String, title: String, body: String) async {
         let content = UNMutableNotificationContent()

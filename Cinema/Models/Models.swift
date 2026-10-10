@@ -816,6 +816,8 @@ enum Route: Hashable {
     case license
     case businessCard
     case powerHour
+    case timeBlocks
+    case scorecard
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

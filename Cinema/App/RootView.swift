@@ -260,6 +260,10 @@ struct RouteDestination: View {
             BusinessCardView()
         case .powerHour:
             PowerHourView()
+        case .timeBlocks:
+            TimeBlocksView()
+        case .scorecard:
+            ScorecardView()
         case .listingCalculator(let id):
             if let listing = store.listing(id) { PaymentCalculatorView(startingPrice: Double(listing.price)) }
         case .buyer(let id):

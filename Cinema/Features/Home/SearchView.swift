@@ -69,6 +69,8 @@ enum ToolCatalog {
         Tool(title: "Split and cap", keywords: "kw cap royalty company dollar split brokerage", icon: "chart.pie.fill", route: .splitTracker, group: .business),
         Tool(title: "Tax set aside", keywords: "taxes quarterly estimated irs 1099 save", icon: "building.columns.fill", route: .taxes, group: .business),
         Tool(title: "Power hour", keywords: "prospecting calls dials timer streak door knocking", icon: "timer", route: .powerHour, group: .business),
+        Tool(title: "Time blocks", keywords: "schedule calendar routine daily focus reminders", icon: "clock.fill", route: .timeBlocks, group: .business),
+        Tool(title: "Weekly scorecard", keywords: "4-1-1 411 goals accountability targets week", icon: "checklist.checked", route: .scorecard, group: .business),
         Tool(title: "Business card", keywords: "vcard qr contact digital card share", icon: "person.text.rectangle.fill", route: .businessCard, group: .business),
         Tool(title: "License and CE", keywords: "renewal continuing education dbpr post licensing hours", icon: "checkmark.seal.fill", route: .license, group: .business),
         Tool(title: "Mileage and expenses", keywords: "tax deduction miles receipts accountant csv", icon: "car.fill", route: .expenses, group: .business),

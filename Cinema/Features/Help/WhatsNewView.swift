@@ -14,6 +14,8 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "checklist.checked", title: "Weekly scorecard", detail: "4-1-1 style weekly targets for videos, touches, appointments and leads, filled in for you. Share it with your accountability partner.", route: .scorecard),
+        Item(icon: "clock.fill", title: "Time blocks", detail: "Set your daily focus blocks and get a reminder when each one starts.", route: .timeBlocks),
         Item(icon: "timer", title: "Power hour", detail: "A prospecting timer with one tap tallies for calls, texts, talks and appointments, plus a daily streak.", route: .powerHour),
         Item(icon: "person.text.rectangle.fill", title: "Digital business card", detail: "A QR code people scan to save your contact, or send it as a contact card.", route: .businessCard),
         Item(icon: "checkmark.seal.fill", title: "License and CE", detail: "Florida renewal date, hours by category and reminders 90, 30 and 7 days out.", route: .license),
