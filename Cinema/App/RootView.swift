@@ -296,6 +296,16 @@ struct RouteDestination: View {
             if let listing = store.listing(id) { StoryPackView(listing: listing) }
         case .carousels:
             CarouselMakerView()
+        case .fairHousing(let text):
+            FairHousingView(text: text)
+        case .yearInReview:
+            YearInReviewView()
+        case .localSpotlight:
+            LocalSpotlightView()
+        case .priceImprovement(let id):
+            PriceImprovementView(listingID: id)
+        case .bioWriter:
+            BioWriterView()
         case .replyHelper:
             ReplyHelperView()
         case .callScripts:

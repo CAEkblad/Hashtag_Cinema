@@ -877,5 +877,10 @@ enum Route: Hashable {
     case prospectingLetters
     case storyPack(UUID)
     case carousels
+    case fairHousing(String)
+    case yearInReview
+    case localSpotlight
+    case priceImprovement(UUID)
+    case bioWriter
     case bookingChat(UUID)
 }

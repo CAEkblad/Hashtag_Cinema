@@ -112,6 +112,12 @@ struct CaptionWriterView: View {
                     }
                 }
                 .cardStyle()
+
+                NavigationLink(value: Route.fairHousing(caption)) {
+                    IconRow(icon: "checkmark.shield.fill", title: "Fair housing check", subtitle: "Make sure the wording describes the home, not the buyer")
+                        .cardStyle(padding: 14)
+                }
+                .buttonStyle(.plain)
             }
             .padding(Theme.gutter)
         }

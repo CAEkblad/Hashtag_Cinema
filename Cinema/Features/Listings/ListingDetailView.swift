@@ -83,6 +83,13 @@ struct ListingDetailView: View {
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
+                if listing.status == .active || listing.status == .comingSoon {
+                    NavigationLink(value: Route.priceImprovement(listing.id)) {
+                        IconRow(icon: "arrow.down.circle.fill", title: "Price improvement", subtitle: "New price, then texts for agents and visitors, a post and a seller update")
+                            .cardStyle()
+                    }
+                    .buttonStyle(.plain)
+                }
                 NavigationLink(value: Route.storyPack(listing.id)) {
                     IconRow(icon: "rectangle.stack.fill", title: "Story pack", subtitle: "6 Instagram stories with polls, a price guess and a countdown")
                         .cardStyle()
@@ -292,6 +299,11 @@ struct ListingDetailView: View {
             Text("Describes the home and area only, so it stays fair housing friendly. Check facts before posting to the MLS.")
                 .font(.cinema(11))
                 .foregroundStyle(Theme.textTertiary)
+            NavigationLink(value: Route.fairHousing(text)) {
+                Label("Run a fair housing check", systemImage: "checkmark.shield.fill")
+                    .font(.cinema(13, weight: .semibold))
+            }
+            .tint(Theme.red)
         }
     }
 
