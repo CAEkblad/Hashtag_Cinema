@@ -236,7 +236,7 @@ struct TourDetailView: View {
             }
         }
         .sheet(isPresented: $showMileage) {
-            AddExpenseView(presetNote: "Showings with \(tour.buyerName)")
+            AddExpenseView(presetNote: "Showings with \(tour.buyerName)", presetStops: tour.stops.map(\.address))
         }
     }
 }

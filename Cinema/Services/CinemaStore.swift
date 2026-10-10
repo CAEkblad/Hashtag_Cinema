@@ -79,6 +79,8 @@ final class CinemaStore {
     // Mileage and expenses
     var expenses: [BusinessExpense] = (try? JSONDecoder().decode([BusinessExpense].self, from: UserDefaults.standard.data(forKey: "cinema.expenses.v1") ?? Data())) ?? []
     var mileageRate: Double = UserDefaults.standard.object(forKey: "cinema.mileageRate") as? Double ?? 0.70
+    var homeBase: String = UserDefaults.standard.string(forKey: "cinema.homeBase") ?? ""
+    var savedTrips: [SavedTrip] = (try? JSONDecoder().decode([SavedTrip].self, from: UserDefaults.standard.data(forKey: "cinema.savedTrips.v1") ?? Data())) ?? []
 
     // Office announcements
     var announcements: [OfficeAnnouncement] = (try? JSONDecoder().decode([OfficeAnnouncement].self, from: UserDefaults.standard.data(forKey: "cinema.announcements.v1") ?? Data())) ?? [
@@ -1388,6 +1390,31 @@ final class CinemaStore {
         saveExpenses()
     }
 
+    func setHomeBase(_ address: String) {
+        homeBase = address
+        UserDefaults.standard.set(address, forKey: "cinema.homeBase")
+    }
+
+    func addSavedTrip(_ trip: SavedTrip) {
+        savedTrips.append(trip)
+        saveTrips()
+    }
+
+    func deleteSavedTrip(_ id: UUID) {
+        savedTrips.removeAll { $0.id == id }
+        saveTrips()
+    }
+
+    func logSavedTrip(_ trip: SavedTrip) {
+        addExpense(BusinessExpense(date: Date(), category: .mileage, amount: trip.miles, note: trip.name))
+    }
+
+    private func saveTrips() {
+        if let data = try? JSONEncoder().encode(savedTrips) {
+            UserDefaults.standard.set(data, forKey: "cinema.savedTrips.v1")
+        }
+    }
+
     func setMileageRate(_ rate: Double) {
         mileageRate = rate
         UserDefaults.standard.set(rate, forKey: "cinema.mileageRate")
@@ -1778,7 +1805,9 @@ final class CinemaStore {
         announcements = []
         connectedPlatforms = []
         farm = nil
-        for key in ["cinema.expenses.v1", "cinema.mileageRate", "cinema.announcements.dismissed", "cinema.announcements.v1", "cinema.farm.v1"] {
+        savedTrips = []
+        homeBase = ""
+        for key in ["cinema.savedTrips.v1", "cinema.homeBase", "cinema.expenses.v1", "cinema.mileageRate", "cinema.announcements.dismissed", "cinema.announcements.v1", "cinema.farm.v1"] {
             UserDefaults.standard.removeObject(forKey: key)
         }
         signOut()

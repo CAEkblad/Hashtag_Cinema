@@ -86,6 +86,53 @@ struct ExpensesView: View {
                     .disabled(thisYear.isEmpty)
                 }
 
+                if !store.savedTrips.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Frequent trips")
+                            .font(.cinema(15, weight: .bold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("Tap to log it for today.")
+                            .font(.cinema(12))
+                            .foregroundStyle(Theme.textTertiary)
+                        FlowLayout(spacing: 8) {
+                            ForEach(store.savedTrips) { trip in
+                                Button {
+                                    store.logSavedTrip(trip)
+                                } label: {
+                                    Label("\(trip.name) · \(String(format: "%.0f", trip.miles)) mi", systemImage: "car.fill")
+                                        .font(.cinema(13, weight: .semibold))
+                                        .foregroundStyle(Theme.textPrimary)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Theme.surfaceRaised, in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        store.deleteSavedTrip(trip.id)
+                                    } label: {
+                                        Label("Remove", systemImage: "trash")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .cardStyle()
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Home base")
+                        .font(.cinema(14, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    TextField("Your office or home address", text: Binding(get: { store.homeBase }, set: { store.setHomeBase($0) }))
+                        .textContentType(.fullStreetAddress)
+                        .inputStyle()
+                    Text("Trips and tours start here when we work out the miles.")
+                        .font(.cinema(11))
+                        .foregroundStyle(Theme.textTertiary)
+                }
+                .cardStyle()
+
                 VStack(alignment: .leading, spacing: 6) {
                     Stepper(String(format: "Mileage rate $%.3f a mile", store.mileageRate), value: Binding(get: { store.mileageRate }, set: { store.setMileageRate($0) }), in: 0.30...1.20, step: 0.005)
                         .font(.cinema(14))
@@ -175,23 +222,76 @@ struct AddExpenseView: View {
     @Environment(\.dismiss) private var dismiss
     var presetMiles: Double? = nil
     var presetNote: String = ""
+    /// Addresses of a showing tour, in order. Miles are worked out from them.
+    var presetStops: [String] = []
 
     @State private var category: BusinessExpense.Category = .mileage
     @State private var amountText = ""
     @State private var note = ""
     @State private var date = Date()
     @State private var didLoad = false
+    @State private var from = ""
+    @State private var to = ""
+    @State private var roundTrip = true
+    @State private var fromHomeBase = true
+    @State private var isCalculating = false
+    @State private var routeMessage: String?
+    @State private var saveAsFrequent = false
+    @State private var frequentName = ""
+
+    private var amount: Double { Double(amountText.replacingOccurrences(of: ",", with: "")) ?? 0 }
 
     var body: some View {
         NavigationStack {
             Form {
-                Picker("Type", selection: $category) {
-                    ForEach(BusinessExpense.Category.allCases) { Label($0.title, systemImage: $0.icon).tag($0) }
+                Section {
+                    Picker("Type", selection: $category) {
+                        ForEach(BusinessExpense.Category.allCases) { Label($0.title, systemImage: $0.icon).tag($0) }
+                    }
+                    TextField(category == .mileage ? "Miles" : "Amount in dollars", text: $amountText)
+                        .keyboardType(.decimalPad)
+                    TextField(category == .mileage ? "Where to, like Showings with the Reeds" : "What for", text: $note)
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
                 }
-                TextField(category == .mileage ? "Miles" : "Amount in dollars", text: $amountText)
-                    .keyboardType(.decimalPad)
-                TextField(category == .mileage ? "Where to, like Showings with the Reeds" : "What for", text: $note)
-                DatePicker("Date", selection: $date, displayedComponents: .date)
+
+                if category == .mileage {
+                    if presetStops.isEmpty {
+                        Section {
+                            TextField("From", text: $from)
+                                .textContentType(.fullStreetAddress)
+                            TextField("To", text: $to)
+                                .textContentType(.fullStreetAddress)
+                            Toggle("Round trip", isOn: $roundTrip)
+                                .tint(Theme.red)
+                            calculateButton
+                        } header: {
+                            Text("Work out the miles")
+                        } footer: {
+                            Text(routeMessage ?? "Driving distance from Apple Maps. Add the city if an address isn't found.")
+                        }
+                    } else {
+                        Section {
+                            Text("\(presetStops.count) homes on this tour")
+                            if !store.homeBase.isEmpty {
+                                Toggle("Start and end at \(store.homeBase)", isOn: $fromHomeBase)
+                                    .tint(Theme.red)
+                            }
+                            calculateButton
+                        } header: {
+                            Text("Tour miles")
+                        } footer: {
+                            Text(routeMessage ?? (store.homeBase.isEmpty ? "Add a home base on the Mileage screen to count the drive there and back." : "Driving distance from Apple Maps through every stop."))
+                        }
+                    }
+
+                    Section {
+                        Toggle("Save as a frequent trip", isOn: $saveAsFrequent)
+                            .tint(Theme.red)
+                        if saveAsFrequent {
+                            TextField("Name, like Office to MLS", text: $frequentName)
+                        }
+                    }
+                }
             }
             .navigationTitle(category == .mileage ? "Log a trip" : "Add an expense")
             .navigationBarTitleDisplayMode(.inline)
@@ -200,6 +300,8 @@ struct AddExpenseView: View {
                 didLoad = true
                 if let presetMiles { amountText = String(format: "%.0f", presetMiles) }
                 if !presetNote.isEmpty { note = presetNote }
+                from = store.homeBase
+                if !presetStops.isEmpty { Task { await calculate() } }
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -207,12 +309,55 @@ struct AddExpenseView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        store.addExpense(BusinessExpense(date: date, category: category, amount: Double(amountText.replacingOccurrences(of: ",", with: "")) ?? 0, note: note))
+                        store.addExpense(BusinessExpense(date: date, category: category, amount: amount, note: note))
+                        if category == .mileage && saveAsFrequent {
+                            let name = frequentName.trimmingCharacters(in: .whitespaces)
+                            store.addSavedTrip(SavedTrip(name: name.isEmpty ? (note.isEmpty ? "Frequent trip" : note) : name, miles: amount))
+                        }
                         dismiss()
                     }
-                    .disabled((Double(amountText.replacingOccurrences(of: ",", with: "")) ?? 0) <= 0)
+                    .disabled(amount <= 0)
                 }
             }
         }
+    }
+
+    private var calculateButton: some View {
+        Button {
+            Task { await calculate() }
+        } label: {
+            HStack {
+                Label("Calculate with Apple Maps", systemImage: "map.fill")
+                if isCalculating {
+                    Spacer()
+                    ProgressView()
+                }
+            }
+        }
+        .disabled(isCalculating || (presetStops.isEmpty && (from.trimmingCharacters(in: .whitespaces).isEmpty || to.trimmingCharacters(in: .whitespaces).isEmpty)))
+    }
+
+    private func calculate() async {
+        var stops: [String]
+        if presetStops.isEmpty {
+            stops = [from, to]
+            if roundTrip { stops.append(from) }
+        } else {
+            stops = presetStops
+            if fromHomeBase && !store.homeBase.isEmpty {
+                stops.insert(store.homeBase, at: 0)
+                stops.append(store.homeBase)
+            }
+        }
+        isCalculating = true
+        routeMessage = nil
+        do {
+            let miles = try await MileageCalculator.drivingMiles(through: stops, near: store.homeCity)
+            amountText = String(format: "%.1f", miles)
+            routeMessage = "\(String(format: "%.1f", miles)) miles by car, from Apple Maps."
+        } catch {
+            routeMessage = (error as? LocalizedError)?.errorDescription ?? "Couldn't work out the route. Enter the miles by hand."
+        }
+        isCalculating = false
     }
 }
