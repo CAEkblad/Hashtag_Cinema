@@ -86,6 +86,9 @@ final class CinemaStore {
     var offerSettingsByKey: [String: OfferSettings] = (try? JSONDecoder().decode([String: OfferSettings].self, from: UserDefaults.standard.data(forKey: "cinema.offerSettings.v1") ?? Data())) ?? [:]
     var offerSets: [String: [OfferEntry]] = (try? JSONDecoder().decode([String: [OfferEntry]].self, from: UserDefaults.standard.data(forKey: "cinema.offers.v1") ?? Data())) ?? [:]
 
+    // Film day
+    var filmDay: FilmDaySession? = (try? JSONDecoder().decode(FilmDaySession.self, from: UserDefaults.standard.data(forKey: "cinema.filmday.v1") ?? Data()))
+
     // Trends feed
     private var remoteTrends: [Trend] = (try? JSONDecoder().decode([Trend].self, from: UserDefaults.standard.data(forKey: "cinema.trends.v1") ?? Data())) ?? []
     var trendsUpdatedAt: Date? = UserDefaults.standard.object(forKey: "cinema.trendsUpdated") as? Date
@@ -1692,6 +1695,39 @@ final class CinemaStore {
         if let data = try? JSONEncoder().encode(offerSets) { UserDefaults.standard.set(data, forKey: "cinema.offers.v1") }
     }
 
+    // MARK: Film day
+
+    func startFilmDay(_ ideas: [Idea]) {
+        guard !ideas.isEmpty else { return }
+        filmDay = FilmDaySession(ideas: ideas)
+        saveFilmDay()
+    }
+
+    func markFilmDay(_ ideaID: UUID, filmed: Bool) {
+        guard var session = filmDay else { return }
+        session.filmed.removeAll { $0 == ideaID }
+        session.skipped.removeAll { $0 == ideaID }
+        if filmed { session.filmed.append(ideaID) } else { session.skipped.append(ideaID) }
+        filmDay = session
+        saveFilmDay()
+        if session.isComplete, !session.filmed.isEmpty {
+            showToast("\(session.filmed.count) \(session.filmed.count == 1 ? "video" : "videos") filmed. That's a wrap!")
+        }
+    }
+
+    func endFilmDay() {
+        filmDay = nil
+        saveFilmDay()
+    }
+
+    private func saveFilmDay() {
+        if let filmDay, let data = try? JSONEncoder().encode(filmDay) {
+            UserDefaults.standard.set(data, forKey: "cinema.filmday.v1")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "cinema.filmday.v1")
+        }
+    }
+
     // MARK: Trends
 
     var trends: [Trend] { TrendLibrary.merge(remoteTrends) }
@@ -2543,6 +2579,8 @@ final class CinemaStore {
         ListingPhotoStore.deleteAll()
         offerSettingsByKey = [:]
         savedTrendIDs = []
+        filmDay = nil
+        UserDefaults.standard.removeObject(forKey: "cinema.filmday.v1")
         remoteTrends = []
         trendsUpdatedAt = nil
         for key in ["cinema.savedTrends", "cinema.trends.v1", "cinema.trendsUpdated"] { UserDefaults.standard.removeObject(forKey: key) }

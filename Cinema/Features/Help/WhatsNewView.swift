@@ -14,6 +14,8 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "video.badge.checkmark", title: "Film day", detail: "Pick 3 to 7 ideas and film your whole week in one sitting. We order them so you move as little as possible, tell you when to change your top, and track what you got.", route: .filmDay),
+        Item(icon: "square.stack.3d.up.fill", title: "Post it everywhere", detail: "Open any idea and tap Post it everywhere for an Instagram caption, TikTok, Facebook, YouTube, LinkedIn, Google Business Profile, an email to your sphere, a text and a blog outline from the same script.", route: .trends),
         Item(icon: "flame.fill", title: "Trends", detail: "See the video formats working for agents on TikTok, Instagram and Facebook, watch real examples, and tap Make my version for a script and shot list in your city. Saw one you liked? Paste the link.", route: .trends),
         Item(icon: "square.and.arrow.down.on.square.fill", title: "Import listings and photos", detail: "Type an MLS number to pull a listing's details and every photo into CloseUp, or add photos from Photos or Files. Reels, posters and flyers use them right away. This build uses a sample MLS feed for testing.", route: .listingPhotos(nil)),
         Item(icon: "point.3.filled.connected.trianglepath.dotted", title: "Touch plans", detail: "Put new people on an 8 touch, 8 week plan and your sphere on 33 touches a year. Each touch has what to say, and Home shows who's due.", route: .touchPlans),

@@ -22,6 +22,11 @@ struct IdeaFeedView: View {
                         .tint(Theme.red)
                     createRow
                     trendsLink
+                    NavigationLink(value: Route.filmDay) {
+                        IconRow(icon: "video.badge.checkmark", title: store.filmDay == nil ? "Film day" : "Back to film day", subtitle: store.filmDay.map { "\($0.filmed.count) of \($0.ideaIDs.count) filmed" } ?? "Film your whole week in one sitting")
+                            .cardStyle(padding: 14)
+                    }
+                    .buttonStyle(.plain)
                     scriptLink
                     hookLink
                     NavigationLink(value: Route.teleprompter) {

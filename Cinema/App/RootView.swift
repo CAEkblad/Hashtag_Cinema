@@ -280,6 +280,14 @@ struct RouteDestination: View {
             TrendsView()
         case .trend(let id):
             TrendDetailView(trendID: id)
+        case .filmDay:
+            FilmDayView()
+        case .repurpose(let id):
+            if let idea = store.idea(id) {
+                RepurposeView(idea: idea)
+            } else {
+                missing
+            }
         case .touchPlans:
             TouchPlansView()
         case .listingPhotos(let id):

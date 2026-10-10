@@ -6,6 +6,7 @@ struct IdeaDetailView: View {
     @State private var showCamera = false
     @State private var practice = false
     @State private var showUpload = false
+    @State private var showRepurpose = false
 
     var body: some View {
         ScrollView {
@@ -65,6 +66,12 @@ struct IdeaDetailView: View {
                         .foregroundStyle(Theme.textTertiary)
                 }
                 .cardStyle()
+
+                Button { showRepurpose = true } label: {
+                    IconRow(icon: "square.stack.3d.up.fill", title: "Post it everywhere", subtitle: "Captions, posts, an email and a text from this script")
+                        .cardStyle(padding: 14)
+                }
+                .buttonStyle(.plain)
             }
             .padding(Theme.gutter)
             .padding(.bottom, 120)
@@ -97,6 +104,9 @@ struct IdeaDetailView: View {
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraView(idea: idea, practiceMode: practice)
+        }
+        .navigationDestination(isPresented: $showRepurpose) {
+            RepurposeView(idea: idea)
         }
         .sheet(isPresented: $showUpload) {
             EditRequestView(idea: idea, recordedURL: nil, sourceLabel: "Video from your camera roll")
