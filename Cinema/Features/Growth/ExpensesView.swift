@@ -349,6 +349,10 @@ struct AddExpenseView: View {
                 stops.append(store.homeBase)
             }
         }
+        guard stops.filter({ !$0.trimmingCharacters(in: .whitespaces).isEmpty }).count >= 2 else {
+            routeMessage = "Add a home base or another stop to work out the miles."
+            return
+        }
         isCalculating = true
         routeMessage = nil
         do {

@@ -156,6 +156,12 @@ final class CinemaStore {
         restoreBrandKit()
         restoreSphere()
         restoreWork()
+        if let end = powerHourEnds, end <= Date() {
+            powerHourEnds = nil
+            UserDefaults.standard.removeObject(forKey: "cinema.powerHourEnds")
+        }
+        // Keep yearly reminders topped up on every launch.
+        if taxPlan.remindersOn { saveTaxPlan(taxPlan, remindersChanged: true, quiet: true) }
         if let data = UserDefaults.standard.data(forKey: Self.keywordsKey), let saved = try? JSONDecoder().decode([KeywordRule].self, from: data) {
             keywordRules = saved
         } else {
@@ -1350,7 +1356,7 @@ final class CinemaStore {
     }
 
     func closingsInCapYear(_ plan: SplitPlan) -> [Double] {
-        deals.filter { $0.isClosed && $0.closingDate >= plan.capYearStart && $0.closingDate < plan.capYearEnd }
+        deals.filter { $0.isClosed && $0.closingDate >= plan.currentYearStart && $0.closingDate < plan.capYearEnd }
             .sorted { $0.closingDate < $1.closingDate }
             .map(\.commission)
     }
@@ -1366,12 +1372,11 @@ final class CinemaStore {
 
     func taxEstimate(_ plan: TaxPlan) -> TaxEstimate {
         let year = Calendar.current.component(.year, from: Date())
-        let closings = deals.filter { $0.isClosed && Calendar.current.component(.year, from: $0.closingDate) == year }
-            .sorted { $0.closingDate < $1.closingDate }
-            .map(\.commission)
-        var yearPlan = splitPlan
-        yearPlan.priorGCI = 0
-        let earned = SplitSummary.run(yearPlan, closings: closings).net
+        // Run every closing through the real cap sequence, then keep the ones paid this calendar year.
+        let closings = deals.filter(\.isClosed).map { (date: $0.closingDate, gross: $0.commission) }
+        let earned = splitPlan.nets(for: closings)
+            .filter { Calendar.current.component(.year, from: $0.date) == year }
+            .reduce(0) { $0 + $1.net }
         let deductions = deductionsThisYear
         return TaxEstimate(earned: earned, deductions: deductions, setAside: max(0, earned - deductions) * plan.setAsidePercent / 100)
     }
@@ -1383,32 +1388,31 @@ final class CinemaStore {
         if let data = try? JSONEncoder().encode(plan) { UserDefaults.standard.set(data, forKey: "cinema.split.v1") }
     }
 
-    func saveTaxPlan(_ plan: TaxPlan, remindersChanged: Bool) {
+    func saveTaxPlan(_ plan: TaxPlan, remindersChanged: Bool, quiet: Bool = false) {
         taxPlan = plan
         if let data = try? JSONEncoder().encode(plan) { UserDefaults.standard.set(data, forKey: "cinema.tax.v1") }
         guard remindersChanged else { return }
         let year = Calendar.current.component(.year, from: Date())
-        let dates = TaxPlan.dueDates(taxYear: year) + TaxPlan.dueDates(taxYear: year + 1)
-        let ids = dates.map { "cinema.tax.\($0.date.timeIntervalSince1970)" }
-        ReminderScheduler.cancel(ids: ids)
+        let dates = TaxPlan.dueDates(taxYear: year - 1) + TaxPlan.dueDates(taxYear: year) + TaxPlan.dueDates(taxYear: year + 1)
+        ReminderScheduler.cancel(ids: dates.map(\.id))
         guard plan.remindersOn else { return }
         Task {
             guard await ReminderScheduler.requestPermission() else {
-                self.showToast("Turn on notifications in Settings to get reminders")
+                if !quiet { self.showToast("Turn on notifications in Settings to get reminders") }
                 return
             }
-            for (due, id) in zip(dates, ids) {
+            for due in dates {
                 let week = Calendar.current.date(byAdding: .day, value: -7, to: due.date) ?? due.date
                 guard week > Date() else { continue }
-                await ReminderScheduler.scheduleOnce(id: id, title: "\(due.label) due in a week", body: "Due \(due.date.formatted(.dateTime.month(.wide).day())). Check what you've set aside in #Cinema.", on: week)
+                await ReminderScheduler.scheduleOnce(id: due.id, title: "\(due.label) due in a week", body: "Due \(due.date.formatted(.dateTime.month(.wide).day())). Check what you've set aside in #Cinema.", on: week)
             }
-            self.showToast("We'll remind you a week before each payment")
+            if !quiet { self.showToast("We'll remind you a week before each payment") }
         }
     }
 
     // MARK: License and CE
 
-    func saveLicensePlan(_ plan: LicensePlan, reschedule: Bool) {
+    func saveLicensePlan(_ plan: LicensePlan, reschedule: Bool, quiet: Bool = false) {
         licensePlan = plan
         if let data = try? JSONEncoder().encode(plan) { UserDefaults.standard.set(data, forKey: "cinema.license.v1") }
         guard reschedule else { return }
@@ -1417,14 +1421,14 @@ final class CinemaStore {
         guard plan.remindersOn else { return }
         Task {
             guard await ReminderScheduler.requestPermission() else {
-                self.showToast("Turn on notifications in Settings to get reminders")
+                if !quiet { self.showToast("Turn on notifications in Settings to get reminders") }
                 return
             }
             for days in offsets {
                 guard let date = Calendar.current.date(byAdding: .day, value: -days, to: plan.expires), date > Date() else { continue }
                 await ReminderScheduler.scheduleOnce(id: "cinema.license.\(days)", title: "License renews in \(days) days", body: "\(String(format: "%g", max(0, plan.totalNeeded - plan.totalDone))) CE hours left. Renew with the Florida DBPR by \(plan.expires.formatted(.dateTime.month(.wide).day())).", on: date)
             }
-            self.showToast("We'll remind you before your license expires")
+            if !quiet { self.showToast("We'll remind you before your license expires") }
         }
     }
 
@@ -1550,7 +1554,7 @@ final class CinemaStore {
         UserDefaults.standard.set(end, forKey: "cinema.powerHourEnds")
         Task {
             guard await ReminderScheduler.requestPermission() else { return }
-            await ReminderScheduler.scheduleIn(seconds: TimeInterval(minutes * 60), id: "cinema.powerhour", title: "Power hour done!", body: "Log your last touches and set tomorrow's time.")
+            await ReminderScheduler.scheduleIn(seconds: end.timeIntervalSinceNow, id: "cinema.powerhour", title: "Power hour done!", body: "Log your last touches and set tomorrow's time.")
         }
     }
 
@@ -2046,6 +2050,8 @@ final class CinemaStore {
         taxPlan = TaxPlan()
         licensePlan = LicensePlan()
         timeBlocks = TimeBlock.defaults
+        mileageRate = 0.70
+        dismissedAnnouncementIDs = []
         weeklyTargets = WeeklyTargets()
         for key in ["cinema.blocks.v1", "cinema.targets.v1"] { UserDefaults.standard.removeObject(forKey: key) }
         prospectLog = [:]

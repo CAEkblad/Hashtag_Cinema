@@ -63,6 +63,7 @@ struct LicenseView: View {
     @State private var plan = LicensePlan()
     @State private var didLoad = false
     @State private var showAdd = false
+    @State private var skipNextChange = false
 
     var body: some View {
         ScrollView {
@@ -159,10 +160,19 @@ struct LicenseView: View {
         .onAppear {
             guard !didLoad else { return }
             didLoad = true
-            plan = store.licensePlan
+            if plan != store.licensePlan {
+                skipNextChange = true
+                plan = store.licensePlan
+            }
         }
         .onChange(of: plan) { old, new in
-            store.saveLicensePlan(new, reschedule: old.remindersOn != new.remindersOn || old.expires != new.expires)
+            if skipNextChange {
+                skipNextChange = false
+                return
+            }
+            let toggled = old.remindersOn != new.remindersOn
+            let changed = toggled || old.expires != new.expires || old.courses != new.courses || old.isFirstRenewal != new.isFirstRenewal || old.kind != new.kind
+            store.saveLicensePlan(new, reschedule: changed, quiet: !toggled)
         }
         .sheet(isPresented: $showAdd) {
             AddCourseView(defaultCategory: plan.isFirstRenewal ? .postLicensing : .specialty) { course in

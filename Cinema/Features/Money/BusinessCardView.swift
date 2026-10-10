@@ -10,18 +10,26 @@ struct BusinessCardView: View {
 
     private var kit: BrandKit { store.brandKit }
 
+    /// vCard text values escape backslashes, commas, semicolons and line breaks.
+    private func esc(_ value: String) -> String {
+        value.replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: ",", with: "\\,")
+            .replacingOccurrences(of: ";", with: "\\;")
+            .replacingOccurrences(of: "\n", with: "\\n")
+    }
+
     private var vCard: String {
         let parts = store.profile.name.split(separator: " ")
         let first = parts.first.map(String.init) ?? store.profile.name
         let last = parts.dropFirst().joined(separator: " ")
-        var lines = ["BEGIN:VCARD", "VERSION:3.0", "N:\(last);\(first);;;", "FN:\(store.profile.name)"]
+        var lines = ["BEGIN:VCARD", "VERSION:3.0", "N:\(esc(last));\(esc(first));;;", "FN:\(esc(store.profile.name))"]
         let company = store.myMarketCenter?.name ?? store.profile.brokerage
-        if !company.isEmpty { lines.append("ORG:\(company)") }
+        if !company.isEmpty { lines.append("ORG:\(esc(company))") }
         lines.append("TITLE:Real Estate Agent")
         if !kit.phone.isEmpty { lines.append("TEL;TYPE=CELL:\(kit.phone)") }
         if !store.profile.email.isEmpty { lines.append("EMAIL:\(store.profile.email)") }
         if !kit.website.isEmpty { lines.append("URL:\(kit.website.hasPrefix("http") ? kit.website : "https://\(kit.website)")") }
-        lines.append("NOTE:\(store.homeCity.name) real estate")
+        lines.append("NOTE:\(esc(store.homeCity.name)) real estate")
         lines.append("END:VCARD")
         return lines.joined(separator: "\r\n")
     }

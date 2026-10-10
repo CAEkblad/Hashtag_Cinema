@@ -176,6 +176,7 @@ struct TaxSetAsideView: View {
     @Environment(CinemaStore.self) private var store
     @State private var plan = TaxPlan()
     @State private var didLoad = false
+    @State private var skipNextChange = false
 
     var body: some View {
         let estimate = store.taxEstimate(plan)
@@ -221,10 +222,11 @@ struct TaxSetAsideView: View {
 
                 SectionHeader(title: "Estimated tax due dates")
                 VStack(spacing: 10) {
-                    ForEach(TaxPlan.dueDates(taxYear: year), id: \.label) { due in
+                    ForEach(TaxPlan.dueDates(taxYear: year), id: \.id) { due in
+                        let passed = due.date < Calendar.current.startOfDay(for: Date())
                         HStack {
-                            Image(systemName: due.date < Date() ? "checkmark.circle.fill" : "calendar")
-                                .foregroundStyle(due.date < Date() ? Theme.success : Theme.red)
+                            Image(systemName: passed ? "checkmark.circle.fill" : "calendar")
+                                .foregroundStyle(passed ? Theme.success : Theme.red)
                             Text(due.label)
                                 .font(.cinema(14, weight: .semibold))
                                 .foregroundStyle(Theme.textPrimary)
@@ -252,9 +254,16 @@ struct TaxSetAsideView: View {
         .onAppear {
             guard !didLoad else { return }
             didLoad = true
-            plan = store.taxPlan
+            if plan != store.taxPlan {
+                skipNextChange = true
+                plan = store.taxPlan
+            }
         }
         .onChange(of: plan) { old, new in
+            if skipNextChange {
+                skipNextChange = false
+                return
+            }
             store.saveTaxPlan(new, remindersChanged: old.remindersOn != new.remindersOn)
         }
     }
