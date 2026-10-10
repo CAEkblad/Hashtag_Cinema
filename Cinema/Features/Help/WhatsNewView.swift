@@ -14,6 +14,7 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "text.bubble.fill", title: "Call scripts", detail: "8 prospecting scripts for power hour: sphere, past clients, new online leads, open house follow up, expireds, FSBOs, just sold neighbors and referral asks. Each has an opener, questions, what to say if they push back, a close, a voicemail and a text, with tally buttons while you talk.", route: .callScripts),
         Item(icon: "printer.fill", title: "Open house kit", detail: "On any open house: a printable sign in sheet with a QR backup, fold over feature cards for each room (\"Did you notice? Impact windows\"), and a what to bring checklist.", route: .listings),
         Item(icon: "person.3.sequence.fill", title: "Team huddle", detail: "A 20 minute weekly team meeting agenda built from your team page: wins, the leaderboard, a shout out, this week's video challenge, a role play and commitments. Share it or post it to the team.", route: .teamHuddle),
         Item(icon: "book.pages.fill", title: "Buyer and seller guides", detail: "3 page PDF guides in your brand: every step with a timeline, Florida costs, and a do and don't list. Send one when someone comments GUIDE.", route: .clientGuides),

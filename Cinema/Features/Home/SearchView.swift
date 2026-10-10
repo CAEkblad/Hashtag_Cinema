@@ -85,6 +85,7 @@ enum ToolCatalog {
         Tool(title: "My money", keywords: "income gci earnings commission dashboard", icon: "banknote.fill", route: .money, group: .business),
         Tool(title: "Split and cap", keywords: "kw cap royalty company dollar split brokerage", icon: "chart.pie.fill", route: .splitTracker, group: .business),
         Tool(title: "Tax set aside", keywords: "taxes quarterly estimated irs 1099 save", icon: "building.columns.fill", route: .taxes, group: .business),
+        Tool(title: "Call scripts", keywords: "prospecting scripts expired fsbo for sale by owner sphere past client online lead speed to lead referral circle prospecting cold call voicemail", icon: "text.bubble.fill", route: .callScripts, group: .business),
         Tool(title: "Power hour", keywords: "prospecting calls dials timer streak door knocking", icon: "timer", route: .powerHour, group: .business),
         Tool(title: "Time blocks", keywords: "schedule calendar routine daily focus reminders", icon: "clock.fill", route: .timeBlocks, group: .business),
         Tool(title: "Weekly scorecard", keywords: "4-1-1 411 goals accountability targets week", icon: "checklist.checked", route: .scorecard, group: .business),

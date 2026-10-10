@@ -868,5 +868,7 @@ enum Route: Hashable {
     case clientGuides
     case teamHuddle
     case openHouseKit(UUID)
+    case callScripts
+    case callScript(String)
     case bookingChat(UUID)
 }

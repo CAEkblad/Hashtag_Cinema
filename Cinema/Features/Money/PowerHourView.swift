@@ -48,6 +48,12 @@ struct PowerHourView: View {
 
                 timerCard
 
+                NavigationLink(value: Route.callScripts) {
+                    IconRow(icon: "text.bubble.fill", title: "Call scripts", subtitle: "Sphere, past clients, online leads, expireds, FSBOs and more")
+                        .cardStyle(padding: 14)
+                }
+                .buttonStyle(.plain)
+
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                     ForEach(ProspectAction.allCases) { action in
                         Button {
