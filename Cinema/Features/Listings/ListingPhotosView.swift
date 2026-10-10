@@ -29,6 +29,8 @@ struct ListingPhotosView: View {
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var showFiles = false
     @State private var createdID: UUID?
+    @State private var askReplace: MLSListing?
+    @State private var nearMatches = false
 
     private var listing: Listing? { listingID.flatMap { store.listing($0) } }
 
@@ -77,7 +79,7 @@ struct ListingPhotosView: View {
         .navigationTitle(listingID == nil ? "Import listing" : "Photos")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            if let listingID, saved.isEmpty { saved = ListingPhotoStore.load(listingID) }
+            if let listingID, saved.isEmpty { saved = ListingPhotoStore.thumbnails(listingID) }
             if mlsNumber.isEmpty, let number = listing?.mlsNumber { mlsNumber = number }
         }
         .onChange(of: pickerItems) { _, items in
@@ -85,7 +87,11 @@ struct ListingPhotosView: View {
             Task { await importLibrary(items) }
         }
         .fileImporter(isPresented: $showFiles, allowedContentTypes: [.image], allowsMultipleSelection: true) { result in
-            if case .success(let urls) = result { importFiles(urls) }
+            if case .success(let urls) = result { Task { await importFiles(urls) } }
+        }
+        .confirmationDialog("This listing already has \(saved.count) photo\(saved.count == 1 ? "" : "s")", isPresented: Binding(get: { askReplace != nil }, set: { if !$0 { askReplace = nil } }), titleVisibility: .visible, presenting: askReplace) { item in
+            Button("Replace them with the MLS photos", role: .destructive) { Task { await importMLS(item, replace: true) } }
+            Button("Add the MLS photos after them") { Task { await importMLS(item, replace: false) } }
         }
     }
 
@@ -129,7 +135,7 @@ struct ListingPhotosView: View {
                 selectedCard(selected)
             } else if !results.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Sample listings")
+                    Text(nearMatches ? "Close matches" : "Sample listings")
                         .font(.cinema(15, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                     ForEach(results) { item in
@@ -218,7 +224,7 @@ struct ListingPhotosView: View {
                 }
             }
 
-            Toggle(listingID == nil ? "Fill in price, beds, baths and description" : "Also update price, beds, baths and description", isOn: $updateDetails)
+            Toggle(listingID == nil ? "Use the MLS description" : "Also update price, beds, baths and description", isOn: $updateDetails)
                 .font(.cinema(13, weight: .semibold))
                 .tint(Theme.red)
 
@@ -228,7 +234,11 @@ struct ListingPhotosView: View {
             }
 
             Button {
-                Task { await importMLS(item) }
+                if listingID != nil && !saved.isEmpty && !chosen.isEmpty {
+                    askReplace = item
+                } else {
+                    Task { await importMLS(item, replace: true) }
+                }
             } label: {
                 Label(listingID == nil ? "Add listing with \(chosen.count) photo\(chosen.count == 1 ? "" : "s")" : "Import \(chosen.count) photo\(chosen.count == 1 ? "" : "s")", systemImage: "square.and.arrow.down.fill")
             }
@@ -266,6 +276,7 @@ struct ListingPhotosView: View {
                 Label("Choose from Photos", systemImage: "photo.on.rectangle.angled")
             }
             .buttonStyle(PrimaryButtonStyle())
+            .disabled(isWorking)
             Text("Pick up to 40. They're added after any photos already on this listing.")
                 .font(.cinema(12))
                 .foregroundStyle(Theme.textTertiary)
@@ -279,6 +290,8 @@ struct ListingPhotosView: View {
                 Label("Choose from Files", systemImage: "folder.fill")
             }
             .buttonStyle(PrimaryButtonStyle())
+            .disabled(isWorking)
+            if isWorking { ProgressView().frame(maxWidth: .infinity) }
             Text("Got a download link from your photographer? Save the photos to Files, then pick them here. Dropbox and Google Drive work too.")
                 .font(.cinema(12))
                 .foregroundStyle(Theme.textTertiary)
@@ -298,6 +311,7 @@ struct ListingPhotosView: View {
                         saved = []
                     }
                     .font(.cinema(13, weight: .semibold))
+                    .disabled(isWorking)
                 }
             }
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)], spacing: 6) {
@@ -373,10 +387,18 @@ struct ListingPhotosView: View {
         isWorking = true
         defer { isWorking = false }
         do {
+            nearMatches = false
             pick(try await MLSService.listing(mlsNumber: mlsNumber))
         } catch {
             selected = nil
-            errorText = error.localizedDescription + (MLSService.isTestFeed ? " Tap Show sample listings to try one from the test feed." : "")
+            let close = (try? await MLSService.search(mlsNumber, limit: 10)) ?? []
+            results = close
+            nearMatches = !close.isEmpty
+            if close.isEmpty {
+                errorText = error.localizedDescription + (MLSService.isTestFeed ? " Tap Show sample listings to try one from the test feed." : "")
+            } else {
+                errorText = "No listing has MLS number \(mlsNumber.trimmingCharacters(in: .whitespaces)). Here are close matches. Check the number before importing."
+            }
         }
     }
 
@@ -386,6 +408,7 @@ struct ListingPhotosView: View {
         defer { isWorking = false }
         do {
             selected = nil
+            nearMatches = false
             results = try await MLSService.search("", limit: 20)
             if results.isEmpty { errorText = "The sample feed didn't return any listings. Try again in a minute." }
         } catch {
@@ -393,23 +416,26 @@ struct ListingPhotosView: View {
         }
     }
 
-    private func importMLS(_ item: MLSListing) async {
+    private func importMLS(_ item: MLSListing, replace: Bool) async {
         errorText = nil
         isWorking = true
         progress = 0
         defer { isWorking = false }
-        let images = await MLSService.downloadPhotos(chosen) { value in progress = value }
-        if !chosen.isEmpty && images.isEmpty {
+        let urls = chosen
+        let images = await MLSService.downloadPhotos(urls) { value in progress = value }
+        if !urls.isEmpty && images.isEmpty {
             errorText = "Couldn't download the photos. Check your connection and try again."
             return
         }
+        let data = await Task.detached(priority: .userInitiated) { ListingPhotoStore.encode(images) }.value
         if let listingID, var current = store.listing(listingID) {
             current.mlsNumber = item.mlsNumber
             if updateDetails { apply(item, to: &current) }
             store.updateListing(current)
-            ListingPhotoStore.save(images, for: listingID)
-            saved = images
-            store.showToast("\(images.count) photo\(images.count == 1 ? "" : "s") imported from the MLS")
+            if replace { ListingPhotoStore.replace(with: data, for: listingID) } else { ListingPhotoStore.append(data, for: listingID) }
+            saved = ListingPhotoStore.thumbnails(listingID)
+            store.persist()
+            store.showToast("\(data.count) photo\(data.count == 1 ? "" : "s") imported from the MLS")
         } else {
             var new = Listing(address: item.address, cityID: cityID(for: item.city), price: item.price, beds: item.beds, baths: item.baths, squareFeet: item.squareFeet, status: status(for: item.status), features: item.hasPool ? [.pool] : [], listedAt: Calendar.current.date(byAdding: .day, value: -(item.daysOnMarket ?? 0), to: Date()) ?? Date())
             new.mlsNumber = item.mlsNumber
@@ -421,8 +447,9 @@ struct ListingPhotosView: View {
                 withRemarks.description = item.remarks
                 store.updateListing(withRemarks)
             }
-            ListingPhotoStore.save(images, for: added.id)
-            saved = images
+            ListingPhotoStore.replace(with: data, for: added.id)
+            saved = ListingPhotoStore.thumbnails(added.id)
+            store.persist()
             createdID = added.id
         }
     }
@@ -440,11 +467,14 @@ struct ListingPhotosView: View {
         FloridaMarkets.all.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }?.id ?? store.homeCity.id
     }
 
+    /// Off market statuses (hold, withdrawn, expired, cancelled) come in as coming
+    /// soon so they never trigger "just listed" posters or buyer match alerts.
     private func status(for text: String) -> ListingStatus {
         let lower = text.lowercased()
         if lower.contains("coming") { return .comingSoon }
         if lower.contains("closed") || lower.contains("sold") { return .sold }
-        if lower.contains("pending") || lower.contains("contract") { return .underContract }
+        if ["pending", "contract", "contingent", "backup"].contains(where: lower.contains) { return .underContract }
+        if ["hold", "withdrawn", "expired", "cancel", "delete", "incomplete"].contains(where: lower.contains) { return .comingSoon }
         return .active
     }
 
@@ -452,32 +482,44 @@ struct ListingPhotosView: View {
         guard let listingID else { return }
         isWorking = true
         defer { isWorking = false }
-        var images = saved
+        var loaded: [UIImage] = []
         for item in items {
             if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
-                images.append(image.downscaled(maxSide: 2048))
+                loaded.append(image)
             }
         }
-        ListingPhotoStore.save(images, for: listingID)
-        let added = images.count - saved.count
-        saved = images
         pickerItems = []
-        store.showToast("\(added) photo\(added == 1 ? "" : "s") added")
+        await add(loaded, to: listingID)
     }
 
-    private func importFiles(_ urls: [URL]) {
+    private func importFiles(_ urls: [URL]) async {
         guard let listingID else { return }
-        var images = saved
-        for url in urls {
-            let scoped = url.startAccessingSecurityScopedResource()
-            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
-                images.append(image.downscaled(maxSide: 2048))
+        isWorking = true
+        defer { isWorking = false }
+        // Read through a file coordinator so cloud files (iCloud, Dropbox, Drive) download first.
+        let loaded: [UIImage] = await Task.detached(priority: .userInitiated) {
+            var images: [UIImage] = []
+            for url in urls {
+                let scoped = url.startAccessingSecurityScopedResource()
+                defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                var readError: NSError?
+                NSFileCoordinator().coordinate(readingItemAt: url, options: .withoutChanges, error: &readError) { readURL in
+                    if let data = try? Data(contentsOf: readURL), let image = UIImage(data: data) { images.append(image) }
+                }
             }
+            return images
+        }.value
+        await add(loaded, to: listingID)
+    }
+
+    private func add(_ images: [UIImage], to listingID: UUID) async {
+        guard !images.isEmpty else {
+            store.showToast("Couldn't read those photos. Try saving them to your phone first.")
+            return
         }
-        ListingPhotoStore.save(images, for: listingID)
-        let added = images.count - saved.count
-        saved = images
-        store.showToast("\(added) photo\(added == 1 ? "" : "s") added")
+        let data = await Task.detached(priority: .userInitiated) { ListingPhotoStore.encode(images) }.value
+        ListingPhotoStore.append(data, for: listingID)
+        saved = ListingPhotoStore.thumbnails(listingID)
+        store.showToast("\(data.count) photo\(data.count == 1 ? "" : "s") added")
     }
 }

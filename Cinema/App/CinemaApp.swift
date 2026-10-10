@@ -54,6 +54,10 @@ struct CinemaApp: App {
                 .onChange(of: scenePhase) { _, phase in
                     if phase != .active { store.persist() }
                 }
+                .task {
+                    // Only prune when listings loaded, so a failed load can never wipe photos.
+                    if !store.listings.isEmpty { ListingPhotoStore.prune(keeping: Set(store.listings.map(\.id))) }
+                }
         }
     }
 }

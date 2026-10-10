@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import UIKit
 
 /// A listing as it comes back from an MLS feed.
@@ -87,7 +88,6 @@ enum MLSService {
                 request.setValue(testAuth, forHTTPHeaderField: "Authorization")
                 if let one = try? await fetch(request).first { return one }
             }
-            if let first = matches.first { return first }
             throw MLSError.notFound
         }
     }
@@ -197,7 +197,7 @@ enum MLSService {
         var images: [UIImage] = []
         for (index, url) in urls.enumerated() {
             if let (data, _) = try? await URLSession.shared.data(from: url), let image = UIImage(data: data) {
-                images.append(image)
+                images.append(image.downscaled(maxSide: 2048))
             }
             await progress(Double(index + 1) / Double(max(urls.count, 1)))
         }
@@ -206,6 +206,8 @@ enum MLSService {
 }
 
 /// Listing photos saved on the phone, one folder per listing.
+/// Writes are atomic (a new folder is swapped in) and encoding happens off the
+/// main thread, so a 40 photo import never freezes the app or loses photos.
 enum ListingPhotoStore {
     private static var root: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -216,49 +218,109 @@ enum ListingPhotoStore {
         root.appendingPathComponent(listingID.uuidString, isDirectory: true)
     }
 
-    private static let thumbs = NSCache<NSString, UIImage>()
+    private static let covers = NSCache<NSString, UIImage>()
+    private static let noCover = NSCache<NSString, NSNumber>()
 
-    /// A small cover image for lists and headers, cached in memory.
+    private static func forget(_ listingID: UUID) {
+        covers.removeObject(forKey: listingID.uuidString as NSString)
+        noCover.removeObject(forKey: listingID.uuidString as NSString)
+    }
+
+    static func files(_ listingID: UUID) -> [URL] {
+        let dir = folder(listingID)
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
+        return names.filter { $0.hasSuffix(".jpg") }.sorted().map { dir.appendingPathComponent($0) }
+    }
+
+    static func count(_ listingID: UUID) -> Int { files(listingID).count }
+
+    /// Full size photos for posters, reels and flyers.
+    static func load(_ listingID: UUID, limit: Int = .max) -> [UIImage] {
+        files(listingID).prefix(limit).compactMap { UIImage(contentsOfFile: $0.path) }
+    }
+
+    /// Small versions for grids, read straight from the JPEG without decoding the full photo.
+    static func thumbnails(_ listingID: UUID, maxPixel: Int = 300) -> [UIImage] {
+        files(listingID).compactMap { thumbnail(at: $0, maxPixel: maxPixel) }
+    }
+
+    static func thumbnail(at url: URL, maxPixel: Int) -> UIImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixel
+        ]
+        guard let cg = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        return UIImage(cgImage: cg)
+    }
+
+    /// The first photo, small, cached in memory. Listings without photos are remembered too.
     static func cover(_ listingID: UUID) -> UIImage? {
         let key = listingID.uuidString as NSString
-        if let cached = thumbs.object(forKey: key) { return cached }
-        guard let first = load(listingID, limit: 1).first else { return nil }
-        let small = first.downscaled(maxSide: 900)
-        thumbs.setObject(small, forKey: key)
+        if let cached = covers.object(forKey: key) { return cached }
+        if noCover.object(forKey: key) != nil { return nil }
+        guard let first = files(listingID).first, let small = thumbnail(at: first, maxPixel: 700) else {
+            noCover.setObject(true, forKey: key)
+            return nil
+        }
+        covers.setObject(small, forKey: key)
         return small
     }
 
-    static func count(_ listingID: UUID) -> Int {
-        (try? FileManager.default.contentsOfDirectory(atPath: folder(listingID).path).filter { $0.hasSuffix(".jpg") }.count) ?? 0
+    /// JPEG data for photos, scaled to 2048 px on the long side. Call off the main thread.
+    static func encode(_ images: [UIImage]) -> [Data] {
+        images.compactMap { $0.downscaled(maxSide: 2048).jpegData(compressionQuality: 0.85) }
     }
 
-    static func load(_ listingID: UUID, limit: Int = .max) -> [UIImage] {
+    /// Replaces every photo on the listing. The new set is written to a temporary
+    /// folder first, so nothing is lost if the app closes halfway.
+    static func replace(with photos: [Data], for listingID: UUID) {
+        forget(listingID)
+        let fm = FileManager.default
+        try? fm.createDirectory(at: root, withIntermediateDirectories: true)
+        let temp = root.appendingPathComponent("tmp-\(UUID().uuidString)", isDirectory: true)
+        try? fm.createDirectory(at: temp, withIntermediateDirectories: true)
+        for (index, data) in photos.enumerated() {
+            try? data.write(to: temp.appendingPathComponent(String(format: "%03d.jpg", index)), options: .atomic)
+        }
         let dir = folder(listingID)
-        guard let names = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return [] }
-        return names.filter { $0.hasSuffix(".jpg") }.sorted().prefix(limit).compactMap { UIImage(contentsOfFile: dir.appendingPathComponent($0).path) }
+        if fm.fileExists(atPath: dir.path) {
+            _ = try? fm.replaceItemAt(dir, withItemAt: temp)
+        } else {
+            try? fm.moveItem(at: temp, to: dir)
+        }
+        try? fm.removeItem(at: temp)
     }
 
-    /// Replaces the listing's photos. Big photos are scaled to 2048 px on the long side.
-    static func save(_ images: [UIImage], for listingID: UUID) {
-        thumbs.removeObject(forKey: listingID.uuidString as NSString)
+    /// Adds photos after the ones already saved, without touching them.
+    static func append(_ photos: [Data], for listingID: UUID) {
+        guard !photos.isEmpty else { return }
+        forget(listingID)
         let dir = folder(listingID)
-        try? FileManager.default.removeItem(at: dir)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        for (index, image) in images.enumerated() {
-            let scaled = image.downscaled(maxSide: 2048)
-            if let data = scaled.jpegData(compressionQuality: 0.85) {
-                try? data.write(to: dir.appendingPathComponent(String(format: "%03d.jpg", index)))
-            }
+        let next = (files(listingID).compactMap { Int($0.deletingPathExtension().lastPathComponent) }.max() ?? -1) + 1
+        for (offset, data) in photos.enumerated() {
+            try? data.write(to: dir.appendingPathComponent(String(format: "%03d.jpg", next + offset)), options: .atomic)
         }
     }
 
     static func delete(_ listingID: UUID) {
-        thumbs.removeObject(forKey: listingID.uuidString as NSString)
+        forget(listingID)
         try? FileManager.default.removeItem(at: folder(listingID))
     }
 
+    /// Removes photo folders for listings that no longer exist, and leftover temp folders.
+    static func prune(keeping ids: Set<UUID>) {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: root.path)) ?? []
+        for name in names where !(UUID(uuidString: name).map(ids.contains) ?? false) {
+            try? FileManager.default.removeItem(at: root.appendingPathComponent(name))
+        }
+    }
+
     static func deleteAll() {
-        thumbs.removeAllObjects()
+        covers.removeAllObjects()
+        noCover.removeAllObjects()
         try? FileManager.default.removeItem(at: root)
     }
 }
