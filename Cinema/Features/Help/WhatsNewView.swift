@@ -14,6 +14,9 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "map.fill", title: "Mileage that does the math", detail: "Apple Maps works out the miles, including round trips and whole showing tours. Save frequent trips and log them in one tap.", route: .expenses),
+        Item(icon: "chart.pie.fill", title: "Split and cap tracker", detail: "See how close you are to capping, with company split and royalty worked out from your closings.", route: .splitTracker),
+        Item(icon: "building.columns.fill", title: "Tax set aside", detail: "How much to save from every closing, and reminders before each quarterly payment.", route: .taxes),
         Item(icon: "calendar.badge.clock", title: "Listing launch plan", detail: "Open any active listing for a dated countdown with every tool one tap away.", route: .listings),
         Item(icon: "film.stack.fill", title: "Photo reel", detail: "Listing photos in, a branded vertical video out, made on your phone.", route: .photoReel),
         Item(icon: "person.crop.rectangle.stack.fill", title: "Find a photographer, now with a map", detail: "See Crew near you, pick a package with Help me choose, and chat with your shooter.", route: .findShooter),

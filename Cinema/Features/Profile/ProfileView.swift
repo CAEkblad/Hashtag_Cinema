@@ -65,6 +65,9 @@ struct ProfileView: View {
                     NavigationLink(value: Route.whatsNew) {
                         IconRow(icon: "sparkles", title: "What's new", subtitle: "The latest tools, one tap to try each")
                     }
+                    NavigationLink(value: Route.money) {
+                        IconRow(icon: "banknote.fill", title: "My money", subtitle: "GCI, split and cap, taxes and write offs")
+                    }
                     NavigationLink(value: Route.expenses) {
                         IconRow(icon: "car.fill", title: "Mileage and expenses", subtitle: "Log trips and costs, export for taxes")
                     }

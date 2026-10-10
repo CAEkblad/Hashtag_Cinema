@@ -12,13 +12,14 @@ enum ToolCatalog {
     }
 
     enum Group: String, CaseIterable, Identifiable {
-        case create, listings, clients, brand, grow
+        case create, listings, clients, business, brand, grow
         var id: String { rawValue }
         var title: String {
             switch self {
             case .create: return "Make content"
             case .listings: return "Listings and deals"
             case .clients: return "Clients and leads"
+            case .business: return "Run my business"
             case .brand: return "Brand and market"
             case .grow: return "Learn and grow"
             }
@@ -64,8 +65,11 @@ enum ToolCatalog {
         Tool(title: "My farm", keywords: "farming neighborhood geographic postcards door knock", icon: "map.fill", route: .farm, group: .brand),
         Tool(title: "Moving to Florida guide", keywords: "relocation out of state buyers homestead pdf", icon: "airplane.arrival", route: .relocationGuide, group: .brand),
         Tool(title: "Insights", keywords: "analytics views stats", icon: "chart.xyaxis.line", route: .insights, group: .brand),
-        Tool(title: "Mileage and expenses", keywords: "tax deduction miles receipts accountant csv", icon: "car.fill", route: .expenses, group: .grow),
-        Tool(title: "Business plan", keywords: "gci goal income closings how many videos", icon: "target", route: .businessPlan, group: .grow),
+        Tool(title: "My money", keywords: "income gci earnings commission dashboard", icon: "banknote.fill", route: .money, group: .business),
+        Tool(title: "Split and cap", keywords: "kw cap royalty company dollar split brokerage", icon: "chart.pie.fill", route: .splitTracker, group: .business),
+        Tool(title: "Tax set aside", keywords: "taxes quarterly estimated irs 1099 save", icon: "building.columns.fill", route: .taxes, group: .business),
+        Tool(title: "Mileage and expenses", keywords: "tax deduction miles receipts accountant csv", icon: "car.fill", route: .expenses, group: .business),
+        Tool(title: "Business plan", keywords: "gci goal income closings how many videos", icon: "target", route: .businessPlan, group: .business),
         Tool(title: "Courses", keywords: "learn lessons", icon: "play.rectangle.on.rectangle.fill", route: .courses, group: .grow),
         Tool(title: "Coach", keywords: "tips feedback", icon: "graduationcap.fill", route: .coach, group: .grow),
         Tool(title: "Challenges", keywords: "streak contest", icon: "flag.checkered", route: .challenges, group: .grow),

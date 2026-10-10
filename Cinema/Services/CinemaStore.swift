@@ -73,6 +73,10 @@ final class CinemaStore {
     // Deals under contract
     var deals: [Deal] = CinemaStore.sampleDeals()
 
+    // Money: split, cap and taxes
+    var splitPlan: SplitPlan = (try? JSONDecoder().decode(SplitPlan.self, from: UserDefaults.standard.data(forKey: "cinema.split.v1") ?? Data())) ?? SplitPlan()
+    var taxPlan: TaxPlan = (try? JSONDecoder().decode(TaxPlan.self, from: UserDefaults.standard.data(forKey: "cinema.tax.v1") ?? Data())) ?? TaxPlan()
+
     // Farm area
     var farm: FarmArea? = (try? JSONDecoder().decode(FarmArea.self, from: UserDefaults.standard.data(forKey: "cinema.farm.v1") ?? Data()))
 
@@ -1327,6 +1331,72 @@ final class CinemaStore {
         return tour.id
     }
 
+    // MARK: Money
+
+    struct TaxEstimate {
+        var earned: Double
+        var deductions: Double
+        var taxable: Double { max(0, earned - deductions) }
+        var setAside: Double
+    }
+
+    func closingsInCapYear(_ plan: SplitPlan) -> [Double] {
+        deals.filter { $0.isClosed && $0.closingDate >= plan.capYearStart && $0.closingDate < plan.capYearEnd }
+            .sorted { $0.closingDate < $1.closingDate }
+            .map(\.commission)
+    }
+
+    var splitSummary: SplitSummary { SplitSummary.run(splitPlan, closings: closingsInCapYear(splitPlan)) }
+
+    /// Mileage at the set rate plus every expense, this calendar year.
+    var deductionsThisYear: Double {
+        let year = Calendar.current.component(.year, from: Date())
+        return allExpenses.filter { Calendar.current.component(.year, from: $0.date) == year }
+            .reduce(0) { $0 + ($1.category == .mileage ? $1.amount * mileageRate : $1.amount) }
+    }
+
+    func taxEstimate(_ plan: TaxPlan) -> TaxEstimate {
+        let year = Calendar.current.component(.year, from: Date())
+        let closings = deals.filter { $0.isClosed && Calendar.current.component(.year, from: $0.closingDate) == year }
+            .sorted { $0.closingDate < $1.closingDate }
+            .map(\.commission)
+        var yearPlan = splitPlan
+        yearPlan.priorGCI = 0
+        let earned = SplitSummary.run(yearPlan, closings: closings).net
+        let deductions = deductionsThisYear
+        return TaxEstimate(earned: earned, deductions: deductions, setAside: max(0, earned - deductions) * plan.setAsidePercent / 100)
+    }
+
+    var taxEstimate: TaxEstimate { taxEstimate(taxPlan) }
+
+    func saveSplitPlan(_ plan: SplitPlan) {
+        splitPlan = plan
+        if let data = try? JSONEncoder().encode(plan) { UserDefaults.standard.set(data, forKey: "cinema.split.v1") }
+    }
+
+    func saveTaxPlan(_ plan: TaxPlan, remindersChanged: Bool) {
+        taxPlan = plan
+        if let data = try? JSONEncoder().encode(plan) { UserDefaults.standard.set(data, forKey: "cinema.tax.v1") }
+        guard remindersChanged else { return }
+        let year = Calendar.current.component(.year, from: Date())
+        let dates = TaxPlan.dueDates(taxYear: year) + TaxPlan.dueDates(taxYear: year + 1)
+        let ids = dates.map { "cinema.tax.\($0.date.timeIntervalSince1970)" }
+        ReminderScheduler.cancel(ids: ids)
+        guard plan.remindersOn else { return }
+        Task {
+            guard await ReminderScheduler.requestPermission() else {
+                self.showToast("Turn on notifications in Settings to get reminders")
+                return
+            }
+            for (due, id) in zip(dates, ids) {
+                let week = Calendar.current.date(byAdding: .day, value: -7, to: due.date) ?? due.date
+                guard week > Date() else { continue }
+                await ReminderScheduler.scheduleOnce(id: id, title: "\(due.label) due in a week", body: "Due \(due.date.formatted(.dateTime.month(.wide).day())). Check what you've set aside in #Cinema.", on: week)
+            }
+            self.showToast("We'll remind you a week before each payment")
+        }
+    }
+
     // MARK: Farm area
 
     func setFarm(cityID: String, neighborhood: String, homes: Int, goal: Int) {
@@ -1807,6 +1877,9 @@ final class CinemaStore {
         farm = nil
         savedTrips = []
         homeBase = ""
+        splitPlan = SplitPlan()
+        taxPlan = TaxPlan()
+        for key in ["cinema.split.v1", "cinema.tax.v1"] { UserDefaults.standard.removeObject(forKey: key) }
         for key in ["cinema.savedTrips.v1", "cinema.homeBase", "cinema.expenses.v1", "cinema.mileageRate", "cinema.announcements.dismissed", "cinema.announcements.v1", "cinema.farm.v1"] {
             UserDefaults.standard.removeObject(forKey: key)
         }

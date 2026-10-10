@@ -248,6 +248,12 @@ struct RouteDestination: View {
             FarmView()
         case .brandShootPrep:
             BrandShootPrepView()
+        case .money:
+            MoneyView()
+        case .splitTracker:
+            SplitTrackerView()
+        case .taxes:
+            TaxSetAsideView()
         case .listingCalculator(let id):
             if let listing = store.listing(id) { PaymentCalculatorView(startingPrice: Double(listing.price)) }
         case .buyer(let id):

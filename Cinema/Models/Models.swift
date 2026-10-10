@@ -810,6 +810,9 @@ enum Route: Hashable {
     case objections
     case farm
     case brandShootPrep
+    case money
+    case splitTracker
+    case taxes
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)
