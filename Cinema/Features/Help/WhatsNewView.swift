@@ -14,6 +14,9 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "timer", title: "Power hour", detail: "A prospecting timer with one tap tallies for calls, texts, talks and appointments, plus a daily streak.", route: .powerHour),
+        Item(icon: "person.text.rectangle.fill", title: "Digital business card", detail: "A QR code people scan to save your contact, or send it as a contact card.", route: .businessCard),
+        Item(icon: "checkmark.seal.fill", title: "License and CE", detail: "Florida renewal date, hours by category and reminders 90, 30 and 7 days out.", route: .license),
         Item(icon: "map.fill", title: "Mileage that does the math", detail: "Apple Maps works out the miles, including round trips and whole showing tours. Save frequent trips and log them in one tap.", route: .expenses),
         Item(icon: "chart.pie.fill", title: "Split and cap tracker", detail: "See how close you are to capping, with company split and royalty worked out from your closings.", route: .splitTracker),
         Item(icon: "building.columns.fill", title: "Tax set aside", detail: "How much to save from every closing, and reminders before each quarterly payment.", route: .taxes),

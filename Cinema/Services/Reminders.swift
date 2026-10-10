@@ -75,12 +75,30 @@ enum ReminderScheduler {
     static func scheduleOnce(id: String, title: String, body: String, on date: Date) async {
         var parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
         parts.hour = 9
-        guard let fire = Calendar.current.date(from: parts), fire > Date() else { return }
+        guard let fire = Calendar.current.date(from: parts) else { return }
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.sound = .default
-        let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
+        let trigger: UNNotificationTrigger
+        if fire > Date() {
+            trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
+        } else if Calendar.current.isDateInToday(date) {
+            // Due today but 9 AM has passed: remind in a minute instead of skipping it.
+            trigger = UNTimeIntervalNotificationTrigger(timeInterval: 60, repeats: false)
+        } else {
+            return
+        }
+        try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
+    /// A reminder a set number of seconds from now, like the end of a power hour.
+    static func scheduleIn(seconds: TimeInterval, id: String, title: String, body: String) async {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, seconds), repeats: false)
         try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
     }
 

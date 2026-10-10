@@ -813,6 +813,9 @@ enum Route: Hashable {
     case money
     case splitTracker
     case taxes
+    case license
+    case businessCard
+    case powerHour
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

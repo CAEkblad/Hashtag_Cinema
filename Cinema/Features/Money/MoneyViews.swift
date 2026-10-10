@@ -53,6 +53,12 @@ struct MoneyView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink(value: Route.license) {
+                    IconRow(icon: "checkmark.seal.fill", title: "License and CE", subtitle: "\(store.licensePlan.daysLeft) days to renew · \(String(format: "%g", store.licensePlan.totalDone)) of \(String(format: "%g", store.licensePlan.totalNeeded)) hours")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
+
                 Text("Estimates to help you plan, not tax or accounting advice. Your accountant has the final word.")
                     .font(.cinema(11))
                     .foregroundStyle(Theme.textTertiary)

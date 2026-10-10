@@ -222,6 +222,8 @@ struct HomeView: View {
             quickLink("Showing tours", icon: "car.fill", route: .tours)
             quickLink("Past clients", icon: "house.and.flag.fill", route: .pastClients)
             quickLink("Photo reel", icon: "film.stack.fill", route: .photoReel)
+            quickLink("Power hour", icon: "timer", route: .powerHour)
+            quickLink("My money", icon: "banknote.fill", route: .money)
             quickLink("All tools", icon: "square.grid.2x2.fill", route: .tools)
         }
     }

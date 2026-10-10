@@ -254,6 +254,12 @@ struct RouteDestination: View {
             SplitTrackerView()
         case .taxes:
             TaxSetAsideView()
+        case .license:
+            LicenseView()
+        case .businessCard:
+            BusinessCardView()
+        case .powerHour:
+            PowerHourView()
         case .listingCalculator(let id):
             if let listing = store.listing(id) { PaymentCalculatorView(startingPrice: Double(listing.price)) }
         case .buyer(let id):

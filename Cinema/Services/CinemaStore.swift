@@ -77,6 +77,11 @@ final class CinemaStore {
     var splitPlan: SplitPlan = (try? JSONDecoder().decode(SplitPlan.self, from: UserDefaults.standard.data(forKey: "cinema.split.v1") ?? Data())) ?? SplitPlan()
     var taxPlan: TaxPlan = (try? JSONDecoder().decode(TaxPlan.self, from: UserDefaults.standard.data(forKey: "cinema.tax.v1") ?? Data())) ?? TaxPlan()
 
+    // License, prospecting
+    var licensePlan: LicensePlan = (try? JSONDecoder().decode(LicensePlan.self, from: UserDefaults.standard.data(forKey: "cinema.license.v1") ?? Data())) ?? LicensePlan()
+    var prospectLog: [String: [String: Int]] = (try? JSONDecoder().decode([String: [String: Int]].self, from: UserDefaults.standard.data(forKey: "cinema.prospect.v1") ?? Data())) ?? [:]
+    var powerHourEnds: Date? = UserDefaults.standard.object(forKey: "cinema.powerHourEnds") as? Date
+
     // Farm area
     var farm: FarmArea? = (try? JSONDecoder().decode(FarmArea.self, from: UserDefaults.standard.data(forKey: "cinema.farm.v1") ?? Data()))
 
@@ -1397,6 +1402,94 @@ final class CinemaStore {
         }
     }
 
+    // MARK: License and CE
+
+    func saveLicensePlan(_ plan: LicensePlan, reschedule: Bool) {
+        licensePlan = plan
+        if let data = try? JSONEncoder().encode(plan) { UserDefaults.standard.set(data, forKey: "cinema.license.v1") }
+        guard reschedule else { return }
+        let offsets = [90, 30, 7]
+        ReminderScheduler.cancel(ids: offsets.map { "cinema.license.\($0)" })
+        guard plan.remindersOn else { return }
+        Task {
+            guard await ReminderScheduler.requestPermission() else {
+                self.showToast("Turn on notifications in Settings to get reminders")
+                return
+            }
+            for days in offsets {
+                guard let date = Calendar.current.date(byAdding: .day, value: -days, to: plan.expires), date > Date() else { continue }
+                await ReminderScheduler.scheduleOnce(id: "cinema.license.\(days)", title: "License renews in \(days) days", body: "\(String(format: "%g", max(0, plan.totalNeeded - plan.totalDone))) CE hours left. Renew with the Florida DBPR by \(plan.expires.formatted(.dateTime.month(.wide).day())).", on: date)
+            }
+            self.showToast("We'll remind you before your license expires")
+        }
+    }
+
+    // MARK: Power hour
+
+    private static let dayKeyFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
+    func prospecting(on date: Date) -> [ProspectAction: Int] {
+        let raw = prospectLog[Self.dayKeyFormatter.string(from: date)] ?? [:]
+        var result: [ProspectAction: Int] = [:]
+        for (key, value) in raw {
+            if let action = ProspectAction(rawValue: key) { result[action] = value }
+        }
+        return result
+    }
+
+    func tallyProspect(_ action: ProspectAction, by amount: Int = 1) {
+        let key = Self.dayKeyFormatter.string(from: Date())
+        var day = prospectLog[key] ?? [:]
+        day[action.rawValue] = max(0, (day[action.rawValue] ?? 0) + amount)
+        prospectLog[key] = day
+        if let data = try? JSONEncoder().encode(prospectLog) { UserDefaults.standard.set(data, forKey: "cinema.prospect.v1") }
+    }
+
+    /// Days in a row with at least 10 touches. Today counts once it hits 10.
+    var prospectStreak: Int {
+        var streak = 0
+        var day = Date()
+        if prospecting(on: day).values.reduce(0, +) < 10 {
+            day = Calendar.current.date(byAdding: .day, value: -1, to: day) ?? day
+        }
+        while prospecting(on: day).values.reduce(0, +) >= 10 {
+            streak += 1
+            day = Calendar.current.date(byAdding: .day, value: -1, to: day) ?? day
+        }
+        return streak
+    }
+
+    func prospectTotal(days: Int, only action: ProspectAction? = nil) -> Int {
+        (0..<days).reduce(0) { sum, back in
+            let date = Calendar.current.date(byAdding: .day, value: -back, to: Date()) ?? Date()
+            let counts = prospecting(on: date)
+            return sum + (action.map { counts[$0] ?? 0 } ?? counts.values.reduce(0, +))
+        }
+    }
+
+    func startPowerHour(minutes: Int) {
+        let end = Date().addingTimeInterval(TimeInterval(minutes * 60))
+        powerHourEnds = end
+        UserDefaults.standard.set(end, forKey: "cinema.powerHourEnds")
+        Task {
+            guard await ReminderScheduler.requestPermission() else { return }
+            await ReminderScheduler.scheduleIn(seconds: TimeInterval(minutes * 60), id: "cinema.powerhour", title: "Power hour done!", body: "Log your last touches and set tomorrow's time.")
+        }
+    }
+
+    func endPowerHour() {
+        powerHourEnds = nil
+        UserDefaults.standard.removeObject(forKey: "cinema.powerHourEnds")
+        ReminderScheduler.cancel(ids: ["cinema.powerhour"])
+        let total = prospecting(on: Date()).values.reduce(0, +)
+        showToast("\(total) touches today. See you tomorrow!")
+    }
+
     // MARK: Farm area
 
     func setFarm(cityID: String, neighborhood: String, homes: Int, goal: Int) {
@@ -1879,7 +1972,10 @@ final class CinemaStore {
         homeBase = ""
         splitPlan = SplitPlan()
         taxPlan = TaxPlan()
-        for key in ["cinema.split.v1", "cinema.tax.v1"] { UserDefaults.standard.removeObject(forKey: key) }
+        licensePlan = LicensePlan()
+        prospectLog = [:]
+        powerHourEnds = nil
+        for key in ["cinema.split.v1", "cinema.tax.v1", "cinema.license.v1", "cinema.prospect.v1", "cinema.powerHourEnds"] { UserDefaults.standard.removeObject(forKey: key) }
         for key in ["cinema.savedTrips.v1", "cinema.homeBase", "cinema.expenses.v1", "cinema.mileageRate", "cinema.announcements.dismissed", "cinema.announcements.v1", "cinema.farm.v1"] {
             UserDefaults.standard.removeObject(forKey: key)
         }
