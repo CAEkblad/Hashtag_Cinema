@@ -14,6 +14,7 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
+        Item(icon: "printer.fill", title: "Open house kit", detail: "On any open house: a printable sign in sheet with a QR backup, fold over feature cards for each room (\"Did you notice? Impact windows\"), and a what to bring checklist.", route: .listings),
         Item(icon: "person.3.sequence.fill", title: "Team huddle", detail: "A 20 minute weekly team meeting agenda built from your team page: wins, the leaderboard, a shout out, this week's video challenge, a role play and commitments. Share it or post it to the team.", route: .teamHuddle),
         Item(icon: "book.pages.fill", title: "Buyer and seller guides", detail: "3 page PDF guides in your brand: every step with a timeline, Florida costs, and a do and don't list. Send one when someone comments GUIDE.", route: .clientGuides),
         Item(icon: "stethoscope", title: "Listing check up", detail: "Every active listing gets a read on how it's doing from days on market, showings and feedback: too early, needs more eyes, buyers are close, or time for a price conversation. With next steps and what to tell your seller. Open houses can now put every visitor on your 8 week plan in one tap.", route: .listings),

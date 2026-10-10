@@ -867,5 +867,6 @@ enum Route: Hashable {
     case listingHealth(UUID)
     case clientGuides
     case teamHuddle
+    case openHouseKit(UUID)
     case bookingChat(UUID)
 }

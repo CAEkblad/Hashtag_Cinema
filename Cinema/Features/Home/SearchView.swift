@@ -41,6 +41,7 @@ enum ToolCatalog {
         Tool(title: "Holiday posts", keywords: "greeting thanksgiving christmas", icon: "gift.fill", route: .greetings, group: .create),
         Tool(title: "Market update graphic", keywords: "stats numbers median price", icon: "chart.bar.xaxis", route: .marketUpdate, group: .create),
         Tool(title: "Listing check up", keywords: "price reduction price improvement days on market showings feedback seller conversation stale listing", icon: "stethoscope", route: .listings, group: .listings),
+        Tool(title: "Open house kit", keywords: "open house sign in sheet paper feature cards tent cards printable checklist what to bring", icon: "printer.fill", route: .listings, group: .listings),
         Tool(title: "Neighbor blast", keywords: "just listed just sold postcard door knock circle prospecting neighbors farm mailer eddm", icon: "mail.stack.fill", route: .listings, group: .listings),
         Tool(title: "My listings", keywords: "listing open house description", icon: "house.and.flag.fill", route: .listings, group: .listings),
         Tool(title: "Book a pro shoot", keywords: "booking deposit listing package", icon: "camera.fill", route: .bookings, group: .listings),

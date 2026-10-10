@@ -284,6 +284,8 @@ struct RouteDestination: View {
             FilmDayView()
         case .popBys:
             PopBysView()
+        case .openHouseKit(let id):
+            OpenHouseKitView(listingID: id)
         case .teamHuddle:
             TeamHuddleView()
         case .clientGuides:
