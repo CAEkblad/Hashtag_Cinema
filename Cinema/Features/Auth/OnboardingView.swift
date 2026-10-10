@@ -143,7 +143,7 @@ struct OnboardingView: View {
     private var welcome: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                title("Your content team, in your pocket", "#Cinema helps you show up on video every week without a film crew.")
+                title("Your content team, in your pocket", "CloseUp helps you show up on video every week without a film crew.")
                 VStack(spacing: 12) {
                     welcomeRow("lightbulb.fill", "Ideas for your city", "A new video idea every day, written for your Florida market.")
                     welcomeRow("video.fill", "Film on your phone", "Teleprompter, framing guides and practice mode.")
@@ -222,7 +222,7 @@ struct OnboardingView: View {
     private var roleStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                title("How do you work?", "\(store.lex.leadersList.prefix(1).uppercased() + store.lex.leadersList.dropFirst()) use #Cinema free.")
+                title("How do you work?", "\(store.lex.leadersList.prefix(1).uppercased() + store.lex.leadersList.dropFirst()) use CloseUp free.")
                 ForEach(UserRole.allCases) { option in
                     Button {
                         role = option
@@ -488,7 +488,7 @@ struct OnboardingView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if role.isLeader {
-                    title("You're free", "Leaders use #Cinema at no cost to promote their \(role.orgWord(store.lex)) and their \(store.lex.agents).")
+                    title("You're free", "Leaders use CloseUp at no cost to promote their \(role.orgWord(store.lex)) and their \(store.lex.agents).")
                     PlanCard(plan: .leader, isSelected: true) {}
                 } else {
                     title("Pick your plan", "Start on any plan and change anytime in Me > Plan and credits.")

@@ -37,7 +37,7 @@ enum UserRole: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// Team leads, market center leaders and admins use #Cinema free.
+    /// Team leads, market center leaders and admins use CloseUp free.
     var isLeader: Bool { self != .agent }
 
     var orgWord: String {

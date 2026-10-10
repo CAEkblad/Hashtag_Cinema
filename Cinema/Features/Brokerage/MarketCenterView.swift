@@ -107,7 +107,7 @@ struct MarketCenterView: View {
             .buttonStyle(SecondaryButtonStyle())
 
             if store.marketCenters.contains(where: \.isSample) {
-                Text("Demo: these are sample \(store.lex.offices). Try code TAMPA1. Your real list loads from the #Cinema admin.")
+                Text("Demo: these are sample \(store.lex.offices). Try code TAMPA1. Your real list loads from the CloseUp admin.")
                     .font(.cinema(11))
                     .foregroundStyle(Theme.textTertiary)
             }
@@ -221,7 +221,7 @@ struct MarketCenterPickerView: View {
 
                 Section("Not listed?") {
                     TextField("\(partner.officeTitle) name", text: $customName)
-                    Button("Ask #Cinema to add it") {
+                    Button("Ask CloseUp to add it") {
                         store.showToast("Thanks. We will add \(customName) and connect you.")
                         dismiss()
                     }

@@ -37,7 +37,7 @@ struct MLSListing: Identifiable, Hashable {
 /// Today it reads the SimplyRETS public test feed (sample listings with real
 /// photos) so the import can be tried end to end. For real Tampa Bay listings,
 /// Stellar MLS shares data through MLS Grid or Bridge under a broker, vendor and
-/// MLS agreement. That feed will sit behind the #Cinema backend (an `mls-listing`
+/// MLS agreement. That feed will sit behind the CloseUp backend (an `mls-listing`
 /// Edge Function), so the app never holds MLS credentials, and the app switches
 /// over once `liveFeedURL` is set.
 enum MLSService {

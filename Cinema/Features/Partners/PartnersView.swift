@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A vetted local service #Cinema agents can book or send clients to.
+/// A vetted local service CloseUp agents can book or send clients to.
 struct ServicePartner: Identifiable, Codable, Hashable {
     enum Category: String, Codable, CaseIterable, Identifiable {
         case staging, cleaning, moving, junk, handyman, painting, landscaping, pool, pressureWash, inspection, lending, title, insurance, transactionCoordinator, assistant, signs, gifts
@@ -86,7 +86,7 @@ struct ServicePartner: Identifiable, Codable, Hashable {
 enum PartnerDirectory {
     static func sample(city: String) -> [ServicePartner] {
         [
-            ServicePartner(name: "Mia Castillo", company: "Shoreline Staging", category: .staging, cityName: city, rating: 4.9, jobs: 210, blurb: "Vacant and occupied staging, ready before your photo day.", agentPerk: "15% off for #Cinema agents", turnaround: "Install in 3 to 5 days"),
+            ServicePartner(name: "Mia Castillo", company: "Shoreline Staging", category: .staging, cityName: city, rating: 4.9, jobs: 210, blurb: "Vacant and occupied staging, ready before your photo day.", agentPerk: "15% off for CloseUp agents", turnaround: "Install in 3 to 5 days"),
             ServicePartner(name: "Sparkle Team", company: "Sparkle Home Cleaning", category: .cleaning, cityName: city, rating: 4.8, jobs: 640, blurb: "Pre-listing, move out and post-construction cleans.", agentPerk: "$40 off pre-listing cleans", turnaround: "Next day"),
             ServicePartner(name: "Gator Moving", company: "Gator Moving Co.", category: .moving, cityName: city, rating: 4.7, jobs: 1_150, blurb: "Local and long distance, licensed and insured in Florida.", agentPerk: "Free boxes for your clients", turnaround: "Book 2 weeks out"),
             ServicePartner(name: "Haul Pros", company: "Haul Pros Junk Removal", category: .junk, cityName: city, rating: 4.8, jobs: 480, blurb: "Garage and estate cleanouts the same week.", agentPerk: "10% off estate cleanouts", turnaround: "Same week"),
@@ -147,7 +147,7 @@ struct PartnersView: View {
                     partnerCard(partner)
                 }
 
-                Text("#Cinema never pays or takes referral fees for lenders, title, inspectors or insurance (RESPA settlement services). Perks are discounts partners offer agents directly. Sample partners until the directory is live.")
+                Text("CloseUp never pays or takes referral fees for lenders, title, inspectors or insurance (RESPA settlement services). Perks are discounts partners offer agents directly. Sample partners until the directory is live.")
                     .font(.cinema(11))
                     .foregroundStyle(Theme.textTertiary)
 
@@ -255,7 +255,7 @@ struct PartnerRequestView: View {
                     TextField("What do you need?", text: $notes, axis: .vertical)
                         .lineLimit(2...5)
                 } footer: {
-                    Text("\(partner.company) replies through #Cinema, usually within a few hours.")
+                    Text("\(partner.company) replies through CloseUp, usually within a few hours.")
                 }
             }
             .navigationTitle(partner.category.title)

@@ -62,7 +62,7 @@ struct ComposeAnnouncementView: View {
 
     private let starters: [(String, String)] = [
         ("Team meeting this week", "Join us Tuesday at 9:30 in the training room. We'll kick off the listing video challenge."),
-        ("New office challenge", "Post 3 videos this week to win. Open #Cinema and tap Challenges to join."),
+        ("New office challenge", "Post 3 videos this week to win. Open CloseUp and tap Challenges to join."),
         ("Shout out", "Big congrats to our agents who closed this week. Keep the videos coming!")
     ]
 

@@ -53,7 +53,7 @@ struct LaunchpadView: View {
             Text("Brand new agent?")
                 .font(.cinema(28, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
-            Text("Most new agents quit before their first closing because nobody tells them what to do each week. Turn on the launchpad and #Cinema walks you through your first 90 days: get set up, tell everyone, build the habits and get to your first deal.")
+            Text("Most new agents quit before their first closing because nobody tells them what to do each week. Turn on the launchpad and CloseUp walks you through your first 90 days: get set up, tell everyone, build the habits and get to your first deal.")
                 .font(.cinema(15))
                 .foregroundStyle(Theme.textSecondary)
             VStack(alignment: .leading, spacing: 8) {

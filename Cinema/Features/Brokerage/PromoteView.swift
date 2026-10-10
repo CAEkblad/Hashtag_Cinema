@@ -38,7 +38,7 @@ struct PromoteView: View {
         var starter: String {
             switch self {
             case .teamWin: return "Huge month for our team: 14 closings and 3 new listings. Proud of every agent who showed up on camera this month."
-            case .recruiting: return "We're growing. Every agent here gets a content team: daily ideas, edited videos and pro shoots through #Cinema. DM us to learn more."
+            case .recruiting: return "We're growing. Every agent here gets a content team: daily ideas, edited videos and pro shoots through CloseUp. DM us to learn more."
             case .event: return "Content day at the office this Thursday at 10 AM. Bring your phone, we'll film 4 videos each and send them to editing."
             }
         }
@@ -83,7 +83,7 @@ struct PromoteView: View {
                 Spacer()
                 Pill(text: "Free for leaders", icon: "checkmark.seal.fill", color: Theme.red, textColor: .white)
             }
-            Text("Show off your agents, celebrate wins and recruit. Featured posts reach agents across the #Cinema community. Still selling? Post as yourself too.")
+            Text("Show off your agents, celebrate wins and recruit. Featured posts reach agents across the CloseUp community. Still selling? Post as yourself too.")
                 .font(.cinema(15))
                 .foregroundStyle(Theme.textSecondary)
         }
@@ -106,7 +106,7 @@ struct PromoteView: View {
                         Text(store.profile.brokerage)
                             .font(.cinema(18, weight: .bold))
                             .foregroundStyle(Theme.textPrimary)
-                        Text("\(store.profile.market) · \(store.brokerageMembers.count) agents on #Cinema")
+                        Text("\(store.profile.market) · \(store.brokerageMembers.count) agents on CloseUp")
                             .font(.cinema(13))
                             .foregroundStyle(Theme.textSecondary)
                     }

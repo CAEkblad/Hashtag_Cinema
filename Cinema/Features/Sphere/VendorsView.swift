@@ -34,7 +34,7 @@ struct VendorsView: View {
                 .buttonStyle(.plain)
 
                 NavigationLink(value: Route.partners) {
-                    IconRow(icon: "hammer.fill", title: "Find more pros", subtitle: "Stagers, cleaners, movers, TCs and more from #Cinema partners")
+                    IconRow(icon: "hammer.fill", title: "Find more pros", subtitle: "Stagers, cleaners, movers, TCs and more from CloseUp partners")
                         .cardStyle()
                 }
                 .buttonStyle(.plain)

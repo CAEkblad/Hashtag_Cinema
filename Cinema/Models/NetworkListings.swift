@@ -1,6 +1,6 @@
 import Foundation
 
-/// A home another agent shared with the #Cinema agent network, including
+/// A home another agent shared with the CloseUp agent network, including
 /// coming soon and off market homes that buyers can't find on the portals.
 struct NetworkListing: Identifiable, Codable, Hashable {
     enum Status: String, Codable, CaseIterable, Identifiable {

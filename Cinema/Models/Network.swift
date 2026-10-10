@@ -1,6 +1,6 @@
 import Foundation
 
-/// An agent in the #Cinema network who takes referrals in their city.
+/// An agent in the CloseUp network who takes referrals in their city.
 struct NetworkAgent: Identifiable, Hashable {
     var id = UUID()
     var name: String

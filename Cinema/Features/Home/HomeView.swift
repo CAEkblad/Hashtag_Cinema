@@ -136,7 +136,7 @@ struct HomeView: View {
                     NavigationLink(value: Route.help) {
                         Image(systemName: "questionmark.circle")
                     }
-                    .accessibilityLabel("How #Cinema works")
+                    .accessibilityLabel("How CloseUp works")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(value: Route.activity) {

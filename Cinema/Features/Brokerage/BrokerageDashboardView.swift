@@ -72,7 +72,7 @@ struct BrokerageDashboardView: View {
                         .contentShape(Rectangle())
                         .contextMenu {
                             if member.postsThisMonth == 0 {
-                                ShareLink(item: "Hey \(member.name.split(separator: " ").first.map(String.init) ?? member.name)! Haven't seen a video from you this month. Open #Cinema, today's idea takes 60 seconds to film. I'll share it with the office!") {
+                                ShareLink(item: "Hey \(member.name.split(separator: " ").first.map(String.init) ?? member.name)! Haven't seen a video from you this month. Open CloseUp, today's idea takes 60 seconds to film. I'll share it with the office!") {
                                     Label("Nudge \(member.name)", systemImage: "hand.wave.fill")
                                 }
                             } else {

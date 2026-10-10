@@ -221,7 +221,7 @@ struct ProfileView: View {
                         IconRow(icon: "bell.badge.fill", title: "Reminders", subtitle: store.reminderEnabled ? "Daily idea at \(ReminderScheduler.label(hour: store.reminderHour, minute: store.reminderMinute))" : "Off")
                     }
                     NavigationLink(value: Route.help) {
-                        IconRow(icon: "questionmark.circle.fill", title: "How #Cinema works", subtitle: "Steps, credits and answers")
+                        IconRow(icon: "questionmark.circle.fill", title: "How CloseUp works", subtitle: "Steps, credits and answers")
                     }
                     NavigationLink(value: Route.plans) {
                         IconRow(icon: "crown.fill", title: "Plan and credits", subtitle: "\(store.profile.plan.name) · \(store.profile.credits) credits left")
@@ -260,7 +260,7 @@ struct ProfileView: View {
             }
             .cinemaScreen()
             .navigationTitle("Me")
-            .confirmationDialog("Delete your #Cinema account?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            .confirmationDialog("Delete your CloseUp account?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete account", role: .destructive) {
                     Task { await store.deleteAccount() }
                 }

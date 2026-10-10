@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// The agent's link in bio page: one link for Instagram and TikTok with booking,
-/// home value, listings, videos and reviews. Hosted by #Cinema once the backend is live.
+/// home value, listings, videos and reviews. Hosted by CloseUp once the backend is live.
 struct BioPage: Codable, Equatable {
     var headline = ""
     var about = ""
@@ -54,7 +54,7 @@ struct LinkInBioView: View {
                                 .font(.cinema(13, weight: .semibold))
                                 .foregroundStyle(Theme.textPrimary)
                                 .lineLimit(2)
-                            Text("Goes live with the #Cinema backend")
+                            Text("Goes live with the CloseUp backend")
                                 .font(.cinema(11))
                                 .foregroundStyle(Theme.textTertiary)
                         }

@@ -142,7 +142,7 @@ struct AgentNetworkView: View {
                     .foregroundStyle(Theme.success)
             }
             if !fits.isEmpty {
-                ShareLink(item: "Hi \(need.agentName.split(separator: " ").first.map(String.init) ?? need.agentName)! Saw your buyer on #Cinema. I have \(fits.map { "\($0.address) (\($0.priceLabel))" }.joined(separator: " and ")) that could fit. Want to set up a showing? \(store.profile.name)") {
+                ShareLink(item: "Hi \(need.agentName.split(separator: " ").first.map(String.init) ?? need.agentName)! Saw your buyer on CloseUp. I have \(fits.map { "\($0.address) (\($0.priceLabel))" }.joined(separator: " and ")) that could fit. Want to set up a showing? \(store.profile.name)") {
                     Label("I have \(fits.count) that fit\(fits.count == 1 ? "s" : "")", systemImage: "house.fill")
                 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -269,7 +269,7 @@ struct ShareToNetworkView: View {
                     TextField("Note for agents, like 'seller wants a 45 day close'", text: $remarks, axis: .vertical)
                         .lineLimit(2...4)
                 } footer: {
-                    Text("Only agents on #Cinema see this. Get your seller's OK first, and follow your MLS rules.")
+                    Text("Only agents on CloseUp see this. Get your seller's OK first, and follow your MLS rules.")
                 }
             }
             .navigationTitle("Share with agents")

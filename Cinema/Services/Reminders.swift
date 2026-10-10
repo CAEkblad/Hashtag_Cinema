@@ -28,7 +28,7 @@ enum ReminderScheduler {
         if let idea {
             content.body = "\(idea.title). Tap to see the shot list and film it in \(idea.targetSeconds) seconds."
         } else {
-            content.body = "Open #Cinema for today's idea, shot list and script."
+            content.body = "Open CloseUp for today's idea, shot list and script."
         }
         content.sound = .default
 
@@ -57,7 +57,7 @@ enum ReminderScheduler {
     static func scheduleAnniversary(for client: PastClient) async {
         let content = UNMutableNotificationContent()
         content.title = "\(client.name)'s home anniversary is today"
-        content.body = "A quick note keeps you their agent for life. Your text is ready in #Cinema."
+        content.body = "A quick note keeps you their agent for life. Your text is ready in CloseUp."
         content.sound = .default
         var parts = Calendar.current.dateComponents([.month, .day], from: client.closeDate)
         // A Feb 29 closing would only fire in leap years. Use Feb 28 so it fires every year.
@@ -116,7 +116,7 @@ enum ReminderScheduler {
         try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
     }
 
-    /// Every scheduled #Cinema reminder, used when an account is deleted.
+    /// Every scheduled CloseUp reminder, used when an account is deleted.
     static func cancelAll() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }

@@ -102,7 +102,7 @@ struct TeamView: View {
                 .font(.cinema(15, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
             HStack(spacing: 10) {
-                ShareLink(item: "Join \(team.name) on #Cinema! Code \(team.joinCode): \(team.joinLink)") {
+                ShareLink(item: "Join \(team.name) on CloseUp! Code \(team.joinCode): \(team.joinLink)") {
                     Label("Invite", systemImage: "person.badge.plus")
                 }
                 .buttonStyle(SecondaryButtonStyle())

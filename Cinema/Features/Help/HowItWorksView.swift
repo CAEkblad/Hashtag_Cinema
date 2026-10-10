@@ -23,14 +23,14 @@ struct HowItWorksView: View {
         FAQ(question: "How do comment keywords work?", answer: "When you post, pick a word like HOME. Anyone who comments that word on Instagram or Facebook gets your message by DM and shows up in Leads."),
         FAQ(question: "Can I change my city?", answer: "Yes. Go to Me > My market. You can also add up to 6 more cities you serve, and your ideas rotate across all of them."),
         FAQ(question: "When should I book a pro shoot?", answer: "For listings, your brand video, headshots and podcasts. A $500 deposit holds your date and goes toward the shoot."),
-        FAQ(question: "I lead a team or an office. Is it free?", answer: "Yes. Team leads, brokers and office leaders (MCAs and Team Leaders at Keller Williams) use #Cinema free to promote their office or team, spotlight agents and recruit.")
+        FAQ(question: "I lead a team or an office. Is it free?", answer: "Yes. Team leads, brokers and office leaders (MCAs and Team Leaders at Keller Williams) use CloseUp free to promote their office or team, spotlight agents and recruit.")
     ]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("How #Cinema works")
+                    Text("How CloseUp works")
                         .font(.cinema(28, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                     Text("Your content team in your pocket. Four steps, about 15 minutes a day.")

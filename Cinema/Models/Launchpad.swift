@@ -89,7 +89,7 @@ enum LaunchPlan90 {
         [
             LaunchPhase(id: "setup", title: "Get set up", weeks: 1...1, steps: [
                 LaunchStep(id: "training", title: lex.isKW ? "Sign up for Ignite" : "Sign up for new agent training", detail: lex.isKW ? "Ask your \(lex.office) when the next Ignite class starts. It's the fastest way to learn the KW systems." : "Ask your \(lex.officeLeader) what training they offer new agents, and get it on your calendar.", icon: "graduationcap.fill", action: nil),
-                LaunchStep(id: "team", title: "Join your team on #Cinema", detail: "Your videos, listings and wins post to your team page so your \(lex.teamLeader) sees your hustle.", icon: "person.3.fill", action: .route(.team)),
+                LaunchStep(id: "team", title: "Join your team on CloseUp", detail: "Your videos, listings and wins post to your team page so your \(lex.teamLeader) sees your hustle.", icon: "person.3.fill", action: .route(.team)),
                 LaunchStep(id: "headshots", title: "Get pro headshots", detail: "Your face is your brand. Every post, card and sign uses it.", icon: "camera.fill", action: .headshots),
                 LaunchStep(id: "brand", title: "Set up your brand kit", detail: "Add your headshot, logo and colors once. Every poster and video picks them up.", icon: "paintpalette.fill", action: .route(.brandKit)),
                 LaunchStep(id: "card", title: "Make your digital business card", detail: "A QR card people can save straight to their phone.", icon: "person.text.rectangle.fill", action: .route(.businessCard)),

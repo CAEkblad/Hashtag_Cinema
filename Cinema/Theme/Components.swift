@@ -10,12 +10,12 @@ struct CinemaLogo: View {
             Image(systemName: "video.fill")
                 .font(.system(size: size * 0.8, weight: .bold))
                 .foregroundStyle(Theme.red)
-            Text("#Cinema")
+            Text("CloseUp")
                 .font(.system(size: size, weight: .heavy))
                 .foregroundStyle(Theme.textPrimary)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("#Cinema")
+        .accessibilityLabel("CloseUp")
     }
 }
 

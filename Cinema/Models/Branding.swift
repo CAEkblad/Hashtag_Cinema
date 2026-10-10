@@ -27,7 +27,7 @@ struct BrandKit: Codable, Equatable {
     }
 
     static let swatches: [Swatch] = [
-        Swatch(name: "#Cinema red", hex: 0xE11D2E),
+        Swatch(name: "CloseUp red", hex: 0xE11D2E),
         Swatch(name: "Classic black", hex: 0x141416),
         Swatch(name: "Navy", hex: 0x1F3A5F),
         Swatch(name: "Ocean", hex: 0x0E7490),

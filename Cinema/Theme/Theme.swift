@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// #Cinema brand, light edition: bright white surfaces, near-black type,
-/// and #Cinema red as the one accent.
+/// CloseUp brand, light edition: bright white surfaces, near-black type,
+/// and CloseUp red as the one accent.
 enum Theme {
     static let red = Color(hex: 0xE11D2E)
     static let redDeep = Color(hex: 0xB3121F)

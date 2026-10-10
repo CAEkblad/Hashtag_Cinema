@@ -14,7 +14,7 @@ struct WhatsNewView: View {
     }
 
     static let items: [Item] = [
-        Item(icon: "square.and.arrow.down.on.square.fill", title: "Import listings and photos", detail: "Type an MLS number to pull a listing's details and every photo into #Cinema, or add photos from Photos or Files. Reels, posters and flyers use them right away. This build uses a sample MLS feed for testing.", route: .listingPhotos(nil)),
+        Item(icon: "square.and.arrow.down.on.square.fill", title: "Import listings and photos", detail: "Type an MLS number to pull a listing's details and every photo into CloseUp, or add photos from Photos or Files. Reels, posters and flyers use them right away. This build uses a sample MLS feed for testing.", route: .listingPhotos(nil)),
         Item(icon: "point.3.filled.connected.trianglepath.dotted", title: "Touch plans", detail: "Put new people on an 8 touch, 8 week plan and your sphere on 33 touches a year. Each touch has what to say, and Home shows who's due.", route: .touchPlans),
         Item(icon: "rectangle.split.3x1.fill", title: "Compare offers", detail: "Line up every offer on a listing with what the seller nets and how likely each one is to close, then send the comparison to your seller.", route: .offers(nil)),
         Item(icon: "dollarsign.circle.fill", title: "How much home and rent or buy", detail: "Two buyer calculators with Florida taxes and insurance built in. Send the results, or turn rent vs buy into a video script.", route: .affordability),
@@ -47,7 +47,7 @@ struct WhatsNewView: View {
         Item(icon: "map.fill", title: "My farm", detail: "Own a neighborhood: log monthly touches and get video ideas for it.", route: .farm),
         Item(icon: "person.crop.square.filled.and.at.rectangle", title: "Brand shoot prep", detail: "Your story, locations and wardrobe, sent to the #Cinema producer before shoot day.", route: .brandShootPrep),
         Item(icon: "chart.bar.fill", title: "Where your leads come from", detail: "A new chart in Insights shows which keywords and open houses bring in leads.", route: .insights),
-        Item(icon: "waveform", title: "Siri and Shortcuts", detail: "Say \"Log mileage in #Cinema\", \"What's my video idea in #Cinema\" or \"Check my leads in #Cinema\".", route: .expenses),
+        Item(icon: "waveform", title: "Siri and Shortcuts", detail: "Say \"Log mileage in CloseUp\", \"What's my video idea in CloseUp\" or \"Check my leads in CloseUp\".", route: .expenses),
         Item(icon: "square.grid.2x2.fill", title: "All tools", detail: "Everything in one place, grouped by what you're doing.", route: .tools)
     ]
 
@@ -55,7 +55,7 @@ struct WhatsNewView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("What's new in #Cinema")
+                    Text("What's new in CloseUp")
                         .font(.cinema(28, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                     Text("Tap anything to try it.")

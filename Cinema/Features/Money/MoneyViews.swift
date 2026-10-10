@@ -118,7 +118,7 @@ struct SplitTrackerView: View {
                     stepper("Royalty cap", value: $plan.royaltyCap, range: 0...10_000, step: 250, label: plan.royaltyCap.compactMoney)
                     stepper("Per deal fee", value: $plan.perDealFee, range: 0...1_000, step: 25, label: plan.perDealFee.compactMoney)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("GCI closed before you used #Cinema this cap year")
+                        Text("GCI closed before you used CloseUp this cap year")
                             .font(.cinema(13, weight: .semibold))
                         TextField("0", value: $plan.priorGCI, format: .currency(code: "USD").precision(.fractionLength(0)))
                             .keyboardType(.numberPad)

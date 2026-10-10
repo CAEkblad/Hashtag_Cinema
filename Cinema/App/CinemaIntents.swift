@@ -1,10 +1,10 @@
 import AppIntents
 import Foundation
 
-/// "Hey Siri, log mileage in #Cinema." Runs without opening the app.
+/// "Hey Siri, log mileage in CloseUp." Runs without opening the app.
 struct LogMileageIntent: AppIntent {
     static var title: LocalizedStringResource = "Log mileage"
-    static var description = IntentDescription("Add a business trip to your #Cinema mileage log.")
+    static var description = IntentDescription("Add a business trip to your CloseUp mileage log.")
     static var openAppWhenRun = false
 
     @Parameter(title: "Miles", requestValueDialog: "How many miles?")
@@ -25,10 +25,10 @@ struct LogMileageIntent: AppIntent {
     }
 }
 
-/// "What's my video idea in #Cinema?"
+/// "What's my video idea in CloseUp?"
 struct TodaysIdeaIntent: AppIntent {
     static var title: LocalizedStringResource = "Today's video idea"
-    static var description = IntentDescription("Hear today's video idea, then open #Cinema to film it.")
+    static var description = IntentDescription("Hear today's video idea, then open CloseUp to film it.")
     static var openAppWhenRun = true
 
     @MainActor
@@ -36,11 +36,11 @@ struct TodaysIdeaIntent: AppIntent {
         if let idea = CinemaStore.shared?.ideaOfTheDay {
             return .result(dialog: "Today's idea: \(idea.title). It takes about \(idea.targetSeconds) seconds to film.")
         }
-        return .result(dialog: "Opening #Cinema with today's idea.")
+        return .result(dialog: "Opening CloseUp with today's idea.")
     }
 }
 
-/// "Check my leads in #Cinema."
+/// "Check my leads in CloseUp."
 struct NewLeadsIntent: AppIntent {
     static var title: LocalizedStringResource = "Check my leads"
     static var description = IntentDescription("Hear how many new leads are waiting for you.")
@@ -49,7 +49,7 @@ struct NewLeadsIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard let store = CinemaStore.shared else {
-            return .result(dialog: "Open #Cinema to see your leads.")
+            return .result(dialog: "Open CloseUp to see your leads.")
         }
         let fresh = store.leads.filter { $0.status == .new }
         let due = store.leadsDueForFollowUp.count

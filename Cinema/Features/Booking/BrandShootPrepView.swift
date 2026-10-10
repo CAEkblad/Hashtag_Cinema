@@ -43,7 +43,7 @@ struct BrandShootPrepView: View {
             lines += locationOptions.filter { locations.contains($0) }.map { "- \($0)" }
             lines.append("")
         }
-        lines.append("Brand color and logo are in my #Cinema brand kit.")
+        lines.append("Brand color and logo are in my CloseUp brand kit.")
         return lines.joined(separator: "\n")
     }
 

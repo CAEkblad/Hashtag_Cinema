@@ -486,7 +486,7 @@ final class CinemaStore {
             let allowed = await ReminderScheduler.requestPermission()
             guard allowed else {
                 reminderEnabled = false
-                showToast("Turn on notifications for #Cinema in Settings")
+                showToast("Turn on notifications for CloseUp in Settings")
                 persist()
                 return
             }
@@ -1154,7 +1154,7 @@ final class CinemaStore {
             ActivityItem(kind: .edit, title: "Your edit is ready", detail: "\"Bayshore listing tour\" is ready for you to review and approve.", date: MockData.day(0, hour: 8, minute: 12), route: .bookings),
             ActivityItem(kind: .lead, title: "New lead from WATER", detail: "Someone commented WATER on your waterfront tour. We sent your DM.", date: MockData.day(0, hour: 7, minute: 40), route: .leads),
             ActivityItem(kind: .coach, title: "Your weekly coach report", detail: "Your hooks are getting stronger. Try ending on a question this week.", date: MockData.day(-1, hour: 18), route: .coach),
-            ActivityItem(kind: .referral, title: "You earned 2 credits", detail: "Alex Morgan joined #Cinema with your invite.", date: MockData.day(-6, hour: 12), route: .referrals, isRead: true)
+            ActivityItem(kind: .referral, title: "You earned 2 credits", detail: "Alex Morgan joined CloseUp with your invite.", date: MockData.day(-6, hour: 12), route: .referrals, isRead: true)
         ]
     }
 
@@ -1170,7 +1170,7 @@ final class CinemaStore {
     var referralLink: String { "https://hashtagcinema.com/join?ref=\(referralCode)" }
 
     var referralMessage: String {
-        "I make my real estate videos with #Cinema. Daily ideas for your city, they edit, and it posts everywhere. Use my code \(referralCode) and we both get 2 free edits: \(referralLink)"
+        "I make my real estate videos with CloseUp. Daily ideas for your city, they edit, and it posts everywhere. Use my code \(referralCode) and we both get 2 free edits: \(referralLink)"
     }
 
     var creditsEarnedFromReferrals: Int { referrals.filter { $0.status == .rewarded }.count * 2 }
@@ -1189,7 +1189,7 @@ final class CinemaStore {
             self.referrals[index].status = .rewarded
             self.profile.credits += 2
             self.persist()
-            self.notify(.referral, "You earned 2 credits", detail: "\(trimmed) joined #Cinema with your invite.", route: .referrals)
+            self.notify(.referral, "You earned 2 credits", detail: "\(trimmed) joined CloseUp with your invite.", route: .referrals)
             self.showToast("\(trimmed) joined. You both got 2 credits.")
         }
     }
@@ -1344,7 +1344,7 @@ final class CinemaStore {
             showToast("\(partner.company) is already in your pros")
             return
         }
-        addVendor(Vendor(name: partner.name, company: partner.company, category: category, note: "#Cinema partner. \(partner.agentPerk)"))
+        addVendor(Vendor(name: partner.name, company: partner.company, category: category, note: "CloseUp partner. \(partner.agentPerk)"))
     }
 
     func requestPartner(_ partner: ServicePartner, client: String?, address: String, date: Date, notes: String) {
@@ -1465,7 +1465,7 @@ final class CinemaStore {
             for due in dates {
                 let week = Calendar.current.date(byAdding: .day, value: -7, to: due.date) ?? due.date
                 guard week > Date() else { continue }
-                await ReminderScheduler.scheduleOnce(id: due.id, title: "\(due.label) due in a week", body: "Due \(due.date.formatted(.dateTime.month(.wide).day())). Check what you've set aside in #Cinema.", on: week)
+                await ReminderScheduler.scheduleOnce(id: due.id, title: "\(due.label) due in a week", body: "Due \(due.date.formatted(.dateTime.month(.wide).day())). Check what you've set aside in CloseUp.", on: week)
             }
             if !quiet { self.showToast("We'll remind you a week before each payment") }
         }
@@ -1506,7 +1506,7 @@ final class CinemaStore {
         networkShared.insert(shared, at: 0)
         saveNetwork()
         let fits = NetworkSamples.buyerNeeds.filter { $0.maxPrice >= listing.price && $0.minBeds <= listing.beds && $0.mustHaves.allSatisfy { listing.features.contains($0) } }
-        showToast(fits.isEmpty ? "Shared with agents on #Cinema" : "Shared. \(fits.count) agent\(fits.count == 1 ? " has a buyer" : "s have buyers") that fit")
+        showToast(fits.isEmpty ? "Shared with agents on CloseUp" : "Shared. \(fits.count) agent\(fits.count == 1 ? " has a buyer" : "s have buyers") that fit")
     }
 
     func postBuyerNeed(_ buyerID: UUID, note: String) {

@@ -214,7 +214,7 @@ struct PosterMakerView: View {
                 .foregroundStyle(Theme.textSecondary)
                 .textSelection(.enabled)
                 .cardStyle()
-            Text("The comment keyword \(details.kind.keyword) turns comments into leads when you post through #Cinema.")
+            Text("The comment keyword \(details.kind.keyword) turns comments into leads when you post through CloseUp.")
                 .font(.cinema(12))
                 .foregroundStyle(Theme.textTertiary)
         }

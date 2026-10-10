@@ -193,7 +193,7 @@ enum ReelRenderer {
                 .foregroundColor: UIColor.white.withAlphaComponent(0.9),
                 .paragraphStyle: center
             ])
-            ("Made with #Cinema" as NSString).draw(in: CGRect(x: 80, y: size.height - 180, width: size.width - 160, height: 60), withAttributes: [
+            ("Made with CloseUp" as NSString).draw(in: CGRect(x: 80, y: size.height - 180, width: size.width - 160, height: 60), withAttributes: [
                 .font: UIFont.systemFont(ofSize: 32, weight: .semibold),
                 .foregroundColor: UIColor.white.withAlphaComponent(0.75),
                 .paragraphStyle: center
