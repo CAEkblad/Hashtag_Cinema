@@ -86,6 +86,14 @@ final class CinemaStore {
     var offerSettingsByKey: [String: OfferSettings] = (try? JSONDecoder().decode([String: OfferSettings].self, from: UserDefaults.standard.data(forKey: "cinema.offerSettings.v1") ?? Data())) ?? [:]
     var offerSets: [String: [OfferEntry]] = (try? JSONDecoder().decode([String: [OfferEntry]].self, from: UserDefaults.standard.data(forKey: "cinema.offers.v1") ?? Data())) ?? [:]
 
+    // Trends feed
+    private var remoteTrends: [Trend] = (try? JSONDecoder().decode([Trend].self, from: UserDefaults.standard.data(forKey: "cinema.trends.v1") ?? Data())) ?? []
+    var trendsUpdatedAt: Date? = UserDefaults.standard.object(forKey: "cinema.trendsUpdated") as? Date
+    var savedTrendIDs: [String] = UserDefaults.standard.stringArray(forKey: "cinema.savedTrends") ?? []
+    var isRefreshingTrends = false
+    private var lastTrendsFetch: Date?
+    private let trendsService = TrendsService()
+
     // New agent launchpad
     var launchpad: LaunchpadState = (try? JSONDecoder().decode(LaunchpadState.self, from: UserDefaults.standard.data(forKey: "cinema.launchpad.v1") ?? Data())) ?? LaunchpadState()
 
@@ -1684,6 +1692,55 @@ final class CinemaStore {
         if let data = try? JSONEncoder().encode(offerSets) { UserDefaults.standard.set(data, forKey: "cinema.offers.v1") }
     }
 
+    // MARK: Trends
+
+    var trends: [Trend] { TrendLibrary.merge(remoteTrends) }
+    var trendsAreLive: Bool { trendsService.isLive }
+
+    func trend(_ id: String) -> Trend? { trends.first { $0.id == id } }
+
+    /// Pulls fresh formats and example videos at most every 30 minutes unless forced.
+    func refreshTrends(force: Bool = false) async {
+        guard trendsService.isLive, !isRefreshingTrends else { return }
+        if !force, let last = lastTrendsFetch, Date().timeIntervalSince(last) < 1800 { return }
+        isRefreshingTrends = true
+        defer { isRefreshingTrends = false }
+        guard let result = try? await trendsService.fetch() else {
+            if force { showToast("Couldn't refresh trends. Showing the last ones we had.") }
+            return
+        }
+        lastTrendsFetch = Date()
+        let builtIn = Set(TrendLibrary.all)
+        remoteTrends = result.trends.filter { !builtIn.contains($0) }
+        trendsUpdatedAt = result.updatedAt ?? Date()
+        if let data = try? JSONEncoder().encode(remoteTrends) { UserDefaults.standard.set(data, forKey: "cinema.trends.v1") }
+        UserDefaults.standard.set(trendsUpdatedAt, forKey: "cinema.trendsUpdated")
+    }
+
+    func isSaved(_ trend: Trend) -> Bool { savedTrendIDs.contains(trend.id) }
+
+    func toggleSaved(_ trend: Trend) {
+        if let index = savedTrendIDs.firstIndex(of: trend.id) {
+            savedTrendIDs.remove(at: index)
+        } else {
+            savedTrendIDs.insert(trend.id, at: 0)
+            showToast("Saved to your trends")
+        }
+        UserDefaults.standard.set(savedTrendIDs, forKey: "cinema.savedTrends")
+    }
+
+    /// The agent's own version of a trend, added to their ideas and ready to film.
+    func makeIdea(from trend: Trend, listing: Listing?, pasted: PastedVideo? = nil) async -> Idea {
+        let context = TrendContext(city: listing?.city ?? homeCity, listing: listing, agentName: profile.name)
+        var idea = await trendsService.makeIdea(from: trend, context: context, pasted: pasted)
+        if let existing = ideas.firstIndex(where: { $0.title == idea.title }) {
+            idea.id = ideas[existing].id
+            ideas[existing] = idea
+            return idea
+        }
+        return addIdea(idea, announce: false)
+    }
+
     // MARK: New agent launchpad
 
     var isNewAgent: Bool { launchpad.isOn }
@@ -2485,6 +2542,10 @@ final class CinemaStore {
         offerSets = [:]
         ListingPhotoStore.deleteAll()
         offerSettingsByKey = [:]
+        savedTrendIDs = []
+        remoteTrends = []
+        trendsUpdatedAt = nil
+        for key in ["cinema.savedTrends", "cinema.trends.v1", "cinema.trendsUpdated"] { UserDefaults.standard.removeObject(forKey: key) }
         UserDefaults.standard.removeObject(forKey: "cinema.offerSettings.v1")
         UserDefaults.standard.removeObject(forKey: "cinema.touch.v1")
         UserDefaults.standard.removeObject(forKey: "cinema.offers.v1")

@@ -14,6 +14,7 @@ Backend/
       ..._florida_cities.sql    every Florida city and town (generated)
       ..._partners.sql          Keller Williams: market centers, join codes, approvals, 10% off, 10% revenue share, office content pool, posters
       ..._hardening.sql         which columns the app may write
+      ..._trends.sql            Trends feed formats, example videos, Instagram hashtag ids, heat
     functions/
       generate-ideas            Claude writes ideas for the agent's cities, month, niche and goals
       coach-feedback            Claude coach notes on a clip
@@ -24,6 +25,9 @@ Backend/
       publish-post              posts or schedules to Facebook, Instagram, TikTok, YouTube via Ayrshare
       meta-webhook              comment keyword to DM, saves the lead
       crew-dispatch             offers a paid shoot to the best nearby shooters, top tiers first
+      trends                    the Trends feed: new formats plus heat and example videos per format
+      remix-trend               Claude writes the agent's version of a trend for their city and listing
+      trends-refresh            daily: Instagram hashtag top media, Claude sorts videos into formats, heat
   tools/build_florida_cities.py rebuilds the city data for the app and the database
 ```
 
@@ -37,6 +41,18 @@ Backend/
 6. **Office content pool.** When a listing clip is approved and the agent shares with their office (on by default), a trigger adds it to `office_assets`. Posters are added from the app. Leaders remix them into office posts with credit to the agent.
 7. **Posting and leads.** `publish-post` sends the finished vertical cut to Ayrshare with the caption and keyword. `meta-webhook` watches comments, and when one contains the keyword it sends the agent's DM by private reply and saves a lead.
 8. **Crew.** A paid deposit opens a `jobs` row and `crew-dispatch` offers it to up to 3 shooters within 45 miles who signed the non-solicit, ranked by tier, rating and distance. Ratings after each job update the shooter's tier (Rookie, Pro, Elite, Legend) and per job bonus.
+
+## Trends feed
+
+The app ships with 14 built in formats (`Models/Trends.swift`), so the feed works with no backend. With it on:
+
+- `trends` returns heat and up to 6 approved example videos per format, plus any whole new formats the team writes (a `trends` row with its own `script` and `beats`, `active = true`).
+- `trends-refresh` runs daily. It pulls top Instagram videos for real estate hashtags through the Graph API (needs an Instagram professional account and app review for Instagram Public Content Access; Instagram allows 30 unique hashtags per 7 days), asks Claude to sort each caption into a format and drop anything that isn't a US real estate video, then updates heat (3 = 8 or more examples this week, 2 = 3 or more).
+- TikTok and Facebook have no public API for trending videos, and scraping breaks their terms. The team adds those by hand: `insert into trend_examples (trend_id, platform, url, caption, creator, views, source, approved) values ('reverse-tour', 'tiktok', 'https://www.tiktok.com/@.../video/...', '...', '@...', 120000, 'curator', true);`
+- Links agents paste in the app are saved with `source = 'agent'` and `approved = false` for the team to review. They are never shown until approved.
+- We store links, captions and counts only, and always link out. No reposting other creators' videos.
+- Schedule: `select cron.schedule('trends-refresh', '15 11 * * *', $$ select net.http_post(url := 'https://<ref>.supabase.co/functions/v1/trends-refresh', headers := jsonb_build_object('Authorization', 'Bearer <service role key>')) $$);`
+- Secrets: `IG_USER_ID`, `IG_ACCESS_TOKEN`, optional `IG_HASHTAGS` (comma separated, up to 10).
 
 ## Set it up
 

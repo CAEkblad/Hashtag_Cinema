@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.crew-dispatch]
 verify_jwt = false
+
+[functions.trends-refresh]
+verify_jwt = false

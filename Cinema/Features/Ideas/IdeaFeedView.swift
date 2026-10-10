@@ -21,6 +21,7 @@ struct IdeaFeedView: View {
                     TipView(NewIdeasTip())
                         .tint(Theme.red)
                     createRow
+                    trendsLink
                     scriptLink
                     hookLink
                     NavigationLink(value: Route.teleprompter) {
@@ -88,6 +89,33 @@ struct IdeaFeedView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    private var trendsLink: some View {
+        NavigationLink(value: Route.trends) {
+            HStack(spacing: 12) {
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .background(Theme.red, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Trending now")
+                        .font(.cinema(15, weight: .bold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("What's working on TikTok, Instagram and Facebook. Make your version.")
+                        .font(.cinema(12))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .cardStyle(padding: 14)
+        }
+        .buttonStyle(.plain)
     }
 
     private var hookLink: some View {

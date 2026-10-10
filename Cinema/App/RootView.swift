@@ -276,6 +276,10 @@ struct RouteDestination: View {
             PartnersView()
         case .launchpad:
             LaunchpadView()
+        case .trends:
+            TrendsView()
+        case .trend(let id):
+            TrendDetailView(trendID: id)
         case .touchPlans:
             TouchPlansView()
         case .listingPhotos(let id):

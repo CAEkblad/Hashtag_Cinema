@@ -858,5 +858,7 @@ enum Route: Hashable {
     case rentVsBuy
     case buyer(UUID)
     case deal(UUID)
+    case trends
+    case trend(String)
     case bookingChat(UUID)
 }

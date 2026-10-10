@@ -27,6 +27,7 @@ enum ToolCatalog {
     }
 
     static let all: [Tool] = [
+        Tool(title: "Trends", keywords: "trending viral tiktok instagram reels facebook ideas formats copy video", icon: "flame.fill", route: .trends, group: .create),
         Tool(title: "Script writer", keywords: "script write hook", icon: "text.quote", route: .scriptWriter, group: .create),
         Tool(title: "What to say when", keywords: "objections scripts commission buyer agreement rates insurance", icon: "quote.bubble.fill", route: .objections, group: .create),
         Tool(title: "Hook library", keywords: "hooks first line", icon: "bolt.fill", route: .hooks, group: .create),
