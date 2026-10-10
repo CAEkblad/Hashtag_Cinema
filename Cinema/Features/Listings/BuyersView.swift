@@ -140,6 +140,19 @@ struct BuyerDetailView: View {
                 }
                 .buttonStyle(.plain)
 
+                HStack(spacing: 10) {
+                    NavigationLink(value: Route.affordability) {
+                        Label("How much home", systemImage: "dollarsign.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    NavigationLink(value: Route.rentVsBuy) {
+                        Label("Rent or buy", systemImage: "scale.3d")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                }
+
                 SectionHeader(title: matches.isEmpty ? "No matches on my listings yet" : "Matches on my listings")
                 if matches.isEmpty {
                     Text("None of your active or coming soon listings fit yet. We'll show matches here as soon as you add one.")

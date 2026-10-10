@@ -106,6 +106,22 @@ struct LeadDetailView: View {
                     .cardStyle(padding: 14)
                 }
 
+                if let plan = store.touchContact(for: lead.id) {
+                    NavigationLink(value: Route.touchPlans) {
+                        IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "On your \(plan.plan.title(store.lex))", subtitle: plan.nextStep.map { "Next: \($0.title), \(plan.date(of: $0).relativeDayLabel.lowercased())" } ?? "Plan complete")
+                            .cardStyle()
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Button {
+                        store.startTouchPlan(name: lead.name, plan: .eightWeek, leadID: lead.id)
+                    } label: {
+                        IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "Start their \(store.lex.newContactPlan)", subtitle: "8 touches in 8 weeks, with what to say each time")
+                            .cardStyle()
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 VStack(alignment: .leading, spacing: 10) {
                     if lead.keyword.uppercased() == "VALUE" {
                         NavigationLink(value: Route.homeValue) {

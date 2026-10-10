@@ -111,6 +111,7 @@ enum LaunchPlan90 {
                 LaunchStep(id: "openHouse", title: "Hold an open house for a teammate", detail: "No listings yet? Ask a teammate. Open houses are where new agents meet buyers.", icon: "house.fill", action: .route(.team)),
                 LaunchStep(id: "farm", title: "Pick a farm area", detail: "One neighborhood you'll own with mail, door knocks and videos.", icon: "map.fill", action: .route(.farm)),
                 LaunchStep(id: "weekPlan", title: "Post 3 videos a week", detail: "We'll plan the topics. You just film.", icon: "calendar.badge.plus", action: .route(.weekPlan)),
+                LaunchStep(id: "touch", title: lex.isKW ? "Put everyone you meet on an 8x8" : "Put everyone you meet on an 8 week plan", detail: "8 touches in 8 weeks turns a new contact into someone who remembers your name.", icon: "point.3.filled.connected.trianglepath.dotted", action: .route(.touchPlans)),
                 LaunchStep(id: "pros", title: "Line up your trusted pros", detail: "Clients will ask you for a lender, inspector and movers. Have answers ready.", icon: "hammer.fill", action: .route(.partners))
             ]),
             LaunchPhase(id: "close", title: "Get to your first closing", weeks: 9...13, steps: [

@@ -36,6 +36,13 @@ struct Lexicon {
     /// Who leaders are, for "free for ..." lines.
     var leadersList: String { isKW ? "Team Leaders, MCAs and Market Center staff" : "team leads, brokers and office staff" }
 
+    /// Touch plans: KW's 8x8 and 33 Touch, or plain names everywhere else.
+    var newContactPlan: String { isKW ? "8x8" : "8 week plan" }
+    var newContactPlanLong: String { isKW ? "8x8: 8 touches in 8 weeks" : "8 week plan: 8 touches in 8 weeks" }
+    var yearPlan: String { isKW ? "33 Touch" : "year round plan" }
+    var yearPlanTitle: String { isKW ? "33 Touch" : "Year round plan" }
+    var yearPlanLong: String { isKW ? "33 Touch: 33 touches a year" : "Year round plan: 33 touches a year" }
+
     var joinCodePrompt: String { isKW ? "Have a join code from your MCA?" : "Have a join code from your broker?" }
 }
 

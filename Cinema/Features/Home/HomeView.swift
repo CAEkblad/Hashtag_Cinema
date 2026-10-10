@@ -36,6 +36,13 @@ struct HomeView: View {
                         onLeads: { path.append(Route.leads) }
                     )
                     WeeklyGoalCard()
+                    if !store.touchesDueToday.isEmpty {
+                        NavigationLink(value: Route.touchPlans) {
+                            IconRow(icon: "point.3.filled.connected.trianglepath.dotted", title: "\(store.touchesDueToday.count) touch\(store.touchesDueToday.count == 1 ? "" : "es") due today", subtitle: store.touchesDueToday.prefix(3).map(\.contact.firstName).joined(separator: ", "))
+                                .cardStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
                     if store.isNewAgent {
                         NavigationLink(value: Route.launchpad) {
                             IconRow(icon: "airplane.departure", title: "Launchpad · day \(store.launchpad.dayNumber) of 90", subtitle: store.nextLaunchStepTitle.map { "Next: \($0)" } ?? "Every step done. Go get that closing.")

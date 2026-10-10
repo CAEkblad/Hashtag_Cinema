@@ -851,6 +851,10 @@ enum Route: Hashable {
     case gems(UUID)
     case partners
     case launchpad
+    case touchPlans
+    case offers(UUID?)
+    case affordability
+    case rentVsBuy
     case buyer(UUID)
     case deal(UUID)
     case bookingChat(UUID)

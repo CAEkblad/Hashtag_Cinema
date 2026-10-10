@@ -81,6 +81,10 @@ final class CinemaStore {
     var networkShared: [NetworkListing] = (try? JSONDecoder().decode([NetworkListing].self, from: UserDefaults.standard.data(forKey: "cinema.network.v1") ?? Data())) ?? []
     var myBuyerNeeds: [BuyerNeedPost] = (try? JSONDecoder().decode([BuyerNeedPost].self, from: UserDefaults.standard.data(forKey: "cinema.needs.v1") ?? Data())) ?? []
 
+    // Touch plans and offer comparisons
+    var touchContacts: [TouchContact] = (try? JSONDecoder().decode([TouchContact].self, from: UserDefaults.standard.data(forKey: "cinema.touch.v1") ?? Data())) ?? []
+    var offerSets: [String: [OfferEntry]] = (try? JSONDecoder().decode([String: [OfferEntry]].self, from: UserDefaults.standard.data(forKey: "cinema.offers.v1") ?? Data())) ?? [:]
+
     // New agent launchpad
     var launchpad: LaunchpadState = (try? JSONDecoder().decode(LaunchpadState.self, from: UserDefaults.standard.data(forKey: "cinema.launchpad.v1") ?? Data())) ?? LaunchpadState()
 
@@ -1593,6 +1597,74 @@ final class CinemaStore {
         saveTeam()
     }
 
+    // MARK: Touch plans
+
+    var touchesDueToday: [(contact: TouchContact, step: TouchStep)] {
+        touchContacts.compactMap { contact in contact.due.first.map { (contact, $0) } }
+    }
+
+    func touchContact(for leadID: UUID) -> TouchContact? {
+        touchContacts.first { $0.leadID == leadID }
+    }
+
+    @discardableResult
+    func startTouchPlan(name: String, phone: String = "", plan: TouchContact.Plan, leadID: UUID? = nil, quiet: Bool = false) -> Bool {
+        let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty else { return false }
+        if let leadID, touchContacts.contains(where: { $0.leadID == leadID }) { return false }
+        if leadID == nil, touchContacts.contains(where: { $0.name.caseInsensitiveCompare(clean) == .orderedSame }) { return false }
+        touchContacts.insert(TouchContact(name: clean, phone: phone, plan: plan, start: Date(), leadID: leadID), at: 0)
+        saveTouches()
+        if !quiet { showToast("\(clean) is on your \(plan.title(lex))") }
+        return true
+    }
+
+    func toggleTouch(_ contactID: UUID, step: Int) {
+        guard let index = touchContacts.firstIndex(where: { $0.id == contactID }) else { return }
+        if let at = touchContacts[index].done.firstIndex(of: step) {
+            touchContacts[index].done.remove(at: at)
+        } else {
+            touchContacts[index].done.append(step)
+            switch touchContacts[index].steps.first(where: { $0.id == step })?.kind {
+            case .call: tallyProspect(.calls)
+            case .text, .video: tallyProspect(.texts)
+            case .note, .mail: tallyProspect(.notes)
+            default: break
+            }
+            if touchContacts[index].isComplete {
+                showToast(touchContacts[index].plan == .eightWeek ? "\(lex.newContactPlan) done! Move \(touchContacts[index].firstName) to your \(lex.yearPlan)." : "A full year of touches. Nice work.")
+            }
+        }
+        saveTouches()
+    }
+
+    func moveToYearPlan(_ contactID: UUID) {
+        guard let index = touchContacts.firstIndex(where: { $0.id == contactID }) else { return }
+        touchContacts[index].plan = .yearRound
+        touchContacts[index].start = Date()
+        touchContacts[index].done = []
+        saveTouches()
+        showToast("\(touchContacts[index].firstName) is on your \(lex.yearPlan)")
+    }
+
+    func removeTouchContact(_ contactID: UUID) {
+        touchContacts.removeAll { $0.id == contactID }
+        saveTouches()
+    }
+
+    private func saveTouches() {
+        if let data = try? JSONEncoder().encode(touchContacts) { UserDefaults.standard.set(data, forKey: "cinema.touch.v1") }
+    }
+
+    // MARK: Offer comparison
+
+    func offers(for key: String) -> [OfferEntry] { offerSets[key] ?? [] }
+
+    func saveOffers(_ offers: [OfferEntry], for key: String) {
+        offerSets[key] = offers.isEmpty ? nil : offers
+        if let data = try? JSONEncoder().encode(offerSets) { UserDefaults.standard.set(data, forKey: "cinema.offers.v1") }
+    }
+
     // MARK: New agent launchpad
 
     var isNewAgent: Bool { launchpad.isOn }
@@ -2390,6 +2462,10 @@ final class CinemaStore {
         networkShared = []
         myBuyerNeeds = []
         launchpad = LaunchpadState()
+        touchContacts = []
+        offerSets = [:]
+        UserDefaults.standard.removeObject(forKey: "cinema.touch.v1")
+        UserDefaults.standard.removeObject(forKey: "cinema.offers.v1")
         UserDefaults.standard.removeObject(forKey: "cinema.launchpad.v1")
         for key in ["cinema.network.v1", "cinema.needs.v1"] { UserDefaults.standard.removeObject(forKey: key) }
         sharesWithTeam = true

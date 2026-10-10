@@ -276,6 +276,14 @@ struct RouteDestination: View {
             PartnersView()
         case .launchpad:
             LaunchpadView()
+        case .touchPlans:
+            TouchPlansView()
+        case .offers(let id):
+            OfferCompareView(listingID: id)
+        case .affordability:
+            AffordabilityView()
+        case .rentVsBuy:
+            RentVsBuyView()
         case .listingCalculator(let id):
             if let listing = store.listing(id) { PaymentCalculatorView(startingPrice: Double(listing.price)) }
         case .buyer(let id):
