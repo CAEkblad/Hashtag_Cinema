@@ -111,6 +111,11 @@ struct TeamView: View {
                 }
                 .buttonStyle(SecondaryButtonStyle())
             }
+            NavigationLink(value: Route.teamHuddle) {
+                IconRow(icon: "person.3.sequence.fill", title: "This week's huddle", subtitle: "Wins, leaderboard, video challenge and a role play, ready to run")
+                    .cardStyle(padding: 12)
+            }
+            .buttonStyle(.plain)
             Toggle(isOn: Binding(get: { team.leadRoutingOn }, set: { store.setLeadRouting($0) })) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Share team marketing leads round robin")
