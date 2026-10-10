@@ -288,6 +288,14 @@ struct RouteDestination: View {
             ScanLeadsView()
         case .buyerPresentation:
             BuyerPresentationView()
+        case .reelCover(let title):
+            ReelCoverView(title: title)
+        case .prospectingLetters:
+            ProspectingLettersView()
+        case .storyPack(let id):
+            if let listing = store.listing(id) { StoryPackView(listing: listing) }
+        case .carousels:
+            CarouselMakerView()
         case .replyHelper:
             ReplyHelperView()
         case .callScripts:

@@ -54,6 +54,12 @@ struct PowerHourView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink(value: Route.prospectingLetters) {
+                    IconRow(icon: "envelope.fill", title: "Prospecting letters", subtitle: "Mail expireds, FSBOs, neighbors and absentee owners")
+                        .cardStyle(padding: 14)
+                }
+                .buttonStyle(.plain)
+
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                     ForEach(ProspectAction.allCases) { action in
                         Button {

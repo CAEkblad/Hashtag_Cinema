@@ -83,6 +83,11 @@ struct ListingDetailView: View {
                         .cardStyle()
                 }
                 .buttonStyle(.plain)
+                NavigationLink(value: Route.storyPack(listing.id)) {
+                    IconRow(icon: "rectangle.stack.fill", title: "Story pack", subtitle: "6 Instagram stories with polls, a price guess and a countdown")
+                        .cardStyle()
+                }
+                .buttonStyle(.plain)
                 NavigationLink(value: Route.neighborBlast(listing.id)) {
                     IconRow(icon: "mail.stack.fill", title: "Neighbor blast", subtitle: "Postcard, door knock and call scripts for the streets around it")
                         .cardStyle()

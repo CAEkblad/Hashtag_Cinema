@@ -72,6 +72,12 @@ struct IdeaDetailView: View {
                         .cardStyle(padding: 14)
                 }
                 .buttonStyle(.plain)
+
+                NavigationLink(value: Route.reelCover(idea.title)) {
+                    IconRow(icon: "rectangle.portrait.fill", title: "Make the cover", subtitle: "A branded reel cover with this title")
+                        .cardStyle(padding: 14)
+                }
+                .buttonStyle(.plain)
             }
             .padding(Theme.gutter)
             .padding(.bottom, 120)
