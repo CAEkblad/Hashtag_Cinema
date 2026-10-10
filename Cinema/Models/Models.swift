@@ -872,5 +872,6 @@ enum Route: Hashable {
     case callScript(String)
     case replyHelper
     case scanLeads
+    case buyerPresentation
     case bookingChat(UUID)
 }

@@ -286,6 +286,8 @@ struct RouteDestination: View {
             PopBysView()
         case .scanLeads:
             ScanLeadsView()
+        case .buyerPresentation:
+            BuyerPresentationView()
         case .replyHelper:
             ReplyHelperView()
         case .callScripts:

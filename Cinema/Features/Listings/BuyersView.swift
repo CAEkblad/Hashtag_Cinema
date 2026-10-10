@@ -153,6 +153,12 @@ struct BuyerDetailView: View {
                     .buttonStyle(SecondaryButtonStyle())
                 }
 
+                NavigationLink(value: Route.buyerPresentation) {
+                    Label("Buyer consultation PDF", systemImage: "person.crop.rectangle.stack.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+
                 SectionHeader(title: matches.isEmpty ? "No matches on my listings yet" : "Matches on my listings")
                 if matches.isEmpty {
                     Text("None of your active or coming soon listings fit yet. We'll show matches here as soon as you add one.")
